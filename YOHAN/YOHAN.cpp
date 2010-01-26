@@ -1,6 +1,7 @@
 // YOHAN.cpp? définit le point d'entrée pour l'application console.
 // TEST2
 // TEST3
+// TEST4
 
 #include "stdafx.h"
 
