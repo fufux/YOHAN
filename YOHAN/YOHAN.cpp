@@ -129,8 +129,8 @@ int main(int argc, _TCHAR* argv[])
 	dimensions, etc.
 	*/
 	IrrlichtDevice *device =
-		createDevice( video::EDT_SOFTWARE, dimension2d<u32>(640, 480), 16,
-			false, false, false, 0);
+		createDevice( video::EDT_DIRECT3D9, dimension2d<u32>(640, 480), 32,
+			false, true, false, 0);
 
 	if (!device)
 		return 1;
