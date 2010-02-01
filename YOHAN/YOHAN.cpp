@@ -60,7 +60,7 @@ int main(int argc, _TCHAR* argv[])
 	user interface environment.
 	*/
 	driver = device->getVideoDriver();
-	mgr = device->getSceneManager();
+	smgr = device->getSceneManager();
 	env = device->getGUIEnvironment();
 
 	/*
