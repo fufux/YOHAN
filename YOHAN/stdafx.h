@@ -10,6 +10,13 @@
 #include <stdio.h>
 #include <tchar.h>
 
+#include <irrlicht.h>
 
+using namespace irr;
+using namespace core;
+using namespace scene;
+using namespace video;
+using namespace io;
+using namespace gui;
 
 // TODO : faites référence ici aux en-têtes supplémentaires nécessaires au programme

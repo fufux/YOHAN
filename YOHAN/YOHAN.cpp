@@ -1,14 +1,6 @@
 // YOHAN.cpp définit le point d'entrée pour l'application console.
 
 #include "stdafx.h"
-#include <irrlicht.h>
-
-using namespace irr;
-using namespace core;
-using namespace scene;
-using namespace video;
-using namespace io;
-using namespace gui;
 
 /*
 To be able to use the Irrlicht.DLL file, we need to link with the Irrlicht.lib.

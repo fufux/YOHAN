@@ -50,9 +50,75 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "tetgen.h" // Defined tetgenio, tetrahedralize().
+#include "stdafx.h"
 
 int main_(int argc, char *argv[])
 {
+
+	/************************************************
+	 *         Cube definition using Irrlicht       *
+	 ************************************************/
+
+	SMeshBuffer* buffer = new SMeshBuffer();
+
+	// Create indices
+	const u16 u[36] = {   0,2,1,   0,3,2,   1,5,4,   1,2,5,   4,6,7,   4,5,6, 
+            7,3,0,   7,6,3,   9,5,2,   9,8,5,   0,11,10,   0,10,7};
+
+	buffer->Indices.set_used(36);
+
+	for (u32 i=0; i<36; ++i)
+		buffer->Indices[i] = u[i];
+
+
+	// Create vertices
+	video::SColor clr1(0,255,100,100);
+	video::SColor clr2(0,100,100,255);
+
+	buffer->Vertices.reallocate(12);
+
+	buffer->Vertices.push_back(video::S3DVertex(0,0,0, -1,-1,-1, clr1, 0, 1));
+	buffer->Vertices.push_back(video::S3DVertex(30,0,0,  1,-1,-1, clr2, 1, 1));
+	buffer->Vertices.push_back(video::S3DVertex(30,30,0,  1, 1,-1, clr1, 1, 0));
+	buffer->Vertices.push_back(video::S3DVertex(0,30,0, -1, 1,-1, clr2, 0, 0));
+	buffer->Vertices.push_back(video::S3DVertex(30,0,30,  1,-1, 1, clr1, 0, 1));
+	buffer->Vertices.push_back(video::S3DVertex(30,30,30,  1, 1, 1, clr2, 0, 0));
+	buffer->Vertices.push_back(video::S3DVertex(0,30,30, -1, 1, 1, clr1, 1, 0));
+	buffer->Vertices.push_back(video::S3DVertex(0,0,30, -1,-1, 1, clr2, 1, 1));
+	buffer->Vertices.push_back(video::S3DVertex(0,30,30, -1, 1, 1, clr1, 0, 1));
+	buffer->Vertices.push_back(video::S3DVertex(0,30,0, -1, 1,-1, clr2, 1, 1));
+	buffer->Vertices.push_back(video::S3DVertex(30,0,30,  1,-1, 1, clr1, 1, 0));
+	buffer->Vertices.push_back(video::S3DVertex(30,0,0,  1,-1,-1, clr2, 0, 0));
+	
+	
+	SMesh* mesh = new SMesh;
+	mesh->addMeshBuffer(buffer);
+	buffer->drop();
+
+
+	/************************************************
+	 *        Adapting the cube data structure      *
+	 *           so that TetGen can use it          *
+	 ************************************************/
+
+
+
+
+
+
+	/************************************************
+	 *       Processing the cube using TeTgen       *
+	 ************************************************/
+
+
+
+
+
+
+	/************************************************
+	 *                 Example code                 *
+	 ************************************************/
+
   tetgenio in, out;
   tetgenio::facet *f;
   tetgenio::polygon *p;
