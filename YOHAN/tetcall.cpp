@@ -100,12 +100,22 @@ int main_(int argc, char *argv[])
 	 *        Adapting the cube data structure      *
 	 *           so that TetGen can use it          *
 	 ************************************************/
+/*
+	tetgenio in, out;
+	tetgenio::facet *f;
+	tetgenio::polygon *p;
+	int i;
+	Vertices vertices;
 
-
-
-
-
-
+	in.firstnumber = 1;
+	in.numberofpoints = buffer->Vertices.size();
+	in.pointlist = new REAL[in.numberofpoints * 3];
+	for (i = 0; i < in.numberofpoints; i++) {
+		in.pointlist[i] = buffer->Vertices.
+		in.pointlist[i+1] =
+		in.pointlist[i+2] =
+	}
+*/
 	/************************************************
 	 *       Processing the cube using TeTgen       *
 	 ************************************************/
@@ -236,6 +246,7 @@ int main_(int argc, char *argv[])
   p->vertexlist[2] = 5;
   p->vertexlist[3] = 1;
 
+
   // Set 'in.facetmarkerlist'
 
   in.facetmarkerlist[0] = -1;
@@ -245,9 +256,10 @@ int main_(int argc, char *argv[])
   in.facetmarkerlist[4] = 0;
   in.facetmarkerlist[5] = 0;
 
-  // Output the PLC to files 'barin.node' and 'barin.poly'.
-  in.save_nodes("barin");
-  in.save_poly("barin");
+
+  // Output the PLC to files 'cube.node' and 'cube.poly'.
+  in.save_nodes("output/cube");
+  in.save_poly("output/cube");
 
   // Tetrahedralize the PLC. Switches are chosen to read a PLC (p),
   //   do quality mesh generation (q) with a specified quality bound
@@ -256,9 +268,9 @@ int main_(int argc, char *argv[])
   tetrahedralize("pq1.414a0.1", &in, &out);
 
   // Output mesh to files 'barout.node', 'barout.ele' and 'barout.face'.
-  out.save_nodes("barout");
-  out.save_elements("barout");
-  out.save_faces("barout");
+  out.save_nodes("output/barout");
+  out.save_elements("output/barout");
+  out.save_faces("output/barout");
 
   return 0;
 }
