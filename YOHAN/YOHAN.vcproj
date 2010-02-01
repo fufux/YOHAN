@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;irrlicht\include&quot;"
+				AdditionalIncludeDirectories="tetgen;irrlicht\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,8 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="TetGenLib.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;irrlicht\lib\Win32-visualstudio&quot;"
+				AdditionalLibraryDirectories="tetgen;&quot;irrlicht\lib\Win32-visualstudio&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -197,6 +198,10 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\tetcall.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\YOHAN.cpp"
