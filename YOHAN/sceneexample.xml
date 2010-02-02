@@ -1,0 +1,19 @@
+<scene name="plop">
+	<volumicmesh id="8">
+		<nodefile file="plop.node"/>
+		<elefile file="plop.ele" />
+		...
+		<initialspeed x="89" y="" z=""/>
+		<materialproperties>
+			<../>
+		</materialproperties>
+	</volumicmesh>
+	<force>
+		<volumicmeshid value="8"/>
+		<vertex index="897"/>
+		<intensity x=".." y=".." z=".."/>
+	</force>
+	<forcefield>
+		<intensity x="32.8" y=".." z=".." />
+	</forcefield>
+</scene>

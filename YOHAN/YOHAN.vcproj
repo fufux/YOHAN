@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="tetgen;irrlicht\include"
+				AdditionalIncludeDirectories="irrlicht\include;tetgen"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,7 +63,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="TetGenLib.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="tetgen;&quot;irrlicht\lib\Win32-visualstudio&quot;"
+				AdditionalLibraryDirectories="&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;irrlicht\include&quot;"
+				AdditionalIncludeDirectories="irrlicht\include;tetgen"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -136,8 +136,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="TetGenLib.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;irrlicht\lib\Win32-visualstudio&quot;"
+				AdditionalLibraryDirectories="&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"

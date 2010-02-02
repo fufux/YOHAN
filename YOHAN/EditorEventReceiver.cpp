@@ -31,6 +31,12 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 	{
 		switch(event.KeyInput.Key)
 		{
+		// press escape to go back to maya view
+		case KEY_ESCAPE:
+			{
+				setActiveCamera(camera[0]);
+				break;
+			}
 		case KEY_KEY_M:
 			device->minimizeWindow();
 			break;

@@ -225,6 +225,11 @@ bool Editor::load(irr::core::stringc filename)
 	<forcefield>
 		<intensity x="32.8" y=".." z=".." />
 	</forcefield>
+	<force>
+		<scenenodeindex value="94"/>
+		<vertexindex value="8"/>
+		<intensity x="32.8" y=".." z=".." />
+	</force>
 	*/
 	while(xml->read())
 	{
