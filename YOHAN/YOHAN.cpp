@@ -1,6 +1,7 @@
 // YOHAN.cpp définit le point d'entrée pour l'application console.
 
 #include "stdafx.h"
+#include "Editor.h"
 
 /*
 To be able to use the Irrlicht.DLL file, we need to link with the Irrlicht.lib.
@@ -22,16 +23,18 @@ These variables are declared here.
 If you want to use these variables in another .cpp file, you must re-decalre them and
 add "extern" key word at the begining of each declaration. See below.
 
-here:
-IrrlichtDevice *Device;
-in another .cpp file:
-extern IrrlichtDevice *Device;
+extern IrrlichtDevice* device;
+extern IVideoDriver* driver;
+extern ISceneManager* smgr;
+extern IGUIEnvironment* env;
+...
+...
 */
 IrrlichtDevice* device;
 IVideoDriver* driver;
 ISceneManager* smgr;
 IGUIEnvironment* env;
-scene::ICameraSceneNode* camera[1]; /* One camera should be enought, but who knows... */
+scene::ICameraSceneNode* camera[CAMERA_COUNT];
 
 /*
 This is the main method.
@@ -59,9 +62,29 @@ int main(int argc, _TCHAR* argv[])
 	env = device->getGUIEnvironment();
 
 	/*
-	Create the main camera.
+	Create cameras.
 	*/
-	camera[0] = smgr->addCameraSceneNode();
+	camera[0] = smgr->addCameraSceneNodeMaya();
+	camera[0]->setFarValue(20000.f);
+	// Maya cameras reposition themselves relative to their target, so target the location
+	// where the mesh scene node is placed.
+	camera[0]->setTarget(core::vector3df(0,30,0));
+
+	camera[1] = smgr->addCameraSceneNodeFPS();
+	camera[1]->setFarValue(20000.f);
+	camera[1]->setPosition(core::vector3df(0,0,-70));
+	camera[1]->setTarget(core::vector3df(0,30,0));
+
+
+	/*
+	Allow us to load files directly frome this folder without giving the explicit path
+	*/
+	device->getFileSystem()->addFileArchive("../YOHAN/irrlicht/media/", true, true, EFAT_FOLDER);
+
+	/*
+	Create the editor, GUI, etc.
+	*/
+	Editor* editor = new Editor();
 
 	/*
 	Ok, now we have set up the scene, lets draw everything: We run the

@@ -180,6 +180,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\EditorEventReceiver.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -215,6 +219,10 @@
 			>
 			<File
 				RelativePath=".\Editor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EditorEventReceiver.h"
 				>
 			</File>
 			<File

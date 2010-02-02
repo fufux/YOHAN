@@ -19,4 +19,6 @@ using namespace video;
 using namespace io;
 using namespace gui;
 
+#define CAMERA_COUNT 2
+
 // TODO : faites référence ici aux en-têtes supplémentaires nécessaires au programme
