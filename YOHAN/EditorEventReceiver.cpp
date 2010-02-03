@@ -14,6 +14,7 @@ EditorEventReceiver::EditorEventReceiver(Editor* editor)
 {
 	this->editor = editor;
 	setActiveCamera( camera[0] );
+	this->oldMousePos = position2di(0,0);
 }
 
 EditorEventReceiver::~EditorEventReceiver(void)
@@ -24,6 +25,40 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 {
 	if (!device || !env)
 		return false;
+
+	gui::IGUIElement* root = env->getRootGUIElement();
+	core::stringc s = "";
+
+	// Mouse
+	if (event.EventType == EET_MOUSE_INPUT_EVENT)
+	{
+		scene::ICameraSceneNode * activeCam = smgr->getActiveCamera();
+
+		/*if (event.MouseInput.Control || event.MouseInput.Shift)
+			activeCam->setInputReceiverEnabled( false );
+		else
+			activeCam->setInputReceiverEnabled( true );*/
+
+
+		if (event.MouseInput.isLeftPressed() && event.MouseInput.Control)
+		{
+			editor->selectNode();
+		}
+		else if (event.MouseInput.Shift && event.MouseInput.Event == EMIE_MOUSE_MOVED)
+		{
+			position2di mousePos;
+			mousePos.X = event.MouseInput.X;
+            mousePos.Y = event.MouseInput.Y; 
+			if ((oldMousePos - mousePos).getLength() > 10)
+				oldMousePos = mousePos;
+			editor->moveSelectedNode(vector3df(
+				(mousePos.X - oldMousePos.X) * cos(activeCam->getRotation().Y) + (mousePos.Y - oldMousePos.Y) * sin(activeCam->getRotation().Y),
+				0,
+				(mousePos.X - oldMousePos.X) * sin(activeCam->getRotation().Y) + (mousePos.Y - oldMousePos.Y) * cos(activeCam->getRotation().Y)));
+			oldMousePos = mousePos;
+		}
+	}
+
 
 	// Key pressed once
 	if (event.EventType == EET_KEY_INPUT_EVENT &&
@@ -70,7 +105,15 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 
 				switch(id)
 				{
+				case GUI_ID_OPEN_SCENE: // File -> Open scene
+					opening = OPENING_SCENE;
+					env->addFileOpenDialog(L"Please select a scene file to open");
+					break;
+				case GUI_ID_SAVE_SCENE: // File -> Save scene
+					editor->askForFileName();
+					break;
 				case GUI_ID_OPEN_MODEL: // File -> Open Model
+					opening = OPENING_MODEL;
 					env->addFileOpenDialog(L"Please select a model file to open");
 					break;
 				case GUI_ID_QUIT: // File -> Quit
@@ -138,7 +181,10 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 				// load the model file, selected in the file open dialog
 				IGUIFileOpenDialog* dialog =
 					(IGUIFileOpenDialog*)event.GUIEvent.Caller;
-				editor->add3DModel(core::stringc(dialog->getFileName()).c_str());
+				if (opening == OPENING_MODEL)
+					editor->add3DModel(core::stringc(dialog->getFileName()).c_str());
+				else if (opening == OPENING_SCENE)
+					editor->load(core::stringc(dialog->getFileName()).c_str());
 			}
 			break;
 
@@ -161,32 +207,129 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 			break;
 
 		case EGET_BUTTON_CLICKED:
-
 			switch(id)
 			{
 			case GUI_ID_TOOL_BOX_SET_BUTTON:
-				{
-					// set scale
-					gui::IGUIElement* root = env->getRootGUIElement();
-					core::vector3df pos;
-					core::stringc s;
-
-					s = root->getElementFromId(GUI_ID_TOOL_BOX_X_POSITION, true)->getText();
-					pos.X = (f32)atof(s.c_str());
-					s = root->getElementFromId(GUI_ID_TOOL_BOX_Y_POSITION, true)->getText();
-					pos.Y = (f32)atof(s.c_str());
-					s = root->getElementFromId(GUI_ID_TOOL_BOX_Z_POSITION, true)->getText();
-					pos.Z = (f32)atof(s.c_str());
-
-					editor->setPositionOfSelectedNode( pos );
-				}
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_FORCE_FIELD_TOOL_BOX_SET_BUTTON:
+				editor->setForceField();
+				break;
+			case GUI_ID_ASK_FILENAME_OK_BUTTON:
+				s = root->getElementFromId(GUI_ID_ASK_FILENAME_NAME, true)->getText();
+				if (s.size() == 0)
+					s = "untitled.xml";
+				editor->save(s.c_str());
+				if (root->getElementFromId(GUI_ID_ASK_FILENAME_WINDOW, true))
+					root->getElementFromId(GUI_ID_ASK_FILENAME_WINDOW, true)->remove();
+				break;
+			case GUI_ID_ASK_FILENAME_CANCEL_BUTTON:
+				if (root->getElementFromId(GUI_ID_ASK_FILENAME_WINDOW, true))
+					root->getElementFromId(GUI_ID_ASK_FILENAME_WINDOW, true)->remove();
 				break;
 			case GUI_ID_OPEN_DIALOG_BUTTON:
+				opening = OPENING_MODEL;
 				env->addFileOpenDialog(L"Please select a model file to open");
+				break;
+			case GUI_ID_FORCE_FIELD_BUTTON:
+				editor->createForceFieldToolBox();
 				break;
 			case GUI_ID_HELP_BUTTON:
 				showHelp();
 				break;
+			case GUI_ID_TOOL_BOX_INCREASE_POSITION_X:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_X_POSITION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_X_POSITION, true)->setText(stringw( 1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_DECREASE_POSITION_X:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_X_POSITION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_X_POSITION, true)->setText(stringw( -1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_INCREASE_POSITION_Y:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Y_POSITION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Y_POSITION, true)->setText(stringw( 1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_DECREASE_POSITION_Y:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Y_POSITION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Y_POSITION, true)->setText(stringw( -1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_INCREASE_POSITION_Z:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Z_POSITION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Z_POSITION, true)->setText(stringw( 1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_DECREASE_POSITION_Z:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Z_POSITION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Z_POSITION, true)->setText(stringw( -1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+
+			case GUI_ID_TOOL_BOX_INCREASE_ROTATION_X:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_X_ROTATION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_X_ROTATION, true)->setText(stringw( 1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_DECREASE_ROTATION_X:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_X_ROTATION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_X_ROTATION, true)->setText(stringw( -1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_INCREASE_ROTATION_Y:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Y_ROTATION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Y_ROTATION, true)->setText(stringw( 1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_DECREASE_ROTATION_Y:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Y_ROTATION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Y_ROTATION, true)->setText(stringw( -1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_INCREASE_ROTATION_Z:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Z_ROTATION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Z_ROTATION, true)->setText(stringw( 1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_DECREASE_ROTATION_Z:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Z_ROTATION, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Z_ROTATION, true)->setText(stringw( -1.0f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+
+			case GUI_ID_TOOL_BOX_INCREASE_SCALE_X:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_X_SCALE, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_X_SCALE, true)->setText(stringw( 0.01f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_DECREASE_SCALE_X:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_X_SCALE, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_X_SCALE, true)->setText(stringw( -0.01f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_INCREASE_SCALE_Y:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Y_SCALE, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Y_SCALE, true)->setText(stringw( 0.01f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_DECREASE_SCALE_Y:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Y_SCALE, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Y_SCALE, true)->setText(stringw( -0.01f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_INCREASE_SCALE_Z:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Z_SCALE, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Z_SCALE, true)->setText(stringw( 0.01f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_DECREASE_SCALE_Z:
+				s = root->getElementFromId(GUI_ID_TOOL_BOX_Z_SCALE, true)->getText();
+				root->getElementFromId(GUI_ID_TOOL_BOX_Z_SCALE, true)->setText(stringw( -0.01f + (f32)atof(s.c_str()) ).c_str());
+				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+
 			}
 
 			break;

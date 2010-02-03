@@ -45,7 +45,7 @@ int main(int argc, _TCHAR* argv[])
 {
 
 	main_(0, NULL);
-	device = createDevice( video::EDT_DIRECT3D9, dimension2d<u32>(640, 480), 32,
+	device = createDevice( video::EDT_DIRECT3D9, dimension2d<u32>(800, 600), 32,
 			false, false, false, 0);
 
 	if (!device)
@@ -60,6 +60,14 @@ int main(int argc, _TCHAR* argv[])
 	driver = device->getVideoDriver();
 	smgr = device->getSceneManager();
 	env = device->getGUIEnvironment();
+
+	// Set GUI to have a low transparency
+	for (s32 i=0; i < irr::gui::EGDC_COUNT ; ++i)
+	{
+		video::SColor col = env->getSkin()->getColor((EGUI_DEFAULT_COLOR)i);
+		col.setAlpha(255);
+		env->getSkin()->setColor((EGUI_DEFAULT_COLOR)i, col);
+	}
 
 	/*
 	Create cameras.
