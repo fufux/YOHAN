@@ -51,19 +51,65 @@
 
 #include "tetgen.h" // Defined tetgenio, tetrahedralize().
 #include "stdafx.h"
+#include <fstream>
+#include <iostream>
+#include "string.h"
+#include <exception>
+using namespace std;
 
-int main_(int argc, char *argv[])
+extern IrrlichtDevice* device;
+extern IVideoDriver* driver;
+extern ISceneManager* smgr;
+
+#ifdef _IRR_WINDOWS_
+#pragma comment(lib, "Irrlicht.lib")
+#pragma comment(linker, "/subsystem:windows /ENTRY:mainCRTStartup")
+#endif
+
+int tetrahedralizeFile (char *fileToOpen)
 {
+
+	tetgenio in, out; // Input and output data for tetgen //
+	tetgenio::facet *f; // Auxiliary variable for the facets array setting //
+	tetgenio::polygon *p; // Auxiliary variable for the facets array setting //
+	int n; // Number of vertices
+	int pointCpt, auxCpt; // Auxiliary variables //
+	IMeshBuffer *newBuffer; // Buffer receiving the irrlicht data //
+	video::S3DVertex *vertices; // Vertices of the mesh //
+	u16 *indices; // Indices of the vertices of each polygon //
+	int *hashMap; // Hash map for the indices of the vertices of each polygon //
+	bool isAlreadyThere; // True if the point has already been added, false otherwise //
+	REAL *tempPointList; // Temporary list of points //
+	bool *toWrite;  // toWrite[i] is true if the i-th vertex is to add to the input of tetgen //
+					// false otherwise //
+	char loadPath[42] = "irrlicht/media/";
+	char tetgenLoadPath[42] = "output/";
+	char tetgenSavePath[42] = "output/";
+	char extension[] = ".3ds";
+	char name[] = "sphere";
+
+		// Creating the paths used //
+	strcat_s(loadPath, name);
+	strcat_s(loadPath, extension);
+	strcat_s(tetgenLoadPath, name);
+	strcat_s(tetgenLoadPath, "in");
+	strcat_s(tetgenSavePath, name);
+	strcat_s(tetgenSavePath, "out");
+
+		// Trying to load the file //
+	newBuffer = smgr->getMesh(loadPath)->getMesh(0)->getMeshBuffer(0);
 
 	/************************************************
 	 *         Cube definition using Irrlicht       *
 	 ************************************************/
 
+/**************************************************************
+
 	SMeshBuffer* buffer = new SMeshBuffer();
 
 	// Create indices
 	const u16 u[36] = {   0,2,1,   0,3,2,   1,5,4,   1,2,5,   4,6,7,   4,5,6, 
-            7,3,0,   7,6,3,   9,5,2,   9,8,5,   0,11,10,   0,10,7};
+            7,3,0,   7,8,9,   9,5,2,   3,8,5,   0,11,4,   0,10,7};
 
 	buffer->Indices.set_used(36);
 
@@ -75,202 +121,139 @@ int main_(int argc, char *argv[])
 	video::SColor clr1(0,255,100,100);
 	video::SColor clr2(0,100,100,255);
 
-	buffer->Vertices.reallocate(12);
+	buffer->Vertices.reallocate(8);
 
-	buffer->Vertices.push_back(video::S3DVertex(0,0,0, -1,-1,-1, clr1, 0, 1));
-	buffer->Vertices.push_back(video::S3DVertex(30,0,0,  1,-1,-1, clr2, 1, 1));
-	buffer->Vertices.push_back(video::S3DVertex(30,30,0,  1, 1,-1, clr1, 1, 0));
-	buffer->Vertices.push_back(video::S3DVertex(0,30,0, -1, 1,-1, clr2, 0, 0));
-	buffer->Vertices.push_back(video::S3DVertex(30,0,30,  1,-1, 1, clr1, 0, 1));
-	buffer->Vertices.push_back(video::S3DVertex(30,30,30,  1, 1, 1, clr2, 0, 0));
-	buffer->Vertices.push_back(video::S3DVertex(0,30,30, -1, 1, 1, clr1, 1, 0));
-	buffer->Vertices.push_back(video::S3DVertex(0,0,30, -1,-1, 1, clr2, 1, 1));
-	buffer->Vertices.push_back(video::S3DVertex(0,30,30, -1, 1, 1, clr1, 0, 1));
-	buffer->Vertices.push_back(video::S3DVertex(0,30,0, -1, 1,-1, clr2, 1, 1));
-	buffer->Vertices.push_back(video::S3DVertex(30,0,30,  1,-1, 1, clr1, 1, 0));
-	buffer->Vertices.push_back(video::S3DVertex(30,0,0,  1,-1,-1, clr2, 0, 0));
+	buffer->Vertices.push_back(video::S3DVertex(0,0,0, -1,-1,-1, clr1, 0, 1));  //  0
+	buffer->Vertices.push_back(video::S3DVertex(30,0,0,  1,-1,-1, clr2, 1, 1));  //  1
+	buffer->Vertices.push_back(video::S3DVertex(30,30,0,  1, 1,-1, clr1, 1, 0));  //  2
+	buffer->Vertices.push_back(video::S3DVertex(0,30,0, -1, 1,-1, clr2, 0, 0));  //  3
+	buffer->Vertices.push_back(video::S3DVertex(30,0,30,  1,-1, 1, clr1, 0, 1));  //  4
+	buffer->Vertices.push_back(video::S3DVertex(30,30,30,  1, 1, 1, clr2, 0, 0));  //  5
+	buffer->Vertices.push_back(video::S3DVertex(0,30,30, -1, 1, 1, clr1, 1, 0));  //  6
+	buffer->Vertices.push_back(video::S3DVertex(0,0,30, -1,-1, 1, clr2, 1, 1));  //  7
+	buffer->Vertices.push_back(video::S3DVertex(0,30,30, -1, 1, 1, clr1, 0, 1));  //  8  6
+	buffer->Vertices.push_back(video::S3DVertex(0,30,0, -1, 1,-1, clr2, 1, 1));  //  9  3
+	buffer->Vertices.push_back(video::S3DVertex(30,0,30,  1,-1, 1, clr1, 1, 0));  //  10  4
+	buffer->Vertices.push_back(video::S3DVertex(30,0,0,  1,-1,-1, clr2, 0, 0));  //  11  1
 	
 	
 	SMesh* mesh = new SMesh;
 	mesh->addMeshBuffer(buffer);
 	buffer->drop();
 
+**************************************************************/
+
 
 	/************************************************
-	 *        Adapting the cube data structure      *
+	 *       Adapting the mesh's data structure     *
 	 *           so that TetGen can use it          *
 	 ************************************************/
-/*
-	tetgenio in, out;
-	tetgenio::facet *f;
-	tetgenio::polygon *p;
-	int i;
-	Vertices vertices;
 
-	in.firstnumber = 1;
-	in.numberofpoints = buffer->Vertices.size();
-	in.pointlist = new REAL[in.numberofpoints * 3];
-	for (i = 0; i < in.numberofpoints; i++) {
-		in.pointlist[i] = buffer->Vertices.
-		in.pointlist[i+1] =
-		in.pointlist[i+2] =
+		// Making sure there is a buffer in the mesh //
+	//n = mesh->getMeshBufferCount();
+
+	//if (n == 0) {
+	//	return -1;
+	//}
+
+		// Acquiring the data from the irrlicht mesh //
+	//newBuffer = mesh->getMeshBuffer(0);
+	vertices = (video::S3DVertex *) newBuffer->getVertices();
+	indices = newBuffer->getIndices();
+
+		// Creating the temporary point list and initializing the auxiliary variables //
+	n = newBuffer->getVertexCount();
+	hashMap = new int[n];
+	tempPointList = new REAL[n * 3];
+	toWrite = new bool[n];
+	pointCpt = 0;
+
+		// Loop for redundant vertices removal //
+	for (int i = 0; i < n; i++) {
+		isAlreadyThere = false;
+			// Checking if some points appear more than once //
+			// thus violating the PLC condition //
+		for (int j = 0; j < pointCpt; j++) {
+			if (vertices[i].Pos.X == tempPointList[3*j] &&
+				vertices[i].Pos.Y == tempPointList[3*j+1] &&
+				vertices[i].Pos.Z == tempPointList[3*j+2]) {
+						// Updating the auxiliary variables if it is the case //
+					hashMap[i] = j;
+					isAlreadyThere = true;
+					toWrite[i] = false;
+					//break;
+			}
+		}
+		if (!isAlreadyThere) {
+				// Adding the point if it's not already there //
+			tempPointList[3*pointCpt]   = (REAL) vertices[i].Pos.X;
+			tempPointList[3*pointCpt+1] = (REAL) vertices[i].Pos.Y;
+			tempPointList[3*pointCpt+2] = (REAL) vertices[i].Pos.Z;
+				// Updating the auxiliary variables if it is the case //
+			hashMap[i] = pointCpt;
+			toWrite[i] = true;
+			pointCpt++;
+		}
 	}
-*/
+
+		// Finally (!) creating the array of vertices (and related attributes)
+		// for tetgen's input // 
+	in.firstnumber = 1;
+	in.numberofpoints = pointCpt;
+	in.pointlist = new REAL[in.numberofpoints * 3];
+	auxCpt = 0;
+
+		// Setting the array of vertices for tetgen's input //
+	for (int i = 0; i < n; i++) {
+		if (toWrite[i]) {
+			in.pointlist[auxCpt] = (REAL) tempPointList[3*hashMap[i]];
+			in.pointlist[auxCpt+1] = (REAL) tempPointList[3*hashMap[i]+1];
+			in.pointlist[auxCpt+2] = (REAL) tempPointList[3*hashMap[i]+2];
+			auxCpt += 3;
+		}
+	}
+
+		// Creating the array of facets for tetgen's input //
+		// We chose one facet per polygon //
+	in.numberoffacets = newBuffer->getIndexCount()/3;
+	in.facetlist = new tetgenio::facet[in.numberoffacets];
+	in.facetmarkerlist = new int[in.numberoffacets];
+
+		// Setting the array of facets for tetgen's input //
+	for (int i = 0; i < (int) newBuffer->getIndexCount()/3; i++) {
+		f = &in.facetlist[i];
+		f->numberofpolygons = 1;
+		f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
+		f->numberofholes = 0;
+		f->holelist = NULL;
+		p = &f->polygonlist[0];
+		p->numberofvertices = 3;
+		p->vertexlist = new int[p->numberofvertices];
+		p->vertexlist[0] = hashMap[indices[3*i]]+1;
+		p->vertexlist[1] = hashMap[indices[3*i+1]]+1;
+		p->vertexlist[2] = hashMap[indices[3*i+2]]+1;
+		in.facetmarkerlist[i] = 0;
+	}
+
 	/************************************************
 	 *       Processing the cube using TeTgen       *
 	 ************************************************/
 
+	// Output the PLC to files 'cubein.node' and 'cubein.poly'.
+	in.save_nodes(tetgenLoadPath);
+	in.save_poly(tetgenLoadPath);
 
+	// Tetrahedralize the PLC. Switches are chosen to read a PLC (p),
+	//   do quality mesh generation (q) with a specified quality bound
+	//   (1.414), and apply a maximum volume constraint (a0.1).
 
+	//tetrahedralize("pq1.414a0.1", &in, &out);
+	tetrahedralize("pq1.414a0.0001", &in, &out);
 
+	// Output mesh to files 'cubeout.node', 'cubeout.ele' and 'cubeout.face'.
+	out.save_nodes(tetgenSavePath);
+	out.save_elements(tetgenSavePath);
+	out.save_faces(tetgenSavePath);
 
-
-	/************************************************
-	 *                 Example code                 *
-	 ************************************************/
-
-  tetgenio in, out;
-  tetgenio::facet *f;
-  tetgenio::polygon *p;
-  int i;
-
-  // All indices start from 1.
-  in.firstnumber = 1;
-
-  in.numberofpoints = 8;
-  in.pointlist = new REAL[in.numberofpoints * 3];
-  in.pointlist[0]  = 0;  // node 1.
-  in.pointlist[1]  = 0;
-  in.pointlist[2]  = 0;
-  in.pointlist[3]  = 2;  // node 2.
-  in.pointlist[4]  = 0;
-  in.pointlist[5]  = 0;
-  in.pointlist[6]  = 2;  // node 3.
-  in.pointlist[7]  = 2;
-  in.pointlist[8]  = 0;
-  in.pointlist[9]  = 0;  // node 4.
-  in.pointlist[10] = 2;
-  in.pointlist[11] = 0;
-  // Set node 5, 6, 7, 8.
-  for (i = 4; i < 8; i++) {
-    in.pointlist[i * 3]     = in.pointlist[(i - 4) * 3];
-    in.pointlist[i * 3 + 1] = in.pointlist[(i - 4) * 3 + 1];
-    in.pointlist[i * 3 + 2] = 12;
-  }
-
-  in.numberoffacets = 6;
-  in.facetlist = new tetgenio::facet[in.numberoffacets];
-  in.facetmarkerlist = new int[in.numberoffacets];
-
-  // Facet 1. The leftmost facet.
-  f = &in.facetlist[0];
-  f->numberofpolygons = 1;
-  f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
-  f->numberofholes = 0;
-  f->holelist = NULL;
-  p = &f->polygonlist[0];
-  p->numberofvertices = 4;
-  p->vertexlist = new int[p->numberofvertices];
-  p->vertexlist[0] = 1;
-  p->vertexlist[1] = 2;
-  p->vertexlist[2] = 3;
-  p->vertexlist[3] = 4;
-  
-  // Facet 2. The rightmost facet.
-  f = &in.facetlist[1];
-  f->numberofpolygons = 1;
-  f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
-  f->numberofholes = 0;
-  f->holelist = NULL;
-  p = &f->polygonlist[0];
-  p->numberofvertices = 4;
-  p->vertexlist = new int[p->numberofvertices];
-  p->vertexlist[0] = 5;
-  p->vertexlist[1] = 6;
-  p->vertexlist[2] = 7;
-  p->vertexlist[3] = 8;
-
-  // Facet 3. The bottom facet.
-  f = &in.facetlist[2];
-  f->numberofpolygons = 1;
-  f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
-  f->numberofholes = 0;
-  f->holelist = NULL;
-  p = &f->polygonlist[0];
-  p->numberofvertices = 4;
-  p->vertexlist = new int[p->numberofvertices];
-  p->vertexlist[0] = 1;
-  p->vertexlist[1] = 5;
-  p->vertexlist[2] = 6;
-  p->vertexlist[3] = 2;
-
-  // Facet 4. The back facet.
-  f = &in.facetlist[3];
-  f->numberofpolygons = 1;
-  f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
-  f->numberofholes = 0;
-  f->holelist = NULL;
-  p = &f->polygonlist[0];
-  p->numberofvertices = 4;
-  p->vertexlist = new int[p->numberofvertices];
-  p->vertexlist[0] = 2;
-  p->vertexlist[1] = 6;
-  p->vertexlist[2] = 7;
-  p->vertexlist[3] = 3;
-
-  // Facet 5. The top facet.
-  f = &in.facetlist[4];
-  f->numberofpolygons = 1;
-  f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
-  f->numberofholes = 0;
-  f->holelist = NULL;
-  p = &f->polygonlist[0];
-  p->numberofvertices = 4;
-  p->vertexlist = new int[p->numberofvertices];
-  p->vertexlist[0] = 3;
-  p->vertexlist[1] = 7;
-  p->vertexlist[2] = 8;
-  p->vertexlist[3] = 4;
-
-  // Facet 6. The front facet.
-  f = &in.facetlist[5];
-  f->numberofpolygons = 1;
-  f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
-  f->numberofholes = 0;
-  f->holelist = NULL;
-  p = &f->polygonlist[0];
-  p->numberofvertices = 4;
-  p->vertexlist = new int[p->numberofvertices];
-  p->vertexlist[0] = 4;
-  p->vertexlist[1] = 8;
-  p->vertexlist[2] = 5;
-  p->vertexlist[3] = 1;
-
-
-  // Set 'in.facetmarkerlist'
-
-  in.facetmarkerlist[0] = -1;
-  in.facetmarkerlist[1] = -2;
-  in.facetmarkerlist[2] = 0;
-  in.facetmarkerlist[3] = 0;
-  in.facetmarkerlist[4] = 0;
-  in.facetmarkerlist[5] = 0;
-
-
-  // Output the PLC to files 'cube.node' and 'cube.poly'.
-  in.save_nodes("output/cube");
-  in.save_poly("output/cube");
-
-  // Tetrahedralize the PLC. Switches are chosen to read a PLC (p),
-  //   do quality mesh generation (q) with a specified quality bound
-  //   (1.414), and apply a maximum volume constraint (a0.1).
-
-  tetrahedralize("pq1.414a0.1", &in, &out);
-
-  // Output mesh to files 'barout.node', 'barout.ele' and 'barout.face'.
-  out.save_nodes("output/barout");
-  out.save_elements("output/barout");
-  out.save_faces("output/barout");
-
-  return 0;
+	return 0;
 }
