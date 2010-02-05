@@ -39,12 +39,12 @@ scene::ICameraSceneNode* camera[CAMERA_COUNT];
 /*
 This is the main method.
 */
-int main_(int argc, char *argv[]);
+//int main_(int argc, char *argv[]);
 
 int main(int argc, _TCHAR* argv[])
 {
 
-	main_(0, NULL);
+//	main_(0, NULL);
 	device = createDevice( video::EDT_DIRECT3D9, dimension2d<u32>(800, 600), 32,
 			false, false, false, 0);
 
