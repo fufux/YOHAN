@@ -75,6 +75,7 @@ private:
 
 	// and this is the list of meshe files name that correspond to the nodes (index must correspond with previous list)
 	core::array<stringw> meshFiles;
+	core::array<f32> densities; // and here are the densities of each object
 
 	// this is the list of all force fields in the scene
 	core::array<vector3df> forceFields;

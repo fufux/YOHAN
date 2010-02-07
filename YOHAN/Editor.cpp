@@ -101,6 +101,7 @@ void Editor::setPositionRotationScaleOfSelectedNode()
 	{
 		gui::IGUIElement* root = env->getRootGUIElement();
 		core::vector3df pos, rot, sca;
+		f32 density;
 		core::stringc s;
 
 		s = root->getElementFromId(GUI_ID_TOOL_BOX_X_POSITION, true)->getText();
@@ -121,10 +122,13 @@ void Editor::setPositionRotationScaleOfSelectedNode()
 		sca.Y = (f32)atof(s.c_str());
 		s = root->getElementFromId(GUI_ID_TOOL_BOX_Z_SCALE, true)->getText();
 		sca.Z = (f32)atof(s.c_str());
+		s = root->getElementFromId(GUI_ID_TOOL_BOX_DENSITY, true)->getText();
+		density = (f32)atof(s.c_str());
 
 		nodes[selectedNodeIndex]->setPosition( pos );
 		nodes[selectedNodeIndex]->setRotation( rot );
 		nodes[selectedNodeIndex]->setScale( sca );
+		densities[selectedNodeIndex] = density;
 	}
 }
 
@@ -204,6 +208,13 @@ void Editor::add3DModel(stringc filename)
 	// select the newly loaded scene node
 	nodes.push_back( node );
 	meshFiles.push_back( filename.c_str() );
+	densities.push_back( 50.0f );
+
+	// unselect current selected node if exists
+	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
+			nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
+
+	// select the node we've just loaded
 	selectedNodeIndex = nodes.size() - 1;
 	this->createSceneNodeToolBox();
 	node->setDebugDataVisible( scene::EDS_MESH_WIRE_OVERLAY );
@@ -220,8 +231,11 @@ void Editor::remove3DModel()
 {
 	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
 	{
+		nodes[selectedNodeIndex]->remove();
 		nodes.erase(selectedNodeIndex);
 		meshFiles.erase(selectedNodeIndex);
+		densities.erase(selectedNodeIndex);
+		selectedNodeIndex = -1;
 	}
 }
 
@@ -389,7 +403,13 @@ void Editor::createSceneNodeToolBox()
 
 	x = 10;
 	y += 10;
-	env->addButton(core::rect<s32>(x,y,x+80,y+40), t1, GUI_ID_TOOL_BOX_SET_BUTTON, L"Set");
+	env->addStaticText(L"Density:", core::rect<s32>(x,y,x+30,y+16), false, false, t1);
+	env->addEditBox(stringw( densities[selectedNodeIndex] ).c_str(), core::rect<s32>(x+32,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_DENSITY);
+	
+	x = 10;
+	y += 50;
+	env->addButton(core::rect<s32>(x,y,x+80,y+20), t1, GUI_ID_TOOL_BOX_SET_BUTTON, L"Set");
+	env->addButton(core::rect<s32>(x+90,y,x+170,y+20), t1, GUI_ID_TOOL_BOX_DELETE_BUTTON, L"Delete");
 
 }
 
@@ -469,22 +489,13 @@ bool Editor::load(irr::core::stringc filename)
 	if (!xml)
 		return false;
 
-	// clean current scene
-	for (u16 i=0; i < nodes.size(); i++)
-		nodes[i]->remove();
-	nodes.clear();
-	meshFiles.clear();
-	forceFields.clear();
-	this->selectedNodeIndex = -1;
-	this->selectedForceField = -1;
-	this->debugData = scene::EDS_OFF;
-
 	// parse the file until end reached
 	/*
 	<scenenode filename="mesh.x">
 		<position x="32.8" y=".." z=".." />
 		<rotation x="32.8" y=".." z=".." />
 		<scale x="32.8" y=".." z=".." />
+		<density value="50.0" />
 	</scenenode>
 	<forcefield>
 		<intensity x="32.8" y=".." z=".." />
@@ -496,6 +507,8 @@ bool Editor::load(irr::core::stringc filename)
 	</force>
 	*/
 	XmlNodeType currentType = UNDEFINED;
+	bool firstLoop = true;
+	bool is_valid_file = false;
 
 	while(xml->read())
 	{
@@ -503,6 +516,32 @@ bool Editor::load(irr::core::stringc filename)
 		{
 		case io::EXN_ELEMENT:
 			{
+				// the element should be "scene"
+				if (firstLoop)
+				{
+					firstLoop = false;
+					if (stringw("scene") != xml->getNodeName())
+					{
+						env->addMessageBox(
+							L"Error", L"This is not a valid scene file !");
+						return false;
+					}
+					else
+					{
+						is_valid_file = true;
+						// clean current scene
+						for (u16 i=0; i < nodes.size(); i++)
+							nodes[i]->remove();
+						nodes.clear();
+						meshFiles.clear();
+						densities.clear();
+						forceFields.clear();
+						this->selectedNodeIndex = -1;
+						this->selectedForceField = -1;
+						this->debugData = scene::EDS_OFF;
+					}
+				}
+
 				if (stringw("scenenode") == xml->getNodeName())
 				{
 					currentType = SCENENODE;
@@ -514,7 +553,6 @@ bool Editor::load(irr::core::stringc filename)
 				}
 				else if (stringw("position") == xml->getNodeName())
 				{
-					device->getLogger()->log((stringc("currentType")+stringc(currentType)).c_str());
 					if (currentType == SCENENODE)
 					{
 						nodes.getLast()->setPosition(vector3df(
@@ -546,6 +584,14 @@ bool Editor::load(irr::core::stringc filename)
 						this->createSceneNodeToolBox();
 					}
 				}
+				else if (stringw("density") == xml->getNodeName())
+				{
+					if (currentType == SCENENODE)
+					{
+						densities[nodes.size() - 1] = xml->getAttributeValueAsFloat(L"value");
+						this->createSceneNodeToolBox();
+					}
+				}
 				else if (stringw("intensity") == xml->getNodeName())
 				{
 					if (currentType == FORCEFIELD)
@@ -565,7 +611,12 @@ bool Editor::load(irr::core::stringc filename)
 
 	xml->drop();
 
-	return true;
+	if (!is_valid_file)
+	{
+		env->addMessageBox(L"Error", L"This is not a valid scene file !");
+	}
+
+	return is_valid_file;
 }
 
 bool Editor::save(irr::core::stringc filename)
@@ -579,6 +630,8 @@ bool Editor::save(irr::core::stringc filename)
 		return false;
 
 	xml->writeXMLHeader();
+	xml->writeElement(L"scene", false);
+	xml->writeLineBreak();
 
 	// Save scene nodes
 	/*
@@ -586,6 +639,7 @@ bool Editor::save(irr::core::stringc filename)
 		<position x="32.8" y=".." z=".." />
 		<rotation x="32.8" y=".." z=".." />
 		<scale x="32.8" y=".." z=".." />
+		<density value="50.0" />
 	</scenenode>
 	*/
 	for (u16 i=0; i < nodes.size(); i++)
@@ -609,6 +663,10 @@ bool Editor::save(irr::core::stringc filename)
 			L"x", stringw( nodes[i]->getScale().X ).c_str(),
 			L"y", stringw( nodes[i]->getScale().Y ).c_str(),
 			L"z", stringw( nodes[i]->getScale().Z ).c_str());
+		xml->writeLineBreak();
+
+		xml->writeElement(L"density", true,
+			L"value", stringw( densities[i] ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeClosingTag(L"scenenode");
@@ -638,6 +696,9 @@ bool Editor::save(irr::core::stringc filename)
 		xml->writeClosingTag(L"forcefield");
 		xml->writeLineBreak();
 	}
+
+	xml->writeClosingTag(L"scene");
+	xml->writeLineBreak();
 
 	xml->drop();
 	file->drop();
