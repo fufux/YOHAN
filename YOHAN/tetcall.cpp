@@ -86,7 +86,7 @@ int tetrahedralizeFile (char *fileToOpen)
 	char tetgenLoadPath[42] = "output/";
 	char tetgenSavePath[42] = "output/";
 	char extension[] = ".3ds";
-	char name[] = "sphere";
+	char name[] = "bigcube";
 
 		// Creating the paths used //
 	strcat_s(loadPath, name);
@@ -196,7 +196,7 @@ int tetrahedralizeFile (char *fileToOpen)
 		}
 	}
 
-		// Finally (!) creating the array of vertices (and related attributes)
+		// Finally (!) creating the array of vertices (and related attributes) //
 		// for tetgen's input // 
 	in.firstnumber = 1;
 	in.numberofpoints = pointCpt;
@@ -232,14 +232,15 @@ int tetrahedralizeFile (char *fileToOpen)
 		p->vertexlist[0] = hashMap[indices[3*i]]+1;
 		p->vertexlist[1] = hashMap[indices[3*i+1]]+1;
 		p->vertexlist[2] = hashMap[indices[3*i+2]]+1;
-		in.facetmarkerlist[i] = 0;
+			// Boundary markers //
+		in.facetmarkerlist[i] = 1;
 	}
 
 	/************************************************
-	 *       Processing the cube using TeTgen       *
+	 *      Processing the object using TeTgen       *
 	 ************************************************/
 
-	// Output the PLC to files 'cubein.node' and 'cubein.poly'.
+	// Output the PLC to files '<object's name>in.node' and '<object's name>in.poly'.
 	in.save_nodes(tetgenLoadPath);
 	in.save_poly(tetgenLoadPath);
 
@@ -248,9 +249,9 @@ int tetrahedralizeFile (char *fileToOpen)
 	//   (1.414), and apply a maximum volume constraint (a0.1).
 
 	//tetrahedralize("pq1.414a0.1", &in, &out);
-	tetrahedralize("pq1.414a0.0001", &in, &out);
+	tetrahedralize("pq1.414a0.01", &in, &out);
 
-	// Output mesh to files 'cubeout.node', 'cubeout.ele' and 'cubeout.face'.
+	// Output mesh to files '<object's name>out.node', '<object's name>out.ele' and '<object's name>out.face'.
 	out.save_nodes(tetgenSavePath);
 	out.save_elements(tetgenSavePath);
 	out.save_faces(tetgenSavePath);
