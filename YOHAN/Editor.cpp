@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "Editor.h"
 
 extern IrrlichtDevice* device;
@@ -22,16 +21,61 @@ enum XmlNodeType
 
 Editor::Editor(void)
 {
-	this->createGUI();
 	this->er = new EditorEventReceiver(this);
+	this->selectedNodeIndex = -1;
+	this->selectedForceField = -1;
+	this->debugData = scene::EDS_OFF;
+	this->is_running = false;
+	this->player = NULL;
+}
+
+Editor::~Editor(void)
+{
+}
+
+void Editor::start()
+{
+	env->getRootGUIElement()->remove();
+	this->createGUI();
 	device->setEventReceiver(this->er);
+	this->clear();
+	this->is_running = true;
+}
+
+
+void Editor::stop()
+{
+	this->is_running = false;
+	this->clear();
+}
+
+void Editor::switchToPlayer()
+{
+	if (player != NULL)
+	{
+		this->stop();
+		player->start();
+	}
+}
+
+
+void Editor::clear()
+{
+	for (u16 i=0; i < nodes.size(); i++)
+		nodes[i]->remove();
+	nodes.clear();
+	meshFiles.clear();
+	densities.clear();
+	forceFields.clear();
 	this->selectedNodeIndex = -1;
 	this->selectedForceField = -1;
 	this->debugData = scene::EDS_OFF;
 }
 
-Editor::~Editor(void)
+
+void Editor::setPlayer(Player* player)
 {
+	this->player = player;
 }
 
 
@@ -280,6 +324,7 @@ void Editor::createGUI()
 	submenu->addSeparator();
 	submenu->addItem(L"Open Model File...", GUI_ID_OPEN_MODEL);
 	submenu->addSeparator();
+	submenu->addItem(L"Switch to player", GUI_ID_SWITCH_TO_PLAYER);
 	submenu->addItem(L"Quit", GUI_ID_QUIT);
 
 	submenu = menu->getSubMenu(1);
@@ -523,22 +568,14 @@ bool Editor::load(irr::core::stringc filename)
 					if (stringw("scene") != xml->getNodeName())
 					{
 						env->addMessageBox(
-							L"Error", L"This is not a valid scene file !");
+							CAPTION_ERROR, L"This is not a valid scene file !");
 						return false;
 					}
 					else
 					{
 						is_valid_file = true;
 						// clean current scene
-						for (u16 i=0; i < nodes.size(); i++)
-							nodes[i]->remove();
-						nodes.clear();
-						meshFiles.clear();
-						densities.clear();
-						forceFields.clear();
-						this->selectedNodeIndex = -1;
-						this->selectedForceField = -1;
-						this->debugData = scene::EDS_OFF;
+						this->clear();
 					}
 				}
 
@@ -613,7 +650,7 @@ bool Editor::load(irr::core::stringc filename)
 
 	if (!is_valid_file)
 	{
-		env->addMessageBox(L"Error", L"This is not a valid scene file !");
+		env->addMessageBox(CAPTION_ERROR, L"This is not a valid scene file !");
 	}
 
 	return is_valid_file;

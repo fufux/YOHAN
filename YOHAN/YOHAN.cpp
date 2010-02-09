@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "Editor.h"
+#include "Player.h"
 
 /*
 To be able to use the Irrlicht.DLL file, we need to link with the Irrlicht.lib.
@@ -41,6 +42,8 @@ This is the main method.
 */
 int main(int argc, _TCHAR* argv[])
 {
+	// initialize random number generator
+	srand((unsigned int)time(NULL)); 
 
 	device = createDevice( video::EDT_DIRECT3D9, dimension2d<u32>(800, 600), 32,
 			false, false, false, 0);
@@ -90,6 +93,12 @@ int main(int argc, _TCHAR* argv[])
 	Create the editor, GUI, etc.
 	*/
 	Editor* editor = new Editor();
+	Player* player = new Player();
+	editor->setPlayer( player );
+	player->setEditor( editor );
+
+	// by default, we start the editor
+	editor->start();
 
 	/*
 	Ok, now we have set up the scene, lets draw everything: We run the
@@ -101,12 +110,16 @@ int main(int argc, _TCHAR* argv[])
 	{
 		driver->beginScene(true, true, SColor(255,100,101,140));
 
+		player->run(); // this will return imediately if player is not currently runing
+
 		smgr->drawAll();
 		env->drawAll();
 
 		driver->endScene();
 	}
 
+	editor->clear();
+	player->clear();
 	device->drop();
 
 	return 0;

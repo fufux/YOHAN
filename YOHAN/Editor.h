@@ -1,19 +1,21 @@
 #pragma once
 
-#include <irrlicht.h>
-#include <iostream>
+#include "StdAfx.h"
 #include "EditorEventReceiver.h"
-
-using namespace irr;
-using namespace gui;
-
-
+#include "Player.h"
 
 class Editor
 {
 public:
 	Editor(void);
 	~Editor(void);
+
+	// call this to launch/stop all the editor
+	void start();
+	void stop();
+	void switchToPlayer();
+	// call this to remove all nodes of the scene editor
+	void clear();
 
 	/*
 	These methods allow us to get easily all scene info in order to tetrahedralize it.
@@ -66,7 +68,12 @@ public:
 	// this method allows the user to select a node
 	void selectNode();
 
+	void setPlayer(Player* player);
+
 private:
+	// is the user currently using the player ? (it could be the editor)
+	bool is_running;
+
 	// the event receiver that handles all controls in the editor
 	EditorEventReceiver* er;
 
@@ -92,5 +99,8 @@ private:
 	void createSceneNodeToolBox();
 	void removeSceneNodeToolBox();
 	void removeForceFieldToolBox();
+
+	// this allows us to access the player in order to start it
+	Player* player;
 	
 };

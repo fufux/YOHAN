@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "Editor.h"
 #include "EditorEventReceiver.h"
 
@@ -118,6 +117,9 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 					opening = OPENING_MODEL;
 					env->addFileOpenDialog(L"Please select a model file to open");
 					break;
+				case GUI_ID_SWITCH_TO_PLAYER: // File -> Switch to player
+					editor->switchToPlayer();
+					break;
 				case GUI_ID_QUIT: // File -> Quit
 					device->closeDevice();
 					break;
@@ -194,18 +196,6 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 			break;
 
 		case EGET_SCROLL_BAR_CHANGED:
-
-			// control skin transparency
-			if (id == GUI_ID_SKIN_TRANSPARENCY_SCROLL_BAR)
-			{
-				const s32 pos = ((IGUIScrollBar*)event.GUIEvent.Caller)->getPos();
-				for (s32 i=0; i<irr::gui::EGDC_COUNT ; ++i)
-				{
-					video::SColor col = env->getSkin()->getColor((EGUI_DEFAULT_COLOR)i);
-					col.setAlpha(pos);
-					env->getSkin()->setColor((EGUI_DEFAULT_COLOR)i, col);
-				}
-			}
 			break;
 
 		case EGET_COMBO_BOX_CHANGED:

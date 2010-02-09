@@ -7,10 +7,15 @@
 
 #include "targetver.h"
 
+#include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <tchar.h>
+#include <time.h>
 
 #include <irrlicht.h>
+
+using namespace std;
 
 using namespace irr;
 using namespace core;
@@ -21,4 +26,11 @@ using namespace gui;
 
 #define CAMERA_COUNT 2
 
+// here define some captions used by the GUI
+#define CAPTION_ERROR L"Error"
+#define CAPTION_HELP L"Help"
+
+int myRandom(int a, int b);
+float myRandom(float a, float b);
+double myRandom(double a, double b);
 // TODO : faites référence ici aux en-têtes supplémentaires nécessaires au programme

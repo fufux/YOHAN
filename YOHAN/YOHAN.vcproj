@@ -185,6 +185,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Player.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerEventReceiver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerFrame.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -224,6 +236,18 @@
 			</File>
 			<File
 				RelativePath=".\EditorEventReceiver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Player.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerEventReceiver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerFrame.h"
 				>
 			</File>
 			<File

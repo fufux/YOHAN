@@ -1,10 +1,5 @@
 #pragma once
-
-
-// here define some captions used by the GUI
-#define CAPTION_ERROR L"Error"
-#define CAPTION_HELP L"Help"
-
+#include "StdAfx.h"
 
 class Editor;
 
@@ -71,7 +66,6 @@ enum
 	GUI_ID_FORCE_FIELD_BUTTON,
 	GUI_ID_HELP_BUTTON,
 
-	GUI_ID_SKIN_TRANSPARENCY_SCROLL_BAR,
 	GUI_ID_ABOUT,
 	GUI_ID_QUIT,
 
@@ -84,7 +78,9 @@ enum
 	GUI_ID_CONFIRM_DELETE_BUTTON,
 	GUI_ID_CANCEL_DELETE_BUTTON,
 
-	GUI_ID_STATIC_TEXT_CAMERA_FPS
+	GUI_ID_STATIC_TEXT_CAMERA_FPS,
+
+	GUI_ID_SWITCH_TO_PLAYER
 };
 
 
@@ -116,7 +112,7 @@ private:
 	// lets store old mouse position
 	position2di oldMousePos;
 
-	// store what we are opening
+	// store what we are opening (a scene or a model ?)
 	s32 opening;
 
 };
