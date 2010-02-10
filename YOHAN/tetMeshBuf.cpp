@@ -1,60 +1,13 @@
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-// tetcall.cxx                                                               //
-//                                                                           //
-// An example of how to call TetGen from another program by using the data   //
-// type "tetgenio" and function "tetrahedralize()" of TetGen libaray.        //
-//                                                                           //
-// In order to run this example, you need the library of TetGen, you can get //
-// the source code as well as the user's manul of TetGen from:               //
-//                                                                           //
-//            http://tetgen.berlios.de/index.html                            //
-//                                                                           //
-// Section 2 of the user's manual contains the information of how to compile //
-// TetGen into a libaray.                                                    //
-//                                                                           //
-// The geometry used in this example (illustrated in Section 3.3 .1, Figure  //
-// 12 of the user's manual) is a rectangluar bar consists of 8 points and 6  //
-// facets (which are all rectangles). In additional, there are two boundary  //
-// markers defined on its facets.                                            //
-//                                                                           //
-// This code illustrates the following basic steps:                          //
-//   - at first create an input object "in", and set data of the geometry    //
-//     into it.                                                              //
-//   - then call function "tetrahedralize()" to create a quality mesh of the //
-//     geometry with output in another object "out".                         //
-// In addition, It outputs the geometry in the object "in" into two files    //
-// (barin.node and barin.poly), and outputs the mesh in the object "out"     //
-// into three files (barout.node, barout.ele, and barout.face).  These files //
-// can be visualized by TetView.                                             //
-//                                                                           //
-// To compile this code into an executable program, do the following steps:  //
-//   - compile TetGen into a library named "libtet.a" (see Section 2.1 of    //
-//     the user's manula for compiling);                                     //
-//   - Save this file into the same directory in which you have the files    //
-//     "tetgen.h" and "libtet.a";                                            //
-//   - compile it using the following command:                               //
-//                                                                           //
-//     g++ -o test tetcall.cxx -L./ -ltet                                    //
-//                                                                           //
-//     which will result an executable program named "test".                 //
-//                                                                           //
-// Please send your quesions, comments to Hang Si <si@wias-berlin.de>        //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-// main()  Create and refine a mesh using TetGen library.                    //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+/*****************************************************************************
+ *  This class only contains one function which tetrahedralizes the surface  *
+ *      object given as a parameter, stored in /ouput/<object's name>.*      *
+ *****************************************************************************/
 
 #include "tetgen.h" // Defined tetgenio, tetrahedralize().
 #include "stdafx.h"
 #include <fstream>
 #include <iostream>
 #include "string.h"
-#include <exception>
 using namespace std;
 
 extern IrrlichtDevice* device;
@@ -66,15 +19,14 @@ extern ISceneManager* smgr;
 #pragma comment(linker, "/subsystem:windows /ENTRY:mainCRTStartup")
 #endif
 
-int tetrahedralizeFile (char *fileToOpen)
-{
+int tetBuf (IMeshBuffer *newBuffer, char *name) {
 
 	tetgenio in, out; // Input and output data for tetgen //
 	tetgenio::facet *f; // Auxiliary variable for the facets array setting //
 	tetgenio::polygon *p; // Auxiliary variable for the facets array setting //
 	int n; // Number of vertices
 	int pointCpt, auxCpt; // Auxiliary variables //
-	IMeshBuffer *newBuffer; // Buffer receiving the irrlicht data //
+	//IMeshBuffer *newBuffer; // Buffer receiving the irrlicht data //
 	video::S3DVertex *vertices; // Vertices of the mesh //
 	u16 *indices; // Indices of the vertices of each polygon //
 	int *hashMap; // Hash map for the indices of the vertices of each polygon //
@@ -82,22 +34,17 @@ int tetrahedralizeFile (char *fileToOpen)
 	REAL *tempPointList; // Temporary list of points //
 	bool *toWrite;  // toWrite[i] is true if the i-th vertex is to add to the input of tetgen //
 					// false otherwise //
-	char loadPath[42] = "irrlicht/media/";
 	char tetgenLoadPath[42] = "output/";
 	char tetgenSavePath[42] = "output/";
-	char extension[] = ".3ds";
-	char name[] = "sphere";
 
 		// Creating the paths used //
-	strcat_s(loadPath, name);
-	strcat_s(loadPath, extension);
 	strcat_s(tetgenLoadPath, name);
 	strcat_s(tetgenLoadPath, "in");
 	strcat_s(tetgenSavePath, name);
 	strcat_s(tetgenSavePath, "out");
 
 		// Trying to load the file //
-	newBuffer = smgr->getMesh(loadPath)->getMesh(0)->getMeshBuffer(0);
+	//newBuffer = smgr->getMesh(loadPath)->getMesh(0)->getMeshBuffer(0);
 
 	/************************************************
 	 *         Cube definition using Irrlicht       *
@@ -131,10 +78,10 @@ int tetrahedralizeFile (char *fileToOpen)
 	buffer->Vertices.push_back(video::S3DVertex(30,30,30,  1, 1, 1, clr2, 0, 0));  //  5
 	buffer->Vertices.push_back(video::S3DVertex(0,30,30, -1, 1, 1, clr1, 1, 0));  //  6
 	buffer->Vertices.push_back(video::S3DVertex(0,0,30, -1,-1, 1, clr2, 1, 1));  //  7
-	buffer->Vertices.push_back(video::S3DVertex(0,30,30, -1, 1, 1, clr1, 0, 1));  //  8  6
-	buffer->Vertices.push_back(video::S3DVertex(0,30,0, -1, 1,-1, clr2, 1, 1));  //  9  3
-	buffer->Vertices.push_back(video::S3DVertex(30,0,30,  1,-1, 1, clr1, 1, 0));  //  10  4
-	buffer->Vertices.push_back(video::S3DVertex(30,0,0,  1,-1,-1, clr2, 0, 0));  //  11  1
+	//buffer->Vertices.push_back(video::S3DVertex(0,30,30, -1, 1, 1, clr1, 0, 1));  //  8  6
+	//buffer->Vertices.push_back(video::S3DVertex(0,30,0, -1, 1,-1, clr2, 1, 1));  //  9  3
+	//buffer->Vertices.push_back(video::S3DVertex(30,0,30,  1,-1, 1, clr1, 1, 0));  //  10  4
+	//buffer->Vertices.push_back(video::S3DVertex(30,0,0,  1,-1,-1, clr2, 0, 0));  //  11  1
 	
 	
 	SMesh* mesh = new SMesh;
@@ -168,6 +115,43 @@ int tetrahedralizeFile (char *fileToOpen)
 	toWrite = new bool[n];
 	pointCpt = 0;
 
+	in.firstnumber = 1;
+	in.numberofpoints = n;
+	in.pointlist = new REAL[in.numberofpoints * 3];
+
+	/*
+	for(int i = 0; i < n; i++) {
+		in.pointlist[3*i]   = vertices[i].Pos.X;
+		in.pointlist[3*i+1] = vertices[i].Pos.Y;
+		in.pointlist[3*i+2] = vertices[i].Pos.Z;
+	}
+
+		// Creating the array of facets for tetgen's input //
+		// We chose one facet per polygon //
+	in.numberoffacets = newBuffer->getIndexCount()/3;
+	in.facetlist = new tetgenio::facet[in.numberoffacets];
+	in.facetmarkerlist = new int[in.numberoffacets];
+
+		// Setting the array of facets for tetgen's input //
+	for (int i = 0; i < (int) newBuffer->getIndexCount()/3; i++) {
+		f = &in.facetlist[i];
+		f->numberofpolygons = 1;
+		f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
+		f->numberofholes = 0;
+		f->holelist = NULL;
+		p = &f->polygonlist[0];
+		p->numberofvertices = 3;
+		p->vertexlist = new int[p->numberofvertices];
+		p->vertexlist[0] = indices[3*i] + 1;
+		p->vertexlist[1] = indices[3*i+1] + 1;
+		p->vertexlist[2] = indices[3*i+2] + 1;
+			// Boundary markers //
+		in.facetmarkerlist[i] = 1;
+	}
+	*/
+
+
+	
 		// Loop for redundant vertices removal //
 	for (int i = 0; i < n; i++) {
 		isAlreadyThere = false;
@@ -196,7 +180,7 @@ int tetrahedralizeFile (char *fileToOpen)
 		}
 	}
 
-		// Finally (!) creating the array of vertices (and related attributes)
+		// Finally (!) creating the array of vertices (and related attributes) //
 		// for tetgen's input // 
 	in.firstnumber = 1;
 	in.numberofpoints = pointCpt;
@@ -232,14 +216,18 @@ int tetrahedralizeFile (char *fileToOpen)
 		p->vertexlist[0] = hashMap[indices[3*i]]+1;
 		p->vertexlist[1] = hashMap[indices[3*i+1]]+1;
 		p->vertexlist[2] = hashMap[indices[3*i+2]]+1;
-		in.facetmarkerlist[i] = 0;
+			// Boundary markers //
+		in.facetmarkerlist[i] = 1;
 	}
 
+
+	
+
 	/************************************************
-	 *       Processing the cube using TeTgen       *
+	 *      Processing the object using TeTgen       *
 	 ************************************************/
 
-	// Output the PLC to files 'cubein.node' and 'cubein.poly'.
+	// Output the PLC to files '<object's name>in.node' and '<object's name>in.poly'.
 	in.save_nodes(tetgenLoadPath);
 	in.save_poly(tetgenLoadPath);
 
@@ -248,9 +236,13 @@ int tetrahedralizeFile (char *fileToOpen)
 	//   (1.414), and apply a maximum volume constraint (a0.1).
 
 	//tetrahedralize("pq1.414a0.1", &in, &out);
-	tetrahedralize("pq1.414a0.0001", &in, &out);
+	try {
+		tetrahedralize("pq1.414a0.1", &in, &out);
+	} catch (...) {
+		return -1;
+	}
 
-	// Output mesh to files 'cubeout.node', 'cubeout.ele' and 'cubeout.face'.
+	// Output mesh to files '<object's name>out.node', '<object's name>out.ele' and '<object's name>out.face'.
 	out.save_nodes(tetgenSavePath);
 	out.save_elements(tetgenSavePath);
 	out.save_faces(tetgenSavePath);
