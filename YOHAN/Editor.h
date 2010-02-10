@@ -55,6 +55,8 @@ public:
 	// allow to change visibility of debug data
 	void setDebugDataVisible(scene::E_DEBUG_SCENE_TYPE state);
 	s32 isDebugDataVisible();
+	// tet all the scene
+	bool tetScene();
 
 
 	// allow to change the position of the selected scene node
@@ -71,6 +73,10 @@ public:
 	void setPlayer(Player* player);
 
 private:
+	// name of the scene
+	stringc name;
+	stringc baseDir;
+
 	// is the user currently using the player ? (it could be the editor)
 	bool is_running;
 

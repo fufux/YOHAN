@@ -113,6 +113,9 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 				case GUI_ID_SAVE_SCENE: // File -> Save scene
 					editor->askForFileName();
 					break;
+				case GUI_ID_TETRAHEDRALIZE_SCENE: // File -> Tetrahedralize scene
+					editor->tetScene();
+					break;
 				case GUI_ID_OPEN_MODEL: // File -> Open Model
 					opening = OPENING_MODEL;
 					env->addFileOpenDialog(L"Please select a model file to open");

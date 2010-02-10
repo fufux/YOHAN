@@ -7,6 +7,10 @@ extern IGUIEnvironment* env;
 extern scene::ICameraSceneNode* camera[CAMERA_COUNT];
 
 
+// lets import the tetBuf method
+int tetBuf (IMeshBuffer *newBuffer, char *name);
+
+
 
 // This is usefull when loading a scene from an xml file. It allows us to know what we are currently loading.
 enum XmlNodeType
@@ -27,6 +31,8 @@ Editor::Editor(void)
 	this->debugData = scene::EDS_OFF;
 	this->is_running = false;
 	this->player = NULL;
+	this->name = "untitled";
+	this->baseDir = device->getFileSystem()->getWorkingDirectory();
 }
 
 Editor::~Editor(void)
@@ -321,6 +327,7 @@ void Editor::createGUI()
 	submenu = menu->getSubMenu(0);
 	submenu->addItem(L"Open scene...", GUI_ID_OPEN_SCENE);
 	submenu->addItem(L"Save scene...", GUI_ID_SAVE_SCENE);
+	submenu->addItem(L"Tetrahedralize scene...", GUI_ID_TETRAHEDRALIZE_SCENE);
 	submenu->addSeparator();
 	submenu->addItem(L"Open Model File...", GUI_ID_OPEN_MODEL);
 	submenu->addSeparator();
@@ -653,6 +660,8 @@ bool Editor::load(irr::core::stringc filename)
 		env->addMessageBox(CAPTION_ERROR, L"This is not a valid scene file !");
 	}
 
+	this->name = device->getFileSystem()->getFileBasename( filename );
+
 	return is_valid_file;
 }
 
@@ -739,6 +748,98 @@ bool Editor::save(irr::core::stringc filename)
 
 	xml->drop();
 	file->drop();
+
+	this->name = device->getFileSystem()->getFileBasename( filename );
+
+	return true;
+}
+
+
+bool Editor::tetScene()
+{
+	IGUIWindow* wnd = env->addMessageBox(L"Processing...", L"Tetraheadralizing... Please wait.", true, 0);
+	driver->beginScene(true, true, SColor(255,100,101,140));
+	env->drawAll();
+	driver->endScene();
+
+	device->getFileSystem()->changeWorkingDirectoryTo( baseDir.c_str() );
+
+	// Create / open the file and get ready to write XML
+	stringc filename = "output/";
+	filename += device->getFileSystem()->getFileBasename( name, false );
+	filename += "_volumic.xml";
+	IWriteFile* file = device->getFileSystem()->createAndWriteFile( filename );
+	if (!file)
+		return false;
+	IXMLWriter* xml = device->getFileSystem()->createXMLWriter( file );
+	if (!xml)
+		return false;
+
+	xml->writeXMLHeader();
+	xml->writeElement(L"scene", false, L"name", stringw(name.c_str()).c_str());
+	xml->writeLineBreak();
+
+	for (u16 i=0; i < nodes.size(); i++)
+	{
+		IMeshBuffer* buf = nodes[i]->getMesh()->getMeshBuffer(0);
+		stringc n =  device->getFileSystem()->getFileBasename( name, false );
+		n += stringc(i);
+		n = n.trim();
+		device->getLogger()->log(n.c_str());
+		tetBuf(buf, (char*)n.c_str());
+
+		xml->writeElement(L"volumicmesh", false, L"id", stringw(i).c_str());
+		xml->writeLineBreak();
+
+		stringw nodefile = L"output/";
+		nodefile += stringw(n.c_str());
+		nodefile += L"out.node";
+		xml->writeElement(L"nodefile", true, L"file", nodefile.c_str());
+		xml->writeLineBreak();
+
+		stringw elefile = L"output/";
+		elefile += stringw(n.c_str());
+		elefile += L"out.ele";
+		xml->writeElement(L"elefile", true, L"file", elefile.c_str());
+		xml->writeLineBreak();
+
+		stringw facefile = L"output/";
+		facefile += stringw(n.c_str());
+		facefile += L"out.face";
+		xml->writeElement(L"facefile", true, L"file", facefile.c_str());
+		xml->writeLineBreak();
+
+		xml->writeElement(L"initialspeed", true, L"x", L"0", L"y", L"0", L"z", L"0");
+		xml->writeLineBreak();
+		xml->writeElement(L"materialproperties", true,
+			L"Lambda", L"0.419", L"Mu", L"0.578", L"Alpha", L"1.04", L"Beta", L"1.44", L"Density", L"2595");
+		xml->writeLineBreak();
+		xml->writeClosingTag(L"volumicmesh");
+		xml->writeLineBreak();
+	}
+
+	for (u16 i=0; i < forceFields.size(); i++)
+	{
+		xml->writeElement(L"forcefield");
+		xml->writeLineBreak();
+
+		xml->writeElement(L"intensity", true,
+			L"x", stringw( forceFields[i].X ).c_str(),
+			L"y", stringw( forceFields[i].Y ).c_str(),
+			L"z", stringw( forceFields[i].Z ).c_str());
+		xml->writeLineBreak();
+
+		xml->writeClosingTag(L"forcefield");
+		xml->writeLineBreak();
+	}
+
+	xml->writeClosingTag(L"scene");
+	xml->writeLineBreak();
+
+	xml->drop();
+	file->drop();
+
+	wnd->remove();
 
 	return true;
 }
