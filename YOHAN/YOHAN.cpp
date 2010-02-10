@@ -39,7 +39,7 @@ scene::ICameraSceneNode* camera[CAMERA_COUNT];
 /*
 This is the main method.
 */
-//int main_(int argc, char *argv[]);
+int tetrahedralizeFile (char *fileToOpen);
 
 int main(int argc, _TCHAR* argv[])
 {
@@ -68,6 +68,8 @@ int main(int argc, _TCHAR* argv[])
 		col.setAlpha(255);
 		env->getSkin()->setColor((EGUI_DEFAULT_COLOR)i, col);
 	}
+
+	//tetrahedralizeFile("toto");
 
 	/*
 	Create cameras.
