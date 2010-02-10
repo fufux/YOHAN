@@ -70,6 +70,9 @@ void Player::setEditor(Editor* editor)
 
 void Player::displayNextFrame()
 {
+	if (framesFileNames.size() == 0)
+		return;
+
 	s32 nextId = 0;
 	if (currFrame && currFrame != NULL)
 	{
@@ -83,15 +86,22 @@ void Player::displayNextFrame()
 	if (!(currFrame->getNode()) || currFrame->getNode() == NULL)
 	{
 		delete currFrame;
+		currentFrame = -1;
 		currFrame = NULL;
 		return;
 	}
+	currentFrame = currFrame->getId();
 	currFrame->display();
+	setDebugDataVisible( this->debugData );
+	updateFrameNumber();
 }
 
 
 void Player::displayPreviousFrame()
 {
+	if (framesFileNames.size() == 0)
+		return;
+
 	s32 nextId = 0;
 	if (currFrame && currFrame != NULL)
 	{
@@ -105,16 +115,49 @@ void Player::displayPreviousFrame()
 	if (!(currFrame->getNode()) || currFrame->getNode() == NULL)
 	{
 		delete currFrame;
+		currentFrame = -1;
 		currFrame = NULL;
 		return;
 	}
+	currentFrame = currFrame->getId();
 	currFrame->display();
+	setDebugDataVisible( this->debugData );
+	updateFrameNumber();
+}
+
+
+void Player::displayFrameById(s32 id)
+{
+	if (framesFileNames.size() == 0 || id < 0 || id >= (s32)framesFileNames.size())
+	{
+		updateFrameNumber();
+		return;
+	}
+
+	if (currFrame && currFrame != NULL)
+		delete currFrame;
+	
+	currFrame = new PlayerFrame(framesFileNames[id].id, framesFileNames[id].nodefile, framesFileNames[id].elefile);
+	if (!(currFrame->getNode()) || currFrame->getNode() == NULL)
+	{
+		delete currFrame;
+		currentFrame = -1;
+		currFrame = NULL;
+		return;
+	}
+	currentFrame = currFrame->getId();
+	currFrame->display();
+	setDebugDataVisible( this->debugData );
+	updateFrameNumber();
 }
 
 
 
 void Player::playNextFrame()
 {
+	if (framesFileNames.size() == 0)
+		return;
+
 	++currentFrame;
 	if (currentFrame == (s32)frames.size())
 		currentFrame = 0;
@@ -127,6 +170,18 @@ void Player::playNextFrame()
 	else
 	{
 		--currentFrame;
+	}
+	setDebugDataVisible( this->debugData );
+	updateFrameNumber();
+}
+
+
+void Player::updateFrameNumber()
+{
+	if (env->getRootGUIElement()->getElementFromId(GUI_ID_PLAYER_FRAME_NUMBER, true))
+	{
+		IGUIEditBox* box = (IGUIEditBox*)(env->getRootGUIElement()->getElementFromId(GUI_ID_PLAYER_FRAME_NUMBER, true));
+		box->setText( stringw(this->currentFrame).c_str() );
 	}
 }
 
@@ -282,6 +337,11 @@ void Player::createGUI()
 
 	image = driver->getTexture("help.png");
 	bar->addButton(GUI_ID_PLAYER_HELP_BUTTON, 0, L"Open Help", image, 0, false, true);
+
+	env->addEditBox(L"-1", core::rect<s32>(300,4,400,24), true, bar, GUI_ID_PLAYER_FRAME_NUMBER);
+	image = driver->getTexture("goto.png");
+	IGUIButton* b = bar->addButton(GUI_ID_PLAYER_FRAME_NUMBER_BUTTON, 0, L"Go to this frame", image, 0, false, true);
+	b->setRelativePosition( core::rect<s32>(404,4,424,24) );
 }
 
 

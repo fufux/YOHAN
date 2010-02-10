@@ -196,6 +196,13 @@ bool PlayerEventReceiver::OnEvent(const SEvent &event)
 			case GUI_ID_PLAYER_HELP_BUTTON:
 				showHelp();
 				break;
+			case GUI_ID_PLAYER_FRAME_NUMBER_BUTTON:
+				if (env->getRootGUIElement()->getElementFromId(GUI_ID_PLAYER_FRAME_NUMBER, true))
+				{
+					IGUIEditBox* box = (IGUIEditBox*)(env->getRootGUIElement()->getElementFromId(GUI_ID_PLAYER_FRAME_NUMBER, true));
+					player->displayFrameById( atoi(stringc(box->getText()).c_str()) );
+				}
+				break;
 			}
 
 			break;

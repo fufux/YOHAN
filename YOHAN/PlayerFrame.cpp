@@ -68,7 +68,8 @@ PlayerFrame::PlayerFrame(s32 id, stringc nodeFile, stringc eleFile)
 	indata >> index >> x >> y >> z; // this is one line
 	while (!indata.eof() && indata.good())
 	{
-		buffer->Vertices.push_back(video::S3DVertex(10*x+myRandom(-0.1f,0.1f), 10*y+myRandom(-0.1f,0.1f), 10*z+myRandom(-0.1f,0.1f), 1,1,1, clr, 0,0));
+		buffer->Vertices.push_back(video::S3DVertex(x, y, z, 1,1,1, clr, 0,0));
+		//buffer->Vertices.push_back(video::S3DVertex(10*x+myRandom(-0.1f,0.1f), 10*y+myRandom(-0.1f,0.1f), 10*z+myRandom(-0.1f,0.1f), 1,1,1, clr, 0,0));
 		indata >> index >> x >> y >> z; // this is one line
 	}
 

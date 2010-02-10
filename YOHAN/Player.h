@@ -34,6 +34,7 @@ public:
 	// allows us to change current frame in step-by-step mode
 	void displayNextFrame();
 	void displayPreviousFrame();
+	void displayFrameById(s32 id);
 
 	// allows us to change current frame in playing mode
 	void playNextFrame();
@@ -83,4 +84,6 @@ private:
 
 	// usefull for playing mode. This is the least time we changed the displayyed frame
 	u32 lastTime;
+
+	void updateFrameNumber();
 };
