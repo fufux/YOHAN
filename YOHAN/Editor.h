@@ -85,6 +85,7 @@ private:
 
 	// this is the list of all models in the scene
 	core::array<IMeshSceneNode*> nodes;
+	IMeshBuffer* getMeshBufferWithAbsoluteCoordinates(IMeshSceneNode* node);
 
 	// and this is the list of meshe files name that correspond to the nodes (index must correspond with previous list)
 	core::array<stringw> meshFiles;

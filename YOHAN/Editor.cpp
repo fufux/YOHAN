@@ -781,12 +781,12 @@ bool Editor::tetScene()
 
 	for (u16 i=0; i < nodes.size(); i++)
 	{
-		IMeshBuffer* buf = nodes[i]->getMesh()->getMeshBuffer(0);
+		IMeshBuffer* buf = getMeshBufferWithAbsoluteCoordinates( nodes[i] );
 		stringc n =  device->getFileSystem()->getFileBasename( name, false );
 		n += stringc(i);
 		n = n.trim();
 		device->getLogger()->log(n.c_str());
-		tetBuf(buf, (char*)n.c_str());
+		//tetBuf(buf, (char*)n.c_str());
 
 		xml->writeElement(L"volumicmesh", false, L"id", stringw(i).c_str());
 		xml->writeLineBreak();
@@ -842,4 +842,59 @@ bool Editor::tetScene()
 	wnd->remove();
 
 	return true;
+}
+
+
+
+IMeshBuffer* Editor::getMeshBufferWithAbsoluteCoordinates(IMeshSceneNode* node)
+{
+	IMeshBuffer* buf = node->getMesh()->getMeshBuffer(0);
+	SMeshBuffer* newBuf = new SMeshBuffer();
+
+	newBuf->Indices.set_used( buf->getIndexCount() );
+	newBuf->Vertices.reallocate( buf->getVertexCount() );
+	for (u32 i=0; i < buf->getIndexCount(); i++)
+		newBuf->Indices[i] = buf->getIndices()[i];
+	for (u32 i=0; i < buf->getVertexCount(); i++)
+		newBuf->Vertices.push_back( ((video::S3DVertex*)buf->getVertices())[i] );
+
+	vector3df pos = node->getPosition();
+	vector3df rot = node->getRotation();
+	vector3df scale = node->getScale();
+	rot.X = degToRad(rot.X);
+	rot.Y = degToRad(rot.Y);
+	rot.Z = degToRad(rot.Z);
+
+	for (u32 i=0; i < newBuf->Vertices.size(); i++)
+	{
+		// apply scale
+		newBuf->Vertices[i].Pos *= scale;
+		vector3df p = newBuf->Vertices[i].Pos;
+		
+		// apply rotation //
+		p.X = newBuf->Vertices[i].Pos.X * cos(rot.Y)
+			+ newBuf->Vertices[i].Pos.Z * sin(rot.Y)
+			+ newBuf->Vertices[i].Pos.X * cos(rot.Z)
+			- newBuf->Vertices[i].Pos.Y * sin(rot.Z);
+		p.Y = newBuf->Vertices[i].Pos.X * sin(rot.Z)
+			+ newBuf->Vertices[i].Pos.Y * cos(rot.Z)
+			+ newBuf->Vertices[i].Pos.Y * cos(rot.X)
+			- newBuf->Vertices[i].Pos.Z * sin(rot.X);
+		p.Z = newBuf->Vertices[i].Pos.Y * sin(rot.X)
+			+ newBuf->Vertices[i].Pos.Z * cos(rot.X)
+			- newBuf->Vertices[i].Pos.X * sin(rot.Y)
+			+ newBuf->Vertices[i].Pos.Z * cos(rot.Y);
+		
+		newBuf->Vertices[i].Pos = p;
+
+		// apply position
+		newBuf->Vertices[i].Pos += pos;
+	}
+
+	SMesh* mesh = new SMesh();
+	mesh->MeshBuffers.push_back(newBuf);
+	IMeshSceneNode* n = smgr->addMeshSceneNode(mesh);
+	n->setMaterialFlag(EMF_WIREFRAME, true);
+
+	return newBuf;
 }
