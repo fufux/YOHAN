@@ -212,3 +212,8 @@ void PointPool::resolveConflit()
 		}
 	}
 }
+
+char* output(char* dir)
+{
+
+}

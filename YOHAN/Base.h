@@ -117,6 +117,8 @@ namespace yohan
 
 			// -- end temporal
 
+			char* output(char* dir);
+
 		};
 
 
@@ -171,6 +173,18 @@ namespace yohan
 
 		};
 
+		class FacePool
+		{
+			std::vector<int*> faceList;
+
+			int oldFaceCount;
+
+		public:
+			FacePool(const char* faceFile);
+
+			char* output(char* dir);
+		}
+
 		class TetrahedronPool
 		{
 			/* 
@@ -180,6 +194,8 @@ namespace yohan
 			std::vector<Tetrahedron*> tetList;
 
 			DATA* constants;
+
+			int oldTetCount;
 
 			/* some index to accelerate the collision detection */
 
@@ -193,6 +209,8 @@ namespace yohan
 			void fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, SquareSparseMatrix* C, DATA* F, DATA gravity[]);
 
 			Tetrahedron* getTetrahedron(int index);
+
+			char* output(char* dir);
 
 			
 			//temporal
@@ -218,6 +236,9 @@ namespace yohan
 
 			/* */
 			PointPool* pointPool;
+
+			/* */
+			FacePool* facePool;
 
 			/* */
 			TetrahedronPool* tetPool;
@@ -429,6 +450,15 @@ namespace yohan
 		/* As the output could be a file (our prototype) or other IO devices, this class should be rather named DiskSceneRecorder */
 		class SceneRecorder
 		{
+			char dir[256];
+
+			char sceneFileName[256];
+
+			char frameFileName[256];
+
+			int indexInFrame;
+
+			int indexOfFrame;
 
 		public:
 			/* To open/create a file for the recording */
@@ -503,6 +533,8 @@ namespace yohan
 		/**********************/
 
 		void fetalError();
+
+		void createDir(const char* dirName);
 		
 	}
 }

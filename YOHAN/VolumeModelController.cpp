@@ -61,7 +61,7 @@ void VolumeModelController::evoluteModel()
 	this->model->feedBackVector();
 
 	// generate a frame
-	this->model->generateFrame(round);
+	//this->model->generateFrame(round);
 
 	// generate the report
 	this->reportQueue.push(MotivationReport(this->model));

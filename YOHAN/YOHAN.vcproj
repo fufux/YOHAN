@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="mumps\include;irrlicht\include;tetgen"
+				AdditionalIncludeDirectories="xercesc\include;mumps\include;irrlicht\include;tetgen"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,9 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="TetGenLib.lib"
+				AdditionalDependencies="pord_c.lib MetisLib.lib libseq_c.lib dmumps_c.lib mumps_common_c.lib libseq_fortran.lib TetGenLib.lib xerces-c_3D.lib blas.lib dmumps_fortran.lib "
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="xercesc\lib;mumps\lib;&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
+				AdditionalLibraryDirectories="&quot;C:\Program Files\Intel\Compiler\11.1\054\lib\ia32&quot;;xercesc\lib;mumps\lib;&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="mumps\include;irrlicht\include;tetgen"
+				AdditionalIncludeDirectories="xercesc\include;mumps\include;irrlicht\include;tetgen"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"

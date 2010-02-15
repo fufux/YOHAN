@@ -259,6 +259,10 @@ void SceneController::simulate(char* filename)
 
 	int step = 0;
 
+	SceneRecorder sr = SceneRecorder(filename);
+
+	DATA totalTime = 0;
+
 	while (step < 100000)
 	{
 		//detect the collision 
@@ -286,18 +290,26 @@ void SceneController::simulate(char* filename)
 			iter->evoluteModel();
 		}
 
+		totalTime += delta_t;
+		sr.newFrame(totalTime);
+
 		//for each VolumeModelController vmc
 			//vmc.retrieveReport();
 		for (std::vector<VolumeModelController>::iterator iter = vmcList.begin(); iter != vmcList.end(); ++iter)
 		{
 			VolumeModel* vm = iter->retrieveReport().getModel();
 
+			//record
+			sr.record(vm);
+
 			// simple detection
-			vm->fillForceList(&forceList);
+			//vm->fillForceList(&forceList);
 
 			// resolve conflict
-			vm->resolveConflit();
+			//vm->resolveConflit();
 		}
+
+		sr.endScene();
 
 		step++;
 		

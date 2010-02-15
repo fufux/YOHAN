@@ -51,6 +51,7 @@ VolumeModel::VolumeModel(const char* nodeFile, const char* faceFile, const char*
 
 
 	this->pointPool = new PointPool(nodeFile, faceFile, speed);
+	this->facePool = new FacePool(faceFile);
 	this->tetPool = new TetrahedronPool(eleFile, this->constants, this->pointPool, this);
 
 	// the matrix

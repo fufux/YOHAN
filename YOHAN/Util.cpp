@@ -12,3 +12,8 @@ void yohan::base::fetalError()
 	printf("Fetal Error\n");
 	exit(1);
 }
+
+void yohan::base::createDir(const char* dirName)
+{
+
+}

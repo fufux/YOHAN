@@ -6,9 +6,9 @@ using namespace yohan;
 using namespace base;
 
 
-int main(int argc, _TCHAR* argv[])
+int __main(int argc, _TCHAR* argv[])
 {
-	char* sceneConfigFile = "F:/doc/ENSEEIHT/3annee/projet_long/model/test/sceneexample3.xml";//argv[0]
+	char* sceneConfigFile = "../YOHAN/test/sceneexample3.xml";//argv[0]
 	char* sceneRecordFile = "titi";//argv[1]
 
 	//load the scene configuration file

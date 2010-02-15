@@ -220,8 +220,12 @@ void Tetrahedron::fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, DATA*
 			K->addAndSetValue(ri + 2, ci + 1, coff * (constants[1] * CrDs[k] + constants[0] * DrCs[k]));
 			K->addAndSetValue(ri + 2, ci + 2, coff * (DrDs[k] + constants[1] * (BrBs[k] + CrCs[k])));
 
-			++k;			
+			++k;	
+
+			coff = -coff;
 		}
+
+		coff = -coff;
 	}
 
 	/********************/
@@ -274,13 +278,13 @@ void Tetrahedron::fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, DATA*
 
 	/* could add a constraint : if z = 0 and v(z) = 0, a force will support it */
 	
-	if (!(p0[2] < 1E-20 && p0[2] > -1E-20 && p0[5] < 1E-20 && p0[5] > -1E-20))
+	//if (!(p0[2] < 1E-20 && p0[2] > -1E-20 && p0[5] < 1E-20 && p0[5] > -1E-20))
 		F[this->pointIndex[0] * 3 + 2] += fz;
-	if (!(p1[2] < 1E-20 && p1[2] > -1E-20 && p1[5] < 1E-20 && p1[5] > -1E-20))
+	//if (!(p1[2] < 1E-20 && p1[2] > -1E-20 && p1[5] < 1E-20 && p1[5] > -1E-20))
 		F[this->pointIndex[1] * 3 + 2] += fz;
-	if (!(p2[2] < 1E-20 && p2[2] > -1E-20 && p2[5] < 1E-20 && p2[5] > -1E-20))
+	//if (!(p2[2] < 1E-20 && p2[2] > -1E-20 && p2[5] < 1E-20 && p2[5] > -1E-20))
 		F[this->pointIndex[2] * 3 + 2] += fz;
-	if (!(p3[2] < 1E-20 && p3[2] > -1E-20 && p3[5] < 1E-20 && p3[5] > -1E-20))
+	//if (!(p3[2] < 1E-20 && p3[2] > -1E-20 && p3[5] < 1E-20 && p3[5] > -1E-20))
 		F[this->pointIndex[3] * 3 + 2] += fz;
 
 	/* end constant */
@@ -293,6 +297,11 @@ void Tetrahedron::fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, DATA*
 	F[this->pointIndex[3] * 3 + 2] += fz;
 	*/
 
+}
+
+int* Tetrahedron::getPointIndex()
+{
+	return this->pointIndex;
 }
 
 

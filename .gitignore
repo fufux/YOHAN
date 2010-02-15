@@ -20,9 +20,8 @@ Thumbs.db
 *.ilk
 *.log
 [Bb]in
-[Dd]ebug*/
+[Nn]ode*/
 *.sbr
 obj/
-[Rr]elease*/
 _ReSharper*/
 [Tt]est[Rr]esult*
