@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "Editor.h"
 #include "EditorEventReceiver.h"
 
@@ -70,6 +69,8 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 		case KEY_ESCAPE:
 			{
 				setActiveCamera(camera[0]);
+				if (root->getElementFromId(GUI_ID_STATIC_TEXT_CAMERA_FPS, true))
+					root->getElementFromId(GUI_ID_STATIC_TEXT_CAMERA_FPS, true)->remove();
 				break;
 			}
 		case KEY_KEY_M:
@@ -112,9 +113,15 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 				case GUI_ID_SAVE_SCENE: // File -> Save scene
 					editor->askForFileName();
 					break;
+				case GUI_ID_TETRAHEDRALIZE_SCENE: // File -> Tetrahedralize scene
+					editor->tetScene();
+					break;
 				case GUI_ID_OPEN_MODEL: // File -> Open Model
 					opening = OPENING_MODEL;
 					env->addFileOpenDialog(L"Please select a model file to open");
+					break;
+				case GUI_ID_SWITCH_TO_PLAYER: // File -> Switch to player
+					editor->switchToPlayer();
 					break;
 				case GUI_ID_QUIT: // File -> Quit
 					device->closeDevice();
@@ -167,9 +174,12 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 
 				case GUI_ID_CAMERA_MAYA:
 					setActiveCamera(camera[0]);
+					if (root->getElementFromId(GUI_ID_STATIC_TEXT_CAMERA_FPS, true))
+						root->getElementFromId(GUI_ID_STATIC_TEXT_CAMERA_FPS, true)->remove();
 					break;
 				case GUI_ID_CAMERA_FIRST_PERSON:
 					setActiveCamera(camera[1]);
+					env->addStaticText(L"Press Escape to go back to maya-style camera mode.", core::rect<s32>(20,60,220,75), true, true, 0, GUI_ID_STATIC_TEXT_CAMERA_FPS);
 					break;
 
 				}
@@ -189,18 +199,6 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 			break;
 
 		case EGET_SCROLL_BAR_CHANGED:
-
-			// control skin transparency
-			if (id == GUI_ID_SKIN_TRANSPARENCY_SCROLL_BAR)
-			{
-				const s32 pos = ((IGUIScrollBar*)event.GUIEvent.Caller)->getPos();
-				for (s32 i=0; i<irr::gui::EGDC_COUNT ; ++i)
-				{
-					video::SColor col = env->getSkin()->getColor((EGUI_DEFAULT_COLOR)i);
-					col.setAlpha(pos);
-					env->getSkin()->setColor((EGUI_DEFAULT_COLOR)i, col);
-				}
-			}
 			break;
 
 		case EGET_COMBO_BOX_CHANGED:
@@ -211,6 +209,9 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 			{
 			case GUI_ID_TOOL_BOX_SET_BUTTON:
 				editor->setPositionRotationScaleOfSelectedNode();
+				break;
+			case GUI_ID_TOOL_BOX_DELETE_BUTTON:
+				showConfirmDeleteNode();
 				break;
 			case GUI_ID_FORCE_FIELD_TOOL_BOX_SET_BUTTON:
 				editor->setForceField();
@@ -223,9 +224,18 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 				if (root->getElementFromId(GUI_ID_ASK_FILENAME_WINDOW, true))
 					root->getElementFromId(GUI_ID_ASK_FILENAME_WINDOW, true)->remove();
 				break;
+			case GUI_ID_CONFIRM_DELETE_BUTTON:
+				editor->remove3DModel();
+				if (root->getElementFromId(GUI_ID_CONFIRM_DELETE_WINDOW, true))
+					root->getElementFromId(GUI_ID_CONFIRM_DELETE_WINDOW, true)->remove();
+				break;
 			case GUI_ID_ASK_FILENAME_CANCEL_BUTTON:
 				if (root->getElementFromId(GUI_ID_ASK_FILENAME_WINDOW, true))
 					root->getElementFromId(GUI_ID_ASK_FILENAME_WINDOW, true)->remove();
+				break;
+			case GUI_ID_CANCEL_DELETE_BUTTON:
+				if (root->getElementFromId(GUI_ID_CONFIRM_DELETE_WINDOW, true))
+					root->getElementFromId(GUI_ID_CONFIRM_DELETE_WINDOW, true)->remove();
 				break;
 			case GUI_ID_OPEN_DIALOG_BUTTON:
 				opening = OPENING_MODEL;
@@ -363,4 +373,17 @@ void EditorEventReceiver::showHelp()
 
 	env->addMessageBox(
 		CAPTION_HELP, message.c_str());
+}
+
+
+void EditorEventReceiver::showConfirmDeleteNode()
+{
+	// create the window
+	IGUIWindow* wnd = env->addWindow(core::rect<s32>(300,200,500,350),
+		true, L"Warning", 0, GUI_ID_CONFIRM_DELETE_WINDOW);
+
+	env->addStaticText(L"Are you sure you want to delete this object ?", core::rect<s32>(20,20,180,80), false, true, wnd);
+
+	env->addButton(core::rect<s32>(60,90,100,110), wnd, GUI_ID_CONFIRM_DELETE_BUTTON, L"Delete");
+	env->addButton(core::rect<s32>(120,90,160,110), wnd, GUI_ID_CANCEL_DELETE_BUTTON, L"Cancel");
 }

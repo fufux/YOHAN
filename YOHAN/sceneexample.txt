@@ -1,19 +1,22 @@
 <scene name="plop">
-	<volumicmesh id="8">
-		<nodefile file="plop.node"/>
-		<elefile file="plop.ele" />
-		...
-		<initialspeed x="89" y="" z=""/>
-		<materialproperties>
-			<../>
-		</materialproperties>
+	<volumicmesh id="0">
+		<nodefile file="F:/doc/ENSEEIHT/3annee/projet_long/model/test/cubeout.node"/>
+		<elefile file="F:/doc/ENSEEIHT/3annee/projet_long/model/test/cubeout.ele" />
+		<facefile file="F:/doc/ENSEEIHT/3annee/projet_long/model/test/cubeout.face" />
+		<initialspeed x="0" y="0" z="10"/>
+		<materialproperties Lambda="0.419" Mu="0.578" Alpha="1.04" Beta="1.44" Density="2595"/>
 	</volumicmesh>
 	<force>
-		<volumicmeshid value="8"/>
-		<vertex index="897"/>
-		<intensity x=".." y=".." z=".."/>
+		<volumicmeshid value="0"/>
+		<vertex index="1"/>
+		<intensity x="1" y="1" z="1"/>
+	</force>
+	<force>
+		<volumicmeshid value="0"/>
+		<vertex index="2"/>
+		<intensity x="2" y="3" z="4"/>
 	</force>
 	<forcefield>
-		<intensity x="32.8" y=".." z=".." />
+		<intensity x="0" y="0" z="-9.8" />
 	</forcefield>
 </scene>

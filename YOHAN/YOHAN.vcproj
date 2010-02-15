@@ -201,6 +201,7 @@
 				>
 			</File>
 			<File
+<<<<<<< HEAD
 				RelativePath=".\Matrix.cpp"
 				>
 			</File>
@@ -230,6 +231,17 @@
 			</File>
 			<File
 				RelativePath=".\SparseMatrix2.cpp"
+=======
+				RelativePath=".\Player.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerEventReceiver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerFrame.cpp"
+>>>>>>> 9d1b847bdafec74e5466f436cdc85f5250d5dee7
 				>
 			</File>
 			<File
@@ -253,7 +265,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\tetcall.cpp"
+				RelativePath=".\tetMeshBuf.cpp"
 				>
 			</File>
 			<File
@@ -315,11 +327,23 @@
 				>
 			</File>
 			<File
+<<<<<<< HEAD
 				RelativePath=".\Matrix.h"
 				>
 			</File>
 			<File
 				RelativePath=".\resource.h"
+=======
+				RelativePath=".\Player.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerEventReceiver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerFrame.h"
+>>>>>>> 9d1b847bdafec74e5466f436cdc85f5250d5dee7
 				>
 			</File>
 			<File
