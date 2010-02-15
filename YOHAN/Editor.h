@@ -1,12 +1,15 @@
 #pragma once
 
-#include <irrlicht.h>
-#include <iostream>
+#include "StdAfx.h"
 #include "EditorEventReceiver.h"
+#include "Player.h"
 
-using namespace irr;
-using namespace gui;
 
+
+struct EditorMaterial
+{
+	f32 lambda,mu,alpha,beta,density;
+};
 
 
 class Editor
@@ -14,6 +17,13 @@ class Editor
 public:
 	Editor(void);
 	~Editor(void);
+
+	// call this to launch/stop all the editor
+	void start();
+	void stop();
+	void switchToPlayer();
+	// call this to remove all nodes of the scene editor
+	void clear();
 
 	/*
 	These methods allow us to get easily all scene info in order to tetrahedralize it.
@@ -53,6 +63,8 @@ public:
 	// allow to change visibility of debug data
 	void setDebugDataVisible(scene::E_DEBUG_SCENE_TYPE state);
 	s32 isDebugDataVisible();
+	// tet all the scene
+	bool tetScene();
 
 
 	// allow to change the position of the selected scene node
@@ -66,15 +78,27 @@ public:
 	// this method allows the user to select a node
 	void selectNode();
 
+	void setPlayer(Player* player);
+
 private:
+	// name of the scene
+	stringc name;
+	stringc baseDir;
+
+	// is the user currently using the player ? (it could be the editor)
+	bool is_running;
+
 	// the event receiver that handles all controls in the editor
 	EditorEventReceiver* er;
 
 	// this is the list of all models in the scene
 	core::array<IMeshSceneNode*> nodes;
+	IMesh* getMeshWithAbsoluteCoordinates(IMeshSceneNode* node);
 
 	// and this is the list of meshe files name that correspond to the nodes (index must correspond with previous list)
 	core::array<stringw> meshFiles;
+	core::array<EditorMaterial> meshMaterials; // and here are the materials of each object
+	core::array<vector3df> initialSpeeds;
 
 	// this is the list of all force fields in the scene
 	core::array<vector3df> forceFields;
@@ -91,5 +115,8 @@ private:
 	void createSceneNodeToolBox();
 	void removeSceneNodeToolBox();
 	void removeForceFieldToolBox();
+
+	// this allows us to access the player in order to start it
+	Player* player;
 	
 };

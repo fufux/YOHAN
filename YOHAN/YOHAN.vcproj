@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="irrlicht\include;tetgen"
+				AdditionalIncludeDirectories="xercesc\include;mumps\include;irrlicht\include;tetgen"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,9 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="TetGenLib.lib"
+				AdditionalDependencies="pord_c.lib MetisLib.lib libseq_c.lib dmumps_c.lib mumps_common_c.lib libseq_fortran.lib TetGenLib.lib xerces-c_3D.lib blas.lib dmumps_fortran.lib "
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
+				AdditionalLibraryDirectories="&quot;C:\Program Files\Intel\Compiler\11.1\054\lib\ia32&quot;;xercesc\lib;mumps\lib;&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="irrlicht\include;tetgen"
+				AdditionalIncludeDirectories="xercesc\include;mumps\include;irrlicht\include;tetgen"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -138,7 +138,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="TetGenLib.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
+				AdditionalLibraryDirectories="xercesc\lib;mumps\lib;&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -177,11 +177,71 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\CollisionFace.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CollisionPoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CollisionPolyedron.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CollisionTest.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Editor.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\EditorEventReceiver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Matrix.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MotivationEvent.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MumpsTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PhysicEngine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Player.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerEventReceiver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerFrame.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PointPool.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SceneController.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SparseMatrix.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SparseMatrix2.cpp"
 				>
 			</File>
 			<File
@@ -205,7 +265,27 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\tetcall.cpp"
+				RelativePath=".\tetMeshBuf.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Tetrahedron.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TetrahedronPool.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Util.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VolumeModel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VolumeModelController.cpp"
 				>
 			</File>
 			<File
@@ -219,11 +299,51 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\Base.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CollisionFace.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CollisionPoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CollisionPolyedron.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CollisionTest.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Editor.h"
 				>
 			</File>
 			<File
 				RelativePath=".\EditorEventReceiver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Matrix.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Player.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerEventReceiver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerFrame.h"
+				>
+			</File>
+			<File
+				RelativePath=".\resource.h"
 				>
 			</File>
 			<File
@@ -240,6 +360,10 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath=".\YOHAN.rc"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"
