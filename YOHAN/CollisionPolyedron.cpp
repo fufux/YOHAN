@@ -53,22 +53,31 @@ double CollisionPolyedron::calcVolume()
 
 CollisionPoint* CollisionPolyedron::calcDir(int owner)
 {
-	CollisionPoint* resul = new CollisionPoint();
+	CollisionPoint* resul;
 	std::vector<CollisionFace>* faces;
 	CollisionPoint* dir;
-	if(this->parents[0]==owner){
-		faces = this->getByOwner(parents[1]);
+	// Test if this is collision with y=0 plan
+	if(parents[0]<0 || parents[1]<0){
+		if(owner<0)resul = new CollisionPoint(0,-1,0);
+		else resul = new CollisionPoint(0,1,0);
+	// Two tetrahedron collision
 	}else{
-		faces = this->getByOwner(parents[0]);
-	}
-	for(int i=0;i<(int)faces->size();i++){
-		for(int j=0;j<(int)faces[i].size();j++){
-			dir = CollisionPoint::vect(&(*faces)[i][j], &(*faces)[i][0], &(*faces)[i][j-1], &(*faces)[i][0]);
-			resul->add(dir);
-			delete dir;
+		resul = new CollisionPoint();
+		if(this->parents[0]==owner){
+			faces = this->getByOwner(parents[1]);
+		}else{
+			faces = this->getByOwner(parents[0]);
 		}
+		for(int i=0;i<(int)faces->size();i++){
+			for(int j=0;j<(int)faces[i].size();j++){
+				dir = CollisionPoint::vect(&(*faces)[i][j], &(*faces)[i][0], &(*faces)[i][j-1], &(*faces)[i][0]);
+				resul->add(dir);
+				delete dir;
+			}
+		}
+		delete faces;
+		resul->mul(1/(resul->norm()));
 	}
-	delete faces;
 	return resul;
 }
 
@@ -100,7 +109,7 @@ std::vector<yohan::base::DATA*>* CollisionPolyedron::getByParent(yohan::base::Vo
 {
 	std::vector<yohan::base::DATA*>* resul = new std::vector<yohan::base::DATA*>();
 	if(parent>=0){
-		int* ptsInds = model->getTet(parent).getPtsInd();
+		int* ptsInds = model->getTetrahedron(parent)->getPointIndex();
 		for(int i=0;i<4;i++){
 			resul->push_back(model->getPoint(ptsInds[i]));
 		}

@@ -57,13 +57,13 @@ public:
 	// Calculates the dot product of two "points"
 	static double scal(CollisionPoint*,CollisionPoint*);
 	// Calcultes the determinant x1 y1 z1
-	//                          x2 y2 z2
-	//                          x3 y3 z3
+	//                           x2 y2 z2
+	//                           x3 y3 z3
 	static double det3(CollisionPoint*,CollisionPoint*,CollisionPoint*);
 	// Calcultes the determinant 1 x1 y1 z1
-	//                          1 x2 y2 z2
-	//                          1 x3 y3 z3
-	//                          1 x4 y4 z4
+	//                           1 x2 y2 z2
+	//                           1 x3 y3 z3
+	//                           1 x4 y4 z4
 	static double det4(CollisionPoint*,CollisionPoint*,CollisionPoint*,CollisionPoint*);
 	// Calculates the norm of the point
 	double norm();
