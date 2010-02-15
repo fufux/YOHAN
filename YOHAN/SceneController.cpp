@@ -263,7 +263,7 @@ void SceneController::simulate(char* filename)
 
 	DATA totalTime = 0;
 
-	while (step < 100000)
+	while (step < 10)
 	{
 		//detect the collision 
 
@@ -309,9 +309,11 @@ void SceneController::simulate(char* filename)
 			//vm->resolveConflit();
 		}
 
-		sr.endScene();
+		sr.endFrame();
 
 		step++;
 		
 	}
+
+	sr.endScene();
 }

@@ -15,6 +15,7 @@ using namespace base;
 
 TetrahedronPool::TetrahedronPool(const char *eleFile, DATA constants[], PointPool* pointPoolRef, VolumeModel* volumeModelRef)
 {
+	this->oldTetCount = 0;
 	tetList = std::vector<Tetrahedron*>();
 	this->constants = constants;
 
@@ -75,6 +76,43 @@ void TetrahedronPool::fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, S
 Tetrahedron* TetrahedronPool::getTetrahedron(int index)
 {
 	return this->tetList[index];
+}
+
+char* TetrahedronPool::output(char* dir, int modelID)
+{
+	if (this->tetList.size() == this->oldTetCount)
+	{
+		// in the case that do not need to regenerate
+		return this->oldOutputFileName;
+	}
+	else
+	{
+		// update
+		this->oldTetCount = this->tetList.size();
+
+		// .bele
+		char tmp[16];
+		strcpy(oldOutputFileName, dir);
+		strcat(oldOutputFileName, "/");
+		strcat(oldOutputFileName, _itoa(modelID, tmp, 10));
+		strcat(oldOutputFileName, ".bele");
+
+		// output
+		FILE* fp = fopen(oldOutputFileName, "a+");
+
+		fwrite(&oldTetCount, sizeof(int), 1, fp);
+
+		for (std::vector<Tetrahedron*>::iterator iter = tetList.begin(); iter != tetList.end(); ++iter)
+		{
+			Tetrahedron* tet = *iter;
+			fwrite(tet->getPointIndex(), sizeof(int), 4, fp);
+		}
+		fflush(fp);
+		fclose(fp);
+
+		// return the file name
+		return oldOutputFileName;
+	}
 }
 
 //temporal

@@ -6,10 +6,10 @@ using namespace yohan;
 using namespace base;
 
 
-int __main(int argc, _TCHAR* argv[])
+int main(int argc, _TCHAR* argv[])
 {
-	char* sceneConfigFile = "../YOHAN/test/sceneexample3.xml";//argv[0]
-	char* sceneRecordFile = "titi";//argv[1]
+	char* sceneConfigFile = "../YOHAN/test/sceneexample2.xml";//argv[0]
+	char* sceneRecordFile = "../YOHAN/test/output";//argv[1]
 
 	//load the scene configuration file
 	SceneController* sc = new SceneController(sceneConfigFile);

@@ -11,8 +11,14 @@ using namespace yohan;
 using namespace base;
 using namespace matrix;
 
+int VolumeModel::ID_COUNT = 0;
+
 VolumeModel::VolumeModel(const char* nodeFile, const char* faceFile, const char* eleFile, DATA speed[], const DATA materialPropriety[])
 {
+	// id
+	id = VolumeModel::ID_COUNT;
+	VolumeModel::ID_COUNT++;
+
 	// defensive copy
 
 	/*
@@ -162,6 +168,19 @@ DATA* VolumeModel::getPoint(int index)
 Tetrahedron* VolumeModel::getTetrahedron(int index)
 {
 	return this->tetPool->getTetrahedron(index);
+}
+
+void VolumeModel::output(FILE* sceneFile, char* objectFileDir, int frameID)
+{
+	char* nodeFileName, *faceFileName, *eleFileName;
+
+	// generate the .bnode, .bface and .bele
+	nodeFileName = pointPool->output(objectFileDir, id);
+	faceFileName = facePool->output(objectFileDir, id);
+	eleFileName = tetPool->output(objectFileDir, id);
+
+	// save in the scene file
+	fprintf(sceneFile, "<object nodefile=\"%s\" facefile=\"%s\" elefile=\"%s\" />\n", nodeFileName, faceFileName, eleFileName);
 }
 
 // temporal

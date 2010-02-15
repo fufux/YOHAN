@@ -95,6 +95,9 @@ namespace yohan
 			*/
 			std::vector<std::list<int>*> tetrahedronIndexList;
 
+			/**/
+			char nodeFileName[256];
+
 
 		public:
 			PointPool(const char* nodeFile, const char* faceFile, DATA speed[]);
@@ -117,7 +120,7 @@ namespace yohan
 
 			// -- end temporal
 
-			char* output(char* dir);
+			char* output(char* dir, int modelID);
 
 		};
 
@@ -179,11 +182,13 @@ namespace yohan
 
 			int oldFaceCount;
 
+			char oldOutputFileName[256];
+
 		public:
 			FacePool(const char* faceFile);
 
-			char* output(char* dir);
-		}
+			char* output(char* dir, int modelID);
+		};
 
 		class TetrahedronPool
 		{
@@ -196,6 +201,8 @@ namespace yohan
 			DATA* constants;
 
 			int oldTetCount;
+
+			char oldOutputFileName[256];
 
 			/* some index to accelerate the collision detection */
 
@@ -210,7 +217,7 @@ namespace yohan
 
 			Tetrahedron* getTetrahedron(int index);
 
-			char* output(char* dir);
+			char* output(char* dir, int modelID);
 
 			
 			//temporal
@@ -233,6 +240,11 @@ namespace yohan
 			static const int VM_MET_NUM = 5;
 
 		private:
+			static int ID_COUNT;
+
+		private:
+
+			int id;
 
 			/* */
 			PointPool* pointPool;
@@ -318,6 +330,8 @@ namespace yohan
 			DATA* getPoint(int index);
 
 			Tetrahedron* getTetrahedron(int index);
+
+			void output(FILE* sceneFile, char* objectFileDir, int frameID);
 
 			// temporelle function
 			void fillForceList(std::list<SceneForce> *fl);
@@ -460,15 +474,21 @@ namespace yohan
 
 			int indexOfFrame;
 
+			/**/
+			FILE* sceneFile;
+
 		public:
 			/* To open/create a file for the recording */
-			SceneRecorder(const char* filename);
+			SceneRecorder(char* filename);
 
 			/* to indicate a new frame start, with its absolute time in the simulated world */
 			void newFrame(const DATA timeStamp);
 
+			/* */
+			void endFrame();
+
 			/* record all the information necessary of the given model (which stands for an object) in the current frame*/
-			void record(const VolumeModel* model);
+			void record(VolumeModel* model);
 
 			/* end and flush all on the disk, add an index of shifting timing (for slow replay) */
 			void endScene();

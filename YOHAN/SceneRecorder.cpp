@@ -3,27 +3,32 @@
 #include "Base.h"
 
 #include <iostream>
-#include <dir.h>
 
 using namespace std;
 
 using namespace yohan;
 using namespace base;
 
-SceneRecorder::SceneRecorder(const char *filename)
+SceneRecorder::SceneRecorder(char *filename)
 {
 	strcpy(dir, filename);
 
 	//create the directory if not exist
+	createDir(dir);
 
 	//name of the scene file
 	strcpy(sceneFileName, dir);
 	strcat(sceneFileName, "/scene.xml");
 
-	//dir of the frame files
-	strcpy(frameFileName, dir);
-
 	indexOfFrame = 0;
+
+	// open scene file
+	this->sceneFile = fopen(sceneFileName, "a+");
+	// write the head of video
+	fprintf(sceneFile, "<video name=\"test\">\n");
+	// close
+	fclose(sceneFile);
+
 
 }
 
@@ -31,13 +36,43 @@ void SceneRecorder::newFrame(const yohan::base::DATA timeStamp)
 {
 	this->indexInFrame = 0;
 
+	char tmp[16];
+
 	//decide if create a new sub directory to avoid penalize the performance of file system
 	int subDirIndex = indexOfFrame / 256;
+	strcpy(frameFileName, dir);
 	strcat(frameFileName, "/sub");
-	strcat(frameFileName, itoa(subDirIndex));
+	strcat(frameFileName, _itoa(subDirIndex, tmp, 10));
+	createDir(frameFileName);
 
-	// name of the frame
-	strcat(frameFileName, "/frame");
-	strcat(frameFileName, itoa(indexOfFrame));
+	// dir of the frame
+	strcat(frameFileName, "/frame-");
+	strcat(frameFileName, _itoa(indexOfFrame, tmp, 10));
 
+	// open scene file
+	this->sceneFile = fopen(sceneFileName, "a+");
+	// the head tag of a frame
+	fprintf(sceneFile, "\t<frame id=\"%d\" timestamp=\"%8.4lf\">\n", this->indexOfFrame, timeStamp);
+	// do not close until the endFrame()
+
+}
+
+void SceneRecorder::endFrame()
+{
+	fprintf(sceneFile, "\t</frame>\n");
+	fclose(sceneFile);
+}
+
+void SceneRecorder::record(VolumeModel* model)
+{
+	model->output(sceneFile, frameFileName, indexOfFrame);
+}
+
+void SceneRecorder::endScene()
+{
+	this->sceneFile = fopen(sceneFileName, "a+");
+	// write the end of video
+	fprintf(sceneFile, "</video>");
+	// close
+	fclose(sceneFile);
 }

@@ -11,9 +11,10 @@ using namespace base;
 
 FacePool::FacePool(const char *faceFile)
 {
+	this->oldFaceCount = 0;
 	faceList = std::vector<int*>();
 
-	int n;		//number of face
+	int nf;		//number of face
 	int tmp;	//for those values not important
 
 	/* file .face */
@@ -39,4 +40,41 @@ FacePool::FacePool(const char *faceFile)
 
 	// close file
 	fclose(fp);
+}
+
+char* FacePool::output(char* dir, int modelID)
+{
+	if (this->faceList.size() == this->oldFaceCount)
+	{
+		// in the case that do not need to regenerate
+		return this->oldOutputFileName;
+	}
+	else
+	{
+		// update
+		this->oldFaceCount = this->faceList.size();
+
+		// .bface
+		char tmp[16];
+		strcpy(oldOutputFileName, dir);
+		strcat(oldOutputFileName, "/");
+		strcat(oldOutputFileName, _itoa(modelID, tmp, 10));
+		strcat(oldOutputFileName, ".bface");
+
+		// output
+		FILE* fp = fopen(oldOutputFileName, "a+");
+
+		fwrite(&oldFaceCount, sizeof(int), 1, fp);
+
+		for (std::vector<int*>::iterator iter = faceList.begin(); iter != faceList.end(); ++iter)
+		{
+			int* faceIndex = *iter;
+			fwrite(faceIndex, sizeof(int), 3, fp);
+		}
+		fflush(fp);
+		fclose(fp);
+
+		// return the file name
+		return oldOutputFileName;
+	}
 }

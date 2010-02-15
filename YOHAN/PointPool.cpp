@@ -213,7 +213,30 @@ void PointPool::resolveConflit()
 	}
 }
 
-char* output(char* dir)
+char* PointPool::output(char* dir, int modelID)
 {
+	// .bnode
+	char tmp[16];
+	strcpy(nodeFileName, dir);
+	strcat(nodeFileName, "/");
+	strcat(nodeFileName, _itoa(modelID, tmp, 10));
+	strcat(nodeFileName, ".bnode");
 
+	// output
+	FILE* fp = fopen(nodeFileName, "a+");
+
+	int size = pointList.size();
+	fwrite(&size, sizeof(int), 1, fp);
+
+	for (std::vector<DATA*>::iterator iter = pointList.begin(); iter != pointList.end(); ++iter)
+	{
+		DATA* pointData = *iter;
+		fwrite(pointData, sizeof(DATA), 3, fp);
+	}
+	fflush(fp);
+	fclose(fp);
+
+	// return the file name
+	return nodeFileName;
+	
 }
