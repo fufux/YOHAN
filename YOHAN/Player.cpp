@@ -26,10 +26,9 @@ Player::~Player(void)
 
 void Player::start()
 {
-	env->getRootGUIElement()->remove();
-	this->createGUI();
 	device->setEventReceiver(this->er);
 	this->clear();
+	this->createGUI();
 	this->is_running = true;
 }
 
@@ -59,6 +58,8 @@ void Player::clear()
 	this->sceneFile = "";
 	this->currentFrame = -1;
 	this->is_playing = false;
+
+	env->getRootGUIElement()->remove();
 }
 
 
@@ -230,6 +231,7 @@ bool Player::load(irr::core::stringc filename)
 						is_valid_file = true;
 						// clean current scene
 						this->clear();
+						this->createGUI();
 					}
 				}
 

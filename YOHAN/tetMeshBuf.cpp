@@ -19,7 +19,7 @@ extern ISceneManager* smgr;
 #pragma comment(linker, "/subsystem:windows /ENTRY:mainCRTStartup")
 #endif
 
-int tetBuf (IMeshBuffer *newBuffer, char *name) {
+int tetBuf (IMeshBuffer *newBuffer, char *name, float volume) {
 
 	tetgenio in, out; // Input and output data for tetgen //
 	tetgenio::facet *f; // Auxiliary variable for the facets array setting //
@@ -36,6 +36,8 @@ int tetBuf (IMeshBuffer *newBuffer, char *name) {
 					// false otherwise //
 	char tetgenLoadPath[42] = "output/";
 	char tetgenSavePath[42] = "output/";
+	stringc params = "Qpq2.0a";
+	params += stringc(volume);
 
 		// Creating the paths used //
 	strcat_s(tetgenLoadPath, name);
@@ -236,8 +238,10 @@ int tetBuf (IMeshBuffer *newBuffer, char *name) {
 	//   (1.414), and apply a maximum volume constraint (a0.1).
 
 	//tetrahedralize("pq1.414a0.1", &in, &out);
+	device->getLogger()->log((stringc("Call tetrahedralize(")+params+stringc(", &in, &out)")).c_str());
 	try {
-		tetrahedralize("pq1.414a0.1", &in, &out);
+		//tetrahedralize("pq1.414a0.1Y", &in, &out);
+		tetrahedralize((char*)params.c_str(), &in, &out);
 	} catch (...) {
 		return -1;
 	}

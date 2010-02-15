@@ -8,7 +8,7 @@ extern scene::ICameraSceneNode* camera[CAMERA_COUNT];
 
 
 // lets import the tetBuf method
-int tetBuf (IMeshBuffer *newBuffer, char *name);
+int tetBuf (IMeshBuffer *newBuffer, char *name, float volume);
 
 
 
@@ -41,10 +41,9 @@ Editor::~Editor(void)
 
 void Editor::start()
 {
-	env->getRootGUIElement()->remove();
-	this->createGUI();
 	device->setEventReceiver(this->er);
 	this->clear();
+	this->createGUI();
 	this->is_running = true;
 }
 
@@ -71,11 +70,14 @@ void Editor::clear()
 		nodes[i]->remove();
 	nodes.clear();
 	meshFiles.clear();
-	densities.clear();
+	meshMaterials.clear();
+	initialSpeeds.clear();
 	forceFields.clear();
 	this->selectedNodeIndex = -1;
 	this->selectedForceField = -1;
 	this->debugData = scene::EDS_OFF;
+
+	env->getRootGUIElement()->remove();
 }
 
 
@@ -150,8 +152,8 @@ void Editor::setPositionRotationScaleOfSelectedNode()
 	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
 	{
 		gui::IGUIElement* root = env->getRootGUIElement();
-		core::vector3df pos, rot, sca;
-		f32 density;
+		core::vector3df pos, rot, sca, ispeed;
+		EditorMaterial material;
 		core::stringc s;
 
 		s = root->getElementFromId(GUI_ID_TOOL_BOX_X_POSITION, true)->getText();
@@ -172,13 +174,28 @@ void Editor::setPositionRotationScaleOfSelectedNode()
 		sca.Y = (f32)atof(s.c_str());
 		s = root->getElementFromId(GUI_ID_TOOL_BOX_Z_SCALE, true)->getText();
 		sca.Z = (f32)atof(s.c_str());
-		s = root->getElementFromId(GUI_ID_TOOL_BOX_DENSITY, true)->getText();
-		density = (f32)atof(s.c_str());
+		s = root->getElementFromId(GUI_ID_TOOL_BOX_X_SPEED, true)->getText();
+		ispeed.X = (f32)atof(s.c_str());
+		s = root->getElementFromId(GUI_ID_TOOL_BOX_Y_SPEED, true)->getText();
+		ispeed.Y = (f32)atof(s.c_str());
+		s = root->getElementFromId(GUI_ID_TOOL_BOX_Z_SPEED, true)->getText();
+		ispeed.Z = (f32)atof(s.c_str());
+		s = root->getElementFromId(GUI_ID_TOOL_BOX_MATERIAL_LAMBDA, true)->getText();
+		material.lambda = (f32)atof(s.c_str());
+		s = root->getElementFromId(GUI_ID_TOOL_BOX_MATERIAL_MU, true)->getText();
+		material.mu = (f32)atof(s.c_str());
+		s = root->getElementFromId(GUI_ID_TOOL_BOX_MATERIAL_ALPHA, true)->getText();
+		material.alpha = (f32)atof(s.c_str());
+		s = root->getElementFromId(GUI_ID_TOOL_BOX_MATERIAL_BETA, true)->getText();
+		material.beta = (f32)atof(s.c_str());
+		s = root->getElementFromId(GUI_ID_TOOL_BOX_MATERIAL_DENSITY, true)->getText();
+		material.density = (f32)atof(s.c_str());
 
 		nodes[selectedNodeIndex]->setPosition( pos );
 		nodes[selectedNodeIndex]->setRotation( rot );
 		nodes[selectedNodeIndex]->setScale( sca );
-		densities[selectedNodeIndex] = density;
+		meshMaterials[selectedNodeIndex] = material;
+		initialSpeeds[selectedNodeIndex] = ispeed;
 	}
 }
 
@@ -258,7 +275,17 @@ void Editor::add3DModel(stringc filename)
 	// select the newly loaded scene node
 	nodes.push_back( node );
 	meshFiles.push_back( filename.c_str() );
-	densities.push_back( 50.0f );
+
+	// set default values for material and initial speed
+	EditorMaterial material;
+	material.lambda = 0.419f;
+	material.mu = 0.578f;
+	material.alpha = 1.04f;
+	material.beta = 1.44f;
+	material.density = 2595.0f;
+	meshMaterials.push_back( material );
+	vector3df initialSpeed = vector3df(0,0,0);
+	initialSpeeds.push_back( initialSpeed );
 
 	// unselect current selected node if exists
 	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
@@ -284,7 +311,8 @@ void Editor::remove3DModel()
 		nodes[selectedNodeIndex]->remove();
 		nodes.erase(selectedNodeIndex);
 		meshFiles.erase(selectedNodeIndex);
-		densities.erase(selectedNodeIndex);
+		meshMaterials.erase(selectedNodeIndex);
+		initialSpeeds.erase(selectedNodeIndex);
 		selectedNodeIndex = -1;
 	}
 }
@@ -388,9 +416,13 @@ void Editor::createSceneNodeToolBox()
 
 	// create tab control and tabs
 	IGUITabControl* tab = env->addTabControl(
-		core::rect<s32>(2,20,800-602,480-7), wnd, true, true);
+		core::rect<s32>(2,20,800-602,435-37), wnd, true, true);
 
-	IGUITab* t1 = tab->addTab(L"Config");
+	env->addButton(core::rect<s32>(20,435-25,100,435-5), wnd, GUI_ID_TOOL_BOX_SET_BUTTON, L"Set");
+	env->addButton(core::rect<s32>(110,435-25,190,435-5), wnd, GUI_ID_TOOL_BOX_DELETE_BUTTON, L"Delete");
+
+	// ----------------------------------------------------------------
+	IGUITab* t1 = tab->addTab(L"Move & Scale");
 
 	// add some edit boxes and a button to tab one
 	s32 x = 10;
@@ -453,15 +485,50 @@ void Editor::createSceneNodeToolBox()
 	env->addButton(core::rect<s32>(x+122,y+10,x+142,y+19), t1, GUI_ID_TOOL_BOX_DECREASE_SCALE_Z, L"-");
 	x = 22; y = y+19;
 
+
+
+	// ----------------------------------------------------------------
+	IGUITab* t2 = tab->addTab(L"Init");
+
+	// add some edit boxes and a button to tab one
 	x = 10;
-	y += 10;
-	env->addStaticText(L"Density:", core::rect<s32>(x,y,x+30,y+16), false, false, t1);
-	env->addEditBox(stringw( densities[selectedNodeIndex] ).c_str(), core::rect<s32>(x+32,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_DENSITY);
-	
+	y = 20;
+	env->addStaticText(L"Initial speed:", core::rect<s32>(x,y,x+140,y+16), false, false, t2);
+	x = 22; y = y+16;
+	env->addStaticText(L"X:", core::rect<s32>(x,y+2,x+16,y+18), false, false, t2);
+	env->addEditBox(stringw( initialSpeeds[selectedNodeIndex].X ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t2, GUI_ID_TOOL_BOX_X_SPEED);
+	x = 22; y = y+19;
+	env->addStaticText(L"Y:", core::rect<s32>(x,y+2,x+16,y+18), false, false, t2);
+	env->addEditBox(stringw( initialSpeeds[selectedNodeIndex].Y ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t2, GUI_ID_TOOL_BOX_Y_SPEED);
+	x = 22; y = y+19;
+	env->addStaticText(L"Z:", core::rect<s32>(x,y+2,x+316,y+18), false, false, t2);
+	env->addEditBox(stringw( initialSpeeds[selectedNodeIndex].Z ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t2, GUI_ID_TOOL_BOX_Z_SPEED);
+	x = 22; y = y+19;
+
+
+
+	// ----------------------------------------------------------------
+	IGUITab* t3 = tab->addTab(L"Material");
+
+	// add some edit boxes and a button to tab one
 	x = 10;
-	y += 50;
-	env->addButton(core::rect<s32>(x,y,x+80,y+20), t1, GUI_ID_TOOL_BOX_SET_BUTTON, L"Set");
-	env->addButton(core::rect<s32>(x+90,y,x+170,y+20), t1, GUI_ID_TOOL_BOX_DELETE_BUTTON, L"Delete");
+	y = 20;
+	env->addStaticText(L"Initial speed:", core::rect<s32>(x,y,x+140,y+16), false, false, t3);
+	x = 22; y = y+16;
+	env->addStaticText(L"Lambda:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
+	env->addEditBox(stringw( meshMaterials[selectedNodeIndex].lambda ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_LAMBDA);
+	x = 22; y = y+19;
+	env->addStaticText(L"Mu:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
+	env->addEditBox(stringw( meshMaterials[selectedNodeIndex].mu ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_MU);
+	x = 22; y = y+19;
+	env->addStaticText(L"Alpha:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
+	env->addEditBox(stringw( meshMaterials[selectedNodeIndex].alpha ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_ALPHA);
+	x = 22; y = y+19;
+	env->addStaticText(L"Beta:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
+	env->addEditBox(stringw( meshMaterials[selectedNodeIndex].beta ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_BETA);
+	x = 22; y = y+19;
+	env->addStaticText(L"Density:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
+	env->addEditBox(stringw( meshMaterials[selectedNodeIndex].density ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_DENSITY);
 
 }
 
@@ -543,20 +610,28 @@ bool Editor::load(irr::core::stringc filename)
 
 	// parse the file until end reached
 	/*
-	<scenenode filename="mesh.x">
-		<position x="32.8" y=".." z=".." />
-		<rotation x="32.8" y=".." z=".." />
-		<scale x="32.8" y=".." z=".." />
-		<density value="50.0" />
-	</scenenode>
-	<forcefield>
-		<intensity x="32.8" y=".." z=".." />
-	</forcefield>
-	<force>
-		<scenenodeindex value="94"/>
-		<vertexindex value="8"/>
-		<intensity x="32.8" y=".." z=".." />
-	</force>
+	<scene name="plop">
+		<volumicmesh id="0">
+			<nodefile file="F:/doc/ENSEEIHT/3annee/projet_long/model/test/cubeout.node"/>
+			<elefile file="F:/doc/ENSEEIHT/3annee/projet_long/model/test/cubeout.ele" />
+			<facefile file="F:/doc/ENSEEIHT/3annee/projet_long/model/test/cubeout.face" />
+			<initialspeed x="0" y="0" z="10"/>
+			<materialproperties Lambda="0.419" Mu="0.578" Alpha="1.04" Beta="1.44" Density="2595"/>
+		</volumicmesh>
+		<force>
+			<volumicmeshid value="0"/>
+			<vertex index="1"/>
+			<intensity x="1" y="1" z="1"/>
+		</force>
+		<force>
+			<volumicmeshid value="0"/>
+			<vertex index="2"/>
+			<intensity x="2" y="3" z="4"/>
+		</force>
+		<forcefield>
+			<intensity x="0" y="0" z="-9.8" />
+		</forcefield>
+	</scene>
 	*/
 	XmlNodeType currentType = UNDEFINED;
 	bool firstLoop = true;
@@ -583,6 +658,7 @@ bool Editor::load(irr::core::stringc filename)
 						is_valid_file = true;
 						// clean current scene
 						this->clear();
+						this->createGUI();
 					}
 				}
 
@@ -628,11 +704,26 @@ bool Editor::load(irr::core::stringc filename)
 						this->createSceneNodeToolBox();
 					}
 				}
-				else if (stringw("density") == xml->getNodeName())
+				else if (stringw("initialspeed") == xml->getNodeName())
 				{
 					if (currentType == SCENENODE)
 					{
-						densities[nodes.size() - 1] = xml->getAttributeValueAsFloat(L"value");
+						initialSpeeds[nodes.size() - 1] = vector3df(
+							xml->getAttributeValueAsFloat(L"x"),
+							xml->getAttributeValueAsFloat(L"y"),
+							xml->getAttributeValueAsFloat(L"z"));
+						this->createSceneNodeToolBox();
+					}
+				}
+				else if (stringw("materialproperties") == xml->getNodeName())
+				{
+					if (currentType == SCENENODE)
+					{
+						meshMaterials[nodes.size() - 1].lambda = xml->getAttributeValueAsFloat(L"lambda");
+						meshMaterials[nodes.size() - 1].mu = xml->getAttributeValueAsFloat(L"mu");
+						meshMaterials[nodes.size() - 1].alpha = xml->getAttributeValueAsFloat(L"alpha");
+						meshMaterials[nodes.size() - 1].beta = xml->getAttributeValueAsFloat(L"beta");
+						meshMaterials[nodes.size() - 1].density = xml->getAttributeValueAsFloat(L"density");
 						this->createSceneNodeToolBox();
 					}
 				}
@@ -711,8 +802,18 @@ bool Editor::save(irr::core::stringc filename)
 			L"z", stringw( nodes[i]->getScale().Z ).c_str());
 		xml->writeLineBreak();
 
-		xml->writeElement(L"density", true,
-			L"value", stringw( densities[i] ).c_str());
+		xml->writeElement(L"initialspeed", true,
+			L"x", stringw( initialSpeeds[i].X ).c_str(),
+			L"y", stringw( initialSpeeds[i].Y ).c_str(),
+			L"z", stringw( initialSpeeds[i].Z ).c_str());
+		xml->writeLineBreak();
+
+		xml->writeElement(L"materialproperties", true,
+			L"lambda", stringw( meshMaterials[i].lambda ).c_str(),
+			L"mu", stringw( meshMaterials[i].mu ).c_str(),
+			L"alpha", stringw( meshMaterials[i].alpha ).c_str(),
+			L"beta", stringw( meshMaterials[i].beta ).c_str(),
+			L"density", stringw( meshMaterials[i].density ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeClosingTag(L"scenenode");
@@ -757,7 +858,7 @@ bool Editor::save(irr::core::stringc filename)
 
 bool Editor::tetScene()
 {
-	IGUIWindow* wnd = env->addMessageBox(L"Processing...", L"Tetraheadralizing... Please wait.", true, 0);
+	IGUIWindow* wnd = env->addMessageBox(L"Processing...", L"Tetrahedralizing... Please wait.", true, 0);
 	driver->beginScene(true, true, SColor(255,100,101,140));
 	env->drawAll();
 	driver->endScene();
@@ -781,12 +882,21 @@ bool Editor::tetScene()
 
 	for (u16 i=0; i < nodes.size(); i++)
 	{
-		IMeshBuffer* buf = getMeshBufferWithAbsoluteCoordinates( nodes[i] );
+		IMesh* mesh = getMeshWithAbsoluteCoordinates( nodes[i] );
+		IMeshBuffer* buf = mesh->getMeshBuffer(0);
 		stringc n =  device->getFileSystem()->getFileBasename( name, false );
 		n += stringc(i);
 		n = n.trim();
 		device->getLogger()->log(n.c_str());
-		//tetBuf(buf, (char*)n.c_str());
+
+		if (tetBuf(buf, (char*)n.c_str(), (float)mesh->getBoundingBox().getVolume() / 1000.0f ) != 0)
+		{
+			xml->drop();
+			file->drop();
+			wnd->remove();
+			env->addMessageBox(CAPTION_ERROR, L"Tetrahedralizing failed !", true);
+			return false;
+		}
 
 		xml->writeElement(L"volumicmesh", false, L"id", stringw(i).c_str());
 		xml->writeLineBreak();
@@ -809,11 +919,20 @@ bool Editor::tetScene()
 		xml->writeElement(L"facefile", true, L"file", facefile.c_str());
 		xml->writeLineBreak();
 
-		xml->writeElement(L"initialspeed", true, L"x", L"0", L"y", L"0", L"z", L"0");
+		xml->writeElement(L"initialspeed", true,
+			L"x", stringw( initialSpeeds[i].X ).c_str(),
+			L"y", stringw( initialSpeeds[i].Y ).c_str(),
+			L"z", stringw( initialSpeeds[i].Z ).c_str());
 		xml->writeLineBreak();
+
 		xml->writeElement(L"materialproperties", true,
-			L"Lambda", L"0.419", L"Mu", L"0.578", L"Alpha", L"1.04", L"Beta", L"1.44", L"Density", L"2595");
+			L"lambda", stringw( meshMaterials[i].lambda ).c_str(),
+			L"mu", stringw( meshMaterials[i].mu ).c_str(),
+			L"alpha", stringw( meshMaterials[i].alpha ).c_str(),
+			L"beta", stringw( meshMaterials[i].beta ).c_str(),
+			L"density", stringw( meshMaterials[i].density ).c_str());
 		xml->writeLineBreak();
+
 		xml->writeClosingTag(L"volumicmesh");
 		xml->writeLineBreak();
 	}
@@ -840,24 +959,108 @@ bool Editor::tetScene()
 	file->drop();
 
 	wnd->remove();
+	env->addMessageBox(L"Success", L"Tetrahedralizing finished well !", true);
 
 	return true;
 }
 
 
 
-IMeshBuffer* Editor::getMeshBufferWithAbsoluteCoordinates(IMeshSceneNode* node)
+IMesh* Editor::getMeshWithAbsoluteCoordinates(IMeshSceneNode* node)
 {
-	IMeshBuffer* buf = node->getMesh()->getMeshBuffer(0);
 	SMeshBuffer* newBuf = new SMeshBuffer();
+	//SMeshBuffer* tmpBuf = new SMeshBuffer();
+	// prepare...
+	u32 index_count = 0;
+	u32 vertex_count = 0;
+	u32 index_offset = 0;
+	u32 poly_offset = 0;
+	for (u32 k=0; k < node->getMesh()->getMeshBufferCount(); k++)
+	{
+		IMeshBuffer* buf = node->getMesh()->getMeshBuffer(k);
+		index_count += buf->getIndexCount();
+		vertex_count += buf->getVertexCount();
+	}
+	//tmpBuf->Indices.set_used( index_count );
+	newBuf->Indices.set_used( index_count );
+	//tmpBuf->Vertices.reallocate( vertex_count );
+	newBuf->Vertices.reallocate( vertex_count );
 
-	newBuf->Indices.set_used( buf->getIndexCount() );
-	newBuf->Vertices.reallocate( buf->getVertexCount() );
-	for (u32 i=0; i < buf->getIndexCount(); i++)
-		newBuf->Indices[i] = buf->getIndices()[i];
-	for (u32 i=0; i < buf->getVertexCount(); i++)
-		newBuf->Vertices.push_back( ((video::S3DVertex*)buf->getVertices())[i] );
+	for (u32 k=0; k < node->getMesh()->getMeshBufferCount(); k++)
+	{
+		IMeshBuffer* buf = node->getMesh()->getMeshBuffer(k);
 
+		for (u32 i=0; i < buf->getIndexCount(); i++)
+		{
+			//tmpBuf->Indices[i+poly_offset] = buf->getIndices()[i] + index_offset;
+			newBuf->Indices[i+poly_offset] = buf->getIndices()[i] + index_offset;
+		}
+		for (u32 i=0; i < buf->getVertexCount(); i++)
+			newBuf->Vertices.push_back( ((video::S3DVertex*)buf->getVertices())[i] );
+
+		index_offset += buf->getVertexCount();
+		poly_offset += buf->getIndexCount();
+	}
+
+	device->getLogger()->log( (stringw("Buffer count : ")+stringw(node->getMesh()->getMeshBufferCount())).c_str() );
+
+
+	// fusionne les mesh buffers et enlève les doublons
+/*	array<bool> add;
+	for (u32 i=0; i < tmpBuf->Vertices.size(); i++)
+		add.push_back(true);*/
+
+/*
+	for (u32 i=0; i < tmpBuf->Vertices.size(); i++)
+	{
+		for (u32 j=i+1; j < tmpBuf->Vertices.size(); j++)
+		{
+			if (tmpBuf->Vertices[i].Pos.equals(tmpBuf->Vertices[j].Pos))
+			{
+				for (u32 k=0; k < tmpBuf->Indices.size(); k++)
+				{
+					if (tmpBuf->Indices[k] == j)
+						tmpBuf->Indices[k] = i;
+					if (tmpBuf->Indices[k] > j)
+						tmpBuf->Indices[k]--;
+				}
+				//tmpBuf->Vertices[j].erase;
+			}
+		}
+	}
+
+	for (u32 i=0; i < tmpBuf->Vertices.size(); i++)
+	{
+		if (add[i])
+		{
+			newBuf->Vertices.push_back(tmpBuf->Vertices[i]);
+
+			for (u32 j=i+1; j < tmpBuf->Vertices.size(); j++)
+			{
+				if (tmpBuf->Vertices[i].Pos.equals(tmpBuf->Vertices[j].Pos))
+				{
+					u32 newJ;
+					for (u32 k=0; k < tmpBuf->Indices.size(); k++)
+					{
+						if (tmpBuf->Indices[k] == j)
+							newJ = newBuf->Indices[k];
+					}
+					for (u32 k=0; k < newBuf->Indices.size(); k++)
+					{
+						if (newBuf->Indices[k] == newJ)
+							newBuf->Indices[k] = i;
+						if (newBuf->Indices[k] > newJ)
+							newBuf->Indices[k]--;
+						device->getLogger()->log( (stringw(k)+L" -> "+stringw(newBuf->Indices[k])).c_str() );
+					}
+					add[j] = false;
+				}
+			}
+		}
+	}
+*/
+
+	// just do it
 	vector3df pos = node->getPosition();
 	vector3df rot = node->getRotation();
 	vector3df scale = node->getScale();
@@ -871,19 +1074,16 @@ IMeshBuffer* Editor::getMeshBufferWithAbsoluteCoordinates(IMeshSceneNode* node)
 		newBuf->Vertices[i].Pos *= scale;
 		vector3df p = newBuf->Vertices[i].Pos;
 		
-		// apply rotation //
-		p.X = newBuf->Vertices[i].Pos.X * cos(rot.Y)
-			+ newBuf->Vertices[i].Pos.Z * sin(rot.Y)
-			+ newBuf->Vertices[i].Pos.X * cos(rot.Z)
-			- newBuf->Vertices[i].Pos.Y * sin(rot.Z);
-		p.Y = newBuf->Vertices[i].Pos.X * sin(rot.Z)
-			+ newBuf->Vertices[i].Pos.Y * cos(rot.Z)
-			+ newBuf->Vertices[i].Pos.Y * cos(rot.X)
-			- newBuf->Vertices[i].Pos.Z * sin(rot.X);
-		p.Z = newBuf->Vertices[i].Pos.Y * sin(rot.X)
-			+ newBuf->Vertices[i].Pos.Z * cos(rot.X)
-			- newBuf->Vertices[i].Pos.X * sin(rot.Y)
-			+ newBuf->Vertices[i].Pos.Z * cos(rot.Y);
+		// apply rotation
+		p.X = newBuf->Vertices[i].Pos.X * ( cos(rot.Z)*cos(rot.Y) )
+			+ newBuf->Vertices[i].Pos.Y * ( cos(rot.Z)*sin(rot.Y)*sin(rot.X)-sin(rot.Z)*cos(rot.X) )
+			+ newBuf->Vertices[i].Pos.Z * ( cos(rot.Z)*sin(rot.Y)*cos(rot.X)+sin(rot.Z)*sin(rot.X) );
+		p.Y = newBuf->Vertices[i].Pos.X * ( sin(rot.Z)*cos(rot.Y) )
+			+ newBuf->Vertices[i].Pos.Y * ( sin(rot.Z)*sin(rot.Y)*sin(rot.X)+cos(rot.Z)*cos(rot.X) )
+			+ newBuf->Vertices[i].Pos.Z * ( sin(rot.Z)*sin(rot.Y)*cos(rot.X)-cos(rot.Z)*sin(rot.X) );
+		p.Z = newBuf->Vertices[i].Pos.X * ( -sin(rot.Y) )
+			+ newBuf->Vertices[i].Pos.Y * ( cos(rot.Y)*sin(rot.X) )
+			+ newBuf->Vertices[i].Pos.Z * ( cos(rot.Y)*cos(rot.X) );
 		
 		newBuf->Vertices[i].Pos = p;
 
@@ -891,10 +1091,15 @@ IMeshBuffer* Editor::getMeshBufferWithAbsoluteCoordinates(IMeshSceneNode* node)
 		newBuf->Vertices[i].Pos += pos;
 	}
 
+	// lets recalculate the bounding box and create the mesh
+	for (u32 j=0; j < newBuf->Vertices.size(); ++j)
+		newBuf->BoundingBox.addInternalPoint(newBuf->Vertices[j].Pos);
+
 	SMesh* mesh = new SMesh();
 	mesh->MeshBuffers.push_back(newBuf);
-	IMeshSceneNode* n = smgr->addMeshSceneNode(mesh);
+	mesh->recalculateBoundingBox();
+	IMeshSceneNode* n = smgr->addMeshSceneNode( mesh );
 	n->setMaterialFlag(EMF_WIREFRAME, true);
 
-	return newBuf;
+	return mesh;
 }
