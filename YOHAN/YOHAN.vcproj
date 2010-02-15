@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="irrlicht\include;tetgen"
+				AdditionalIncludeDirectories="mumps\include;irrlicht\include;tetgen"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,7 +63,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="TetGenLib.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
+				AdditionalLibraryDirectories="xercesc\lib;mumps\lib;&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="irrlicht\include;tetgen"
+				AdditionalIncludeDirectories="mumps\include;irrlicht\include;tetgen"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -138,7 +138,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="TetGenLib.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
+				AdditionalLibraryDirectories="xercesc\lib;mumps\lib;&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -201,7 +201,6 @@
 				>
 			</File>
 			<File
-<<<<<<< HEAD
 				RelativePath=".\Matrix.cpp"
 				>
 			</File>
@@ -218,6 +217,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Player.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerEventReceiver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerFrame.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\PointPool.cpp"
 				>
 			</File>
@@ -231,17 +242,6 @@
 			</File>
 			<File
 				RelativePath=".\SparseMatrix2.cpp"
-=======
-				RelativePath=".\Player.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PlayerEventReceiver.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PlayerFrame.cpp"
->>>>>>> 9d1b847bdafec74e5466f436cdc85f5250d5dee7
 				>
 			</File>
 			<File
@@ -327,13 +327,10 @@
 				>
 			</File>
 			<File
-<<<<<<< HEAD
 				RelativePath=".\Matrix.h"
 				>
 			</File>
 			<File
-				RelativePath=".\resource.h"
-=======
 				RelativePath=".\Player.h"
 				>
 			</File>
@@ -343,7 +340,10 @@
 			</File>
 			<File
 				RelativePath=".\PlayerFrame.h"
->>>>>>> 9d1b847bdafec74e5466f436cdc85f5250d5dee7
+				>
+			</File>
+			<File
+				RelativePath=".\resource.h"
 				>
 			</File>
 			<File
