@@ -47,7 +47,7 @@ void SymmetricMumpsSquareSparseMatrix2::addAndSetValue(int i, int j, DATA value)
 {
 	//resizing
 	if (size == capacity - 1)
-		resize(capacity + order * 2);
+		resize(capacity * 2);
 
 	rows[size] = i;
 	columns[size] = j;
@@ -76,6 +76,10 @@ SymmetricMumpsSquareSparseMatrix2::~SymmetricMumpsSquareSparseMatrix2()
 
 void SymmetricMumpsSquareSparseMatrix2::clear()
 {
+	memset((void*)columns, 0, size * sizeof(int));
+	memset((void*)rows, 0, size * sizeof(int));
+	memset((void*)values, 0, size * sizeof(DATA));
+
 	this->size = 0;
 }
 
@@ -120,64 +124,6 @@ DATA SymmetricMumpsSquareSparseMatrix2::getValue(int i, int j)
 	return val;
 }
 
-/*
-void SymmetricMumpsSquareSparseMatrix::calcul_AXplusBY(DATA alpha, SquareSparseMatrix* X, DATA beta, SquareSparseMatrix* Y)
-{
-
-	if (X->getType() == SquareSparseMatrix::TYPE_SymmetricMumpsSquareSparse &&
-		Y->getType() == SquareSparseMatrix::TYPE_SymmetricMumpsSquareSparse)
-	{
-		SymmetricMumpsSquareSparseMatrix* A;
-		SymmetricMumpsSquareSparseMatrix* B;
-
-		if (X->getSize() < Y->getSize())
-		{
-			A = (SymmetricMumpsSquareSparseMatrix*)X;
-			B = (SymmetricMumpsSquareSparseMatrix*)Y;
-		}
-		else
-		{
-			A = (SymmetricMumpsSquareSparseMatrix*)Y;
-			B = (SymmetricMumpsSquareSparseMatrix*)X;
-
-			DATA tmp = alpha;
-			alpha = beta;
-			beta = tmp;
-		}
-
-		std::map<int,int> testMap = std::map<int,int>();
-
-		for (int i = 0; i < A->size; i++)
-		{
-			int row = A->rows[i];
-			int column = A->columns[i];
-
-			this->setValue(row, column, A->values[i] * alpha + B->getValue(row, column) * beta);
-
-			int key = row * this->order + column;
-			testMap[key] = 0;
-		}
-
-		for (int i = 0; i < B->size; i++)
-		{
-			int row = B->rows[i];
-			int column = B->columns[i];
-	
-			int key = row * this->order + column;
-			if (testMap.find(key) != testMap.end())	// already added
-				continue;
-
-			this->setValue(row, column, B->values[i] * beta + A->getValue(row, column) * alpha);
-		}
-	}
-	else
-	{
-		printf("Check your matrix, their type is not correct.");
-		fetalError();
-	}
-}
-*/
-
 void SymmetricMumpsSquareSparseMatrix2::calcul_AXplusBY(DATA alpha, SquareSparseMatrix* X, DATA beta, SquareSparseMatrix* Y)
 {
 
@@ -207,8 +153,8 @@ void SymmetricMumpsSquareSparseMatrix2::calcul_AXplusBY(DATA alpha, SquareSparse
 		// use memcpy for performance
 
 		this->clear();
-		if(this->capacity < B->capacity)
-			resize(B->capacity + 2 * order);
+		if(this->capacity < B->size + A->size)
+			resize(B->size + A->size);
 
 		//copy
 		memcpy((void*)this->columns, (void*)B->columns, B->size * sizeof(int));
