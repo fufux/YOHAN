@@ -63,8 +63,15 @@ public:
 	// allow to change visibility of debug data
 	void setDebugDataVisible(scene::E_DEBUG_SCENE_TYPE state);
 	s32 isDebugDataVisible();
-	// tet all the scene
-	bool tetScene();
+
+
+	// This method tetrahedralize the current scene and save the result in the given file and directory.
+	bool tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir);
+	// This method simulate the given volumic scene and save the result in a given directory
+	bool simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSceneOutDir);
+
+	// This simply calls tetrahedralizeScene and simulateScene with right arguments
+	void quickTetAndSimulate();
 
 
 	// allow to change the position of the selected scene node
@@ -79,6 +86,10 @@ public:
 	void selectNode();
 
 	void setPlayer(Player* player);
+
+	// is the editor running ?
+	bool isRunning();
+	stringc getName();
 
 private:
 	// name of the scene

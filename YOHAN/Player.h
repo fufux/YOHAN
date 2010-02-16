@@ -53,6 +53,9 @@ public:
 	// are we playing now ?
 	bool is_playing;
 
+	// is the player running ?
+	bool isRunning();
+
 private:
 	// is the user currently using the player ? (it could be the editor)
 	bool is_running;

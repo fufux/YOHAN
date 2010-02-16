@@ -40,7 +40,7 @@ scene::ICameraSceneNode* camera[CAMERA_COUNT];
 /*
 This is the main method.
 */
-int __main(int argc, _TCHAR* argv[])
+int main(int argc, _TCHAR* argv[])
 {
 	// initialize random number generator
 	srand((unsigned int)time(NULL)); 
@@ -116,6 +116,19 @@ int __main(int argc, _TCHAR* argv[])
 		env->drawAll();
 
 		driver->endScene();
+
+		stringw caption = L"";
+		if (editor->isRunning())
+		{
+			caption += L"Editor - [";
+			caption += editor->getName();
+			caption += L"]";
+		}
+		else if (player->isRunning())
+		{
+			caption += L"Player";
+		}
+		device->setWindowCaption( caption.c_str() );
 	}
 
 	editor->clear();

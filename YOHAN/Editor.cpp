@@ -1,4 +1,9 @@
 #include "Editor.h"
+#include "Base.h"
+
+using namespace yohan;
+using namespace base;
+
 
 extern IrrlichtDevice* device;
 extern IVideoDriver* driver;
@@ -8,7 +13,7 @@ extern scene::ICameraSceneNode* camera[CAMERA_COUNT];
 
 
 // lets import the tetBuf method
-int tetBuf (IMeshBuffer *newBuffer, char *name, float volume);
+int tetBuf (IMeshBuffer *newBuffer, char *name, char *directory, float volume);
 
 
 
@@ -61,6 +66,17 @@ void Editor::switchToPlayer()
 		this->stop();
 		player->start();
 	}
+}
+
+
+bool Editor::isRunning()
+{
+	return is_running;
+}
+
+stringc Editor::getName()
+{
+	return name;
 }
 
 
@@ -856,19 +872,88 @@ bool Editor::save(irr::core::stringc filename)
 }
 
 
-bool Editor::tetScene()
+void Editor::quickTetAndSimulate()
 {
+	// reset the working directory
+	device->getFileSystem()->changeWorkingDirectoryTo( baseDir.c_str() );
+
+	// files and directories names
+	stringc outDirTetrahedralize = "tetrahedralized/";
+	outDirTetrahedralize += device->getFileSystem()->getFileBasename( name, false );
+	stringc tetrahedralizedSceneFile = device->getFileSystem()->getFileBasename( name, false );
+	tetrahedralizedSceneFile += "_volumic.xml";
+	stringc simulatedSceneOutDir = "simulated/";
+	simulatedSceneOutDir += device->getFileSystem()->getFileBasename( name, false );
+
+	// create the directories if they don't exist
+	createDir( "tetrahedralized" );
+	createDir( "simulated" );
+	createDir( (char*)outDirTetrahedralize.c_str() );
+	createDir( (char*)simulatedSceneOutDir.c_str() );
+
+	// display message
 	IGUIWindow* wnd = env->addMessageBox(L"Processing...", L"Tetrahedralizing... Please wait.", true, 0);
 	driver->beginScene(true, true, SColor(255,100,101,140));
 	env->drawAll();
 	driver->endScene();
+	wnd->remove();
 
-	device->getFileSystem()->changeWorkingDirectoryTo( baseDir.c_str() );
+	// tetrahedralize...
+	if ( tetrahedralizeScene(tetrahedralizedSceneFile, outDirTetrahedralize) )
+	{
+		// display message
+		wnd = env->addMessageBox(L"Processing...", L"Tetrahedralizing succeed. Simulating... Please wait.", true, 0);
+		driver->beginScene(true, true, SColor(255,100,101,140));
+		env->drawAll();
+		driver->endScene();
+		wnd->remove();
 
+		// simulate...
+		if ( simulateScene(outDirTetrahedralize + "/" + tetrahedralizedSceneFile, simulatedSceneOutDir) )
+		{
+			env->addMessageBox(L"Success", L"Simulation finished well.", true);
+		}
+		else
+		{
+			env->addMessageBox(CAPTION_ERROR, L"Simulation failed ! Aborting.", true);
+		}
+	}
+	else
+	{
+		env->addMessageBox(CAPTION_ERROR, L"Tetrahedralizing failed ! Aborting.", true);
+	}
+
+}
+
+
+bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSceneOutDir)
+{
+	/*try
+	{*/
+		//load the scene file
+		SceneController* sc = new SceneController( (char*)tetrahedralizedSceneFile.c_str() );
+
+		//start to simulate, and try to record all the process into the given file
+		device->getLogger()->log((stringc("Call simulate(")+simulatedSceneOutDir+stringc(")")).c_str());
+		sc->simulate( (char*)simulatedSceneOutDir.c_str() );
+	/*}
+	catch(...)
+	{
+		return false;
+	}*/
+
+	return true;
+}
+
+
+/*
+Ths method tetrahedralize the current scene and save the result in the given file and directory.
+*/
+bool Editor::tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir)
+{
 	// Create / open the file and get ready to write XML
-	stringc filename = "output/";
-	filename += device->getFileSystem()->getFileBasename( name, false );
-	filename += "_volumic.xml";
+	stringc filename = outDir + "/" + outTetrahedralizedFile;
+
 	IWriteFile* file = device->getFileSystem()->createAndWriteFile( filename );
 	if (!file)
 		return false;
@@ -887,33 +972,30 @@ bool Editor::tetScene()
 		stringc n =  device->getFileSystem()->getFileBasename( name, false );
 		n += stringc(i);
 		n = n.trim();
-		device->getLogger()->log(n.c_str());
 
-		if (tetBuf(buf, (char*)n.c_str(), (float)mesh->getBoundingBox().getVolume() / 1000.0f ) != 0)
+		if (tetBuf(buf, (char*)n.c_str(), (char*)(outDir+"/").c_str(), (float)mesh->getBoundingBox().getVolume() / 1000.0f ) != 0)
 		{
 			xml->drop();
 			file->drop();
-			wnd->remove();
-			env->addMessageBox(CAPTION_ERROR, L"Tetrahedralizing failed !", true);
 			return false;
 		}
 
 		xml->writeElement(L"volumicmesh", false, L"id", stringw(i).c_str());
 		xml->writeLineBreak();
 
-		stringw nodefile = L"output/";
+		stringw nodefile = stringw(outDir.c_str()) + L"/";
 		nodefile += stringw(n.c_str());
 		nodefile += L"out.node";
 		xml->writeElement(L"nodefile", true, L"file", nodefile.c_str());
 		xml->writeLineBreak();
 
-		stringw elefile = L"output/";
+		stringw elefile = stringw(outDir.c_str()) + L"/";
 		elefile += stringw(n.c_str());
 		elefile += L"out.ele";
 		xml->writeElement(L"elefile", true, L"file", elefile.c_str());
 		xml->writeLineBreak();
 
-		stringw facefile = L"output/";
+		stringw facefile = stringw(outDir.c_str()) + L"/";
 		facefile += stringw(n.c_str());
 		facefile += L"out.face";
 		xml->writeElement(L"facefile", true, L"file", facefile.c_str());
@@ -926,11 +1008,11 @@ bool Editor::tetScene()
 		xml->writeLineBreak();
 
 		xml->writeElement(L"materialproperties", true,
-			L"lambda", stringw( meshMaterials[i].lambda ).c_str(),
-			L"mu", stringw( meshMaterials[i].mu ).c_str(),
-			L"alpha", stringw( meshMaterials[i].alpha ).c_str(),
-			L"beta", stringw( meshMaterials[i].beta ).c_str(),
-			L"density", stringw( meshMaterials[i].density ).c_str());
+			L"Lambda", stringw( meshMaterials[i].lambda ).c_str(),
+			L"Mu", stringw( meshMaterials[i].mu ).c_str(),
+			L"Alpha", stringw( meshMaterials[i].alpha ).c_str(),
+			L"Beta", stringw( meshMaterials[i].beta ).c_str(),
+			L"Density", stringw( meshMaterials[i].density ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeClosingTag(L"volumicmesh");
@@ -957,9 +1039,6 @@ bool Editor::tetScene()
 
 	xml->drop();
 	file->drop();
-
-	wnd->remove();
-	env->addMessageBox(L"Success", L"Tetrahedralizing finished well !", true);
 
 	return true;
 }
@@ -1002,63 +1081,6 @@ IMesh* Editor::getMeshWithAbsoluteCoordinates(IMeshSceneNode* node)
 		poly_offset += buf->getIndexCount();
 	}
 
-	device->getLogger()->log( (stringw("Buffer count : ")+stringw(node->getMesh()->getMeshBufferCount())).c_str() );
-
-
-	// fusionne les mesh buffers et enlève les doublons
-/*	array<bool> add;
-	for (u32 i=0; i < tmpBuf->Vertices.size(); i++)
-		add.push_back(true);*/
-
-/*
-	for (u32 i=0; i < tmpBuf->Vertices.size(); i++)
-	{
-		for (u32 j=i+1; j < tmpBuf->Vertices.size(); j++)
-		{
-			if (tmpBuf->Vertices[i].Pos.equals(tmpBuf->Vertices[j].Pos))
-			{
-				for (u32 k=0; k < tmpBuf->Indices.size(); k++)
-				{
-					if (tmpBuf->Indices[k] == j)
-						tmpBuf->Indices[k] = i;
-					if (tmpBuf->Indices[k] > j)
-						tmpBuf->Indices[k]--;
-				}
-				//tmpBuf->Vertices[j].erase;
-			}
-		}
-	}
-
-	for (u32 i=0; i < tmpBuf->Vertices.size(); i++)
-	{
-		if (add[i])
-		{
-			newBuf->Vertices.push_back(tmpBuf->Vertices[i]);
-
-			for (u32 j=i+1; j < tmpBuf->Vertices.size(); j++)
-			{
-				if (tmpBuf->Vertices[i].Pos.equals(tmpBuf->Vertices[j].Pos))
-				{
-					u32 newJ;
-					for (u32 k=0; k < tmpBuf->Indices.size(); k++)
-					{
-						if (tmpBuf->Indices[k] == j)
-							newJ = newBuf->Indices[k];
-					}
-					for (u32 k=0; k < newBuf->Indices.size(); k++)
-					{
-						if (newBuf->Indices[k] == newJ)
-							newBuf->Indices[k] = i;
-						if (newBuf->Indices[k] > newJ)
-							newBuf->Indices[k]--;
-						device->getLogger()->log( (stringw(k)+L" -> "+stringw(newBuf->Indices[k])).c_str() );
-					}
-					add[j] = false;
-				}
-			}
-		}
-	}
-*/
 
 	// just do it
 	vector3df pos = node->getPosition();
