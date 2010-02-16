@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "Editor.h"
 
+
 extern IrrlichtDevice* device;
 extern IVideoDriver* driver;
 extern ISceneManager* smgr;
@@ -45,6 +46,11 @@ void Player::switchToEditor()
 		this->stop();
 		editor->start();
 	}
+}
+
+bool Player::isRunning()
+{
+	return is_running;
 }
 
 void Player::clear()

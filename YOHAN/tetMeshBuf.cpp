@@ -19,7 +19,7 @@ extern ISceneManager* smgr;
 #pragma comment(linker, "/subsystem:windows /ENTRY:mainCRTStartup")
 #endif
 
-int tetBuf (IMeshBuffer *newBuffer, char *name, float volume) {
+int tetBuf (IMeshBuffer *newBuffer, char *name, char *directory, float volume) {
 
 	tetgenio in, out; // Input and output data for tetgen //
 	tetgenio::facet *f; // Auxiliary variable for the facets array setting //
@@ -34,14 +34,16 @@ int tetBuf (IMeshBuffer *newBuffer, char *name, float volume) {
 	REAL *tempPointList; // Temporary list of points //
 	bool *toWrite;  // toWrite[i] is true if the i-th vertex is to add to the input of tetgen //
 					// false otherwise //
-	char tetgenLoadPath[42] = "output/";
-	char tetgenSavePath[42] = "output/";
+	char tetgenLoadPath[128] = "";
+	char tetgenSavePath[128] = "";
 	stringc params = "Qpq2.0a";
 	params += stringc(volume);
 
 		// Creating the paths used //
+	strcat_s(tetgenLoadPath, directory);
 	strcat_s(tetgenLoadPath, name);
 	strcat_s(tetgenLoadPath, "in");
+	strcat_s(tetgenSavePath, directory);
 	strcat_s(tetgenSavePath, name);
 	strcat_s(tetgenSavePath, "out");
 

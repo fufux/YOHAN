@@ -114,7 +114,7 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 					editor->askForFileName();
 					break;
 				case GUI_ID_TETRAHEDRALIZE_SCENE: // File -> Tetrahedralize scene
-					editor->tetScene();
+					editor->quickTetAndSimulate();
 					break;
 				case GUI_ID_OPEN_MODEL: // File -> Open Model
 					opening = OPENING_MODEL;
