@@ -180,7 +180,7 @@ void VolumeModel::output(FILE* sceneFile, char* objectFileDir, int frameID)
 	eleFileName = tetPool->output(objectFileDir, id);
 
 	// save in the scene file
-	fprintf(sceneFile, "<object nodefile=\"%s\" facefile=\"%s\" elefile=\"%s\" />\n", nodeFileName, faceFileName, eleFileName);
+	fprintf(sceneFile, "\t\t<object nodefile=\"%s\" facefile=\"%s\" elefile=\"%s\" />\n", nodeFileName, faceFileName, eleFileName);
 }
 
 // temporal

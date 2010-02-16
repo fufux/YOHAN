@@ -470,8 +470,6 @@ namespace yohan
 
 			char frameFileName[256];
 
-			int indexInFrame;
-
 			int indexOfFrame;
 
 			/**/
