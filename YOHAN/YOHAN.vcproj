@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="YOHAN"
 	ProjectGUID="{42174D37-CE25-4CAE-BCD7-4F7DE8146035}"
 	RootNamespace="YOHAN"
@@ -63,7 +63,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="pord_c.lib MetisLib.lib libseq_c.lib dmumps_c.lib mumps_common_c.lib libseq_fortran.lib TetGenLib.lib xerces-c_3D.lib blas.lib dmumps_fortran.lib "
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;C:\Program Files\Intel\Compiler\11.1\054\lib\ia32&quot;;xercesc\lib;mumps\lib;&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
+				AdditionalLibraryDirectories="&quot;h:\Program Files\Intel\Compiler\11.1\054\lib\ia32&quot;;xercesc\lib;mumps\lib;&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -201,6 +201,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FacePool.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Matrix.cpp"
 				>
 			</File>
@@ -234,6 +238,10 @@
 			</File>
 			<File
 				RelativePath=".\SceneController.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SceneRecorder.cpp"
 				>
 			</File>
 			<File
