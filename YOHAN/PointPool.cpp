@@ -45,11 +45,11 @@ PointPool::PointPool(const char *nodeFile, const char* faceFile, DATA speed[])
 		fscanf(fp, "%d%lf%lf%lf", &tmp, pointData, pointData + 1, pointData + 2);
 
 		// temporal, only for test
-		/*
+		
 		pointData[0] += 1;
 		pointData[1] += 1;
 		pointData[2] += 1;
-		*/
+		
 
 		// velority
 		pointData[3] = speed[0];
@@ -129,7 +129,7 @@ void PointPool::fillVector(DATA* V, DATA* XU)
 		// deplacement
 		XU[i] = pointData[0] - pointData[6];
 		XU[i + 1] = pointData[1] - pointData[7];
-		XU[i + 1] = pointData[2] - pointData[8];
+		XU[i + 2] = pointData[2] - pointData[8];
 
 		i += 3;
 	}
@@ -141,6 +141,11 @@ void PointPool::feedBackVector(DATA* V, DATA deltaTime)
 	for (std::vector<DATA*>::iterator iter = pointList.begin(); iter != pointList.end(); ++iter)
 	{
 		DATA* pointData = *iter;
+
+		// acceleration, only for debug
+		pointData[9] = (V[i] - pointData[3]) / deltaTime;
+		pointData[10] = (V[i + 1] - pointData[4]) / deltaTime;
+		pointData[11] = (V[i + 2] - pointData[5]) / deltaTime;
 
 		// velority
 		pointData[3] = V[i];
@@ -173,6 +178,7 @@ void PointPool::showInfo(int round)
 	printf("%d - %32.26lf , %32.26lf , %32.26lf : %32.26lf , %32.26lf , %32.26lf \n", 0, pointData[0], pointData[1], pointData[2], pointData[3], pointData[4], pointData[5]);
 	*/
 
+	/*
 	// append .xml
 	FILE* fpXML = fopen("SceneTest.xml", "a+");
 	fprintf(fpXML, "<frame id=\"%d\" nodefile=\"test-%d.node\" elefile=\"test.ele\" facefile=\"test.face\" timestamp=\"0.0\"/>\n", round, round);
@@ -194,6 +200,7 @@ void PointPool::showInfo(int round)
 	}
 
 	fclose(fpNode);
+	*/
 
 
 }

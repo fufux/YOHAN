@@ -34,8 +34,6 @@ SceneRecorder::SceneRecorder(char *filename)
 
 void SceneRecorder::newFrame(const yohan::base::DATA timeStamp)
 {
-	this->indexInFrame = 0;
-
 	char tmp[16];
 
 	//decide if create a new sub directory to avoid penalize the performance of file system
@@ -48,11 +46,12 @@ void SceneRecorder::newFrame(const yohan::base::DATA timeStamp)
 	// dir of the frame
 	strcat(frameFileName, "/frame-");
 	strcat(frameFileName, _itoa(indexOfFrame, tmp, 10));
+	createDir(frameFileName);
 
 	// open scene file
 	this->sceneFile = fopen(sceneFileName, "a+");
 	// the head tag of a frame
-	fprintf(sceneFile, "\t<frame id=\"%d\" timestamp=\"%8.4lf\">\n", this->indexOfFrame, timeStamp);
+	fprintf(sceneFile, "\t<frame id=\"%d\" timestamp=\"%.4lf\">\n", this->indexOfFrame, timeStamp);
 	// do not close until the endFrame()
 
 }
@@ -61,6 +60,8 @@ void SceneRecorder::endFrame()
 {
 	fprintf(sceneFile, "\t</frame>\n");
 	fclose(sceneFile);
+
+	indexOfFrame++;
 }
 
 void SceneRecorder::record(VolumeModel* model)

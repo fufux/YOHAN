@@ -4,9 +4,9 @@
 		<elefile file="../YOHAN/test/sphereout.ele" />
 		<facefile file="../YOHAN/test/sphereout.face" />
 		<initialspeed x="0" y="0" z="0"/>
-		<materialproperties Lambda="0.419E9" Mu="0.4" Alpha="1.04E3" Beta="1.44E3" Density="2595"/>
+		<materialproperties Lambda="0.419E8" Mu="0.4" Alpha="1.04E-3" Beta="1.44E-3" Density="2595"/>
 	</volumicmesh>
 	<forcefield>
-		<intensity x="0" y="0" z="-9.8" />
+		<intensity x="0" y="0" z="-9.81" />
 	</forcefield>
 </scene>
