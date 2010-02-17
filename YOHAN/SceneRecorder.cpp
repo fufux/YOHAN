@@ -23,13 +23,11 @@ SceneRecorder::SceneRecorder(char *filename)
 	indexOfFrame = 0;
 
 	// open scene file
-	this->sceneFile = fopen(sceneFileName, "a+");
+	this->sceneFile = fopen(sceneFileName, "w");
 	// write the head of video
 	fprintf(sceneFile, "<video name=\"test\">\n");
 	// close
 	fclose(sceneFile);
-
-
 }
 
 void SceneRecorder::newFrame(const yohan::base::DATA timeStamp)
