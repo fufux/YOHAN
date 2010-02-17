@@ -24,21 +24,25 @@ TetrahedronPool::TetrahedronPool(const char *eleFile, DATA constants[], PointPoo
 
 	/* file .ele */
 
-	FILE *fp = fopen(eleFile, "r");
-	if (fp == NULL)
+	//FILE *fp = fopen(eleFile, "r");
+	ifstream fp (eleFile, ios::in);
+	//if (fp == NULL)
+	if (!fp || !fp.good())
 	{
 		printf("Can not open ele file: %s", eleFile);
 		fetalError();
 	}
 
 	// get number
-	fscanf(fp, "%d%d%d", &n, &tmp, &tmp);
+	//fscanf(fp, "%d%d%d", &n, &tmp, &tmp);
+	fp >> n >> tmp >> tmp;
 
 	// the tet list
-	for (int i = 0; i < n; i++)
+	for (int i = 0; i < n && fp.good(); i++)
 	{
 		int id, p[4];
-		fscanf(fp, "%d%d%d%d%d", &id, p, p + 1, p + 2, p + 3);
+		//fscanf(fp, "%d%d%d%d%d", &id, p, p + 1, p + 2, p + 3);
+		fp >> id >> p[0] >> p[1] >> p[2] >> p[3];
 
 		// coherent index
 		id--;
@@ -50,7 +54,9 @@ TetrahedronPool::TetrahedronPool(const char *eleFile, DATA constants[], PointPoo
 	}
 
 	// close file
-	fclose(fp);
+	//fclose(fp);
+	fp.close();
+	fp.clear();
 }
 
 void TetrahedronPool::fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, SquareSparseMatrix* C, DATA* F, DATA gravity[])
@@ -91,24 +97,33 @@ char* TetrahedronPool::output(char* dir, int modelID)
 		this->oldTetCount = this->tetList.size();
 
 		// .bele
-		char tmp[16];
+		/*char tmp[16];
 		strcpy(oldOutputFileName, dir);
 		strcat(oldOutputFileName, "/");
 		strcat(oldOutputFileName, _itoa(modelID, tmp, 10));
-		strcat(oldOutputFileName, ".bele");
+		strcat(oldOutputFileName, ".bele");*/
+		std::stringstream sstream;
+		sstream << dir << "/" << modelID << ".bele";
+		strcpy_s(oldOutputFileName, 256, sstream.str().c_str());
 
 		// output
-		FILE* fp = fopen(oldOutputFileName, "a+");
+		//FILE* fp = fopen(oldOutputFileName, "a+");
+		ofstream fp (oldOutputFileName, ios::out | ios::binary);
 
-		fwrite(&oldTetCount, sizeof(int), 1, fp);
+		//fwrite(&oldTetCount, sizeof(int), 1, fp);
+		fp.write ((char*)&oldTetCount, sizeof(int));
 
 		for (std::vector<Tetrahedron*>::iterator iter = tetList.begin(); iter != tetList.end(); ++iter)
 		{
 			Tetrahedron* tet = *iter;
-			fwrite((void*)tet->getPointIndex(), sizeof(int), 4, fp);
+			//fwrite((void*)tet->getPointIndex(), sizeof(int), 4, fp);
+			fp.write ((char*)tet->getPointIndex(), sizeof(int) * 4);
 		}
-		fflush(fp);
-		fclose(fp);
+		//fflush(fp);
+		//fclose(fp);
+		fp.flush();
+		fp.close();
+		fp.clear();
 
 		// return the file name
 		return oldOutputFileName;
