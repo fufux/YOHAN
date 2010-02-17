@@ -183,6 +183,11 @@ void VolumeModel::output(FILE* sceneFile, char* objectFileDir, int frameID)
 	fprintf(sceneFile, "\t\t<object nodefile=\"%s\" facefile=\"%s\" elefile=\"%s\" />\n", nodeFileName, faceFileName, eleFileName);
 }
 
+void VolumeModel::fracture()
+{
+
+}
+
 // temporal
 void VolumeModel::fillForceList(std::list<SceneForce> *fl)
 {

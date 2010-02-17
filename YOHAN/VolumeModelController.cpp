@@ -60,6 +60,9 @@ void VolumeModelController::evoluteModel()
 	// the new vitesse are in F, feed them back
 	this->model->feedBackVector();
 
+	// calculate the fracture
+	this->model->fracture();
+
 	// generate a frame
 	//this->model->generateFrame(round);
 

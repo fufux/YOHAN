@@ -329,6 +329,8 @@ namespace yohan
 
 			void feedBackVector();
 
+			void fracture();
+
 			void generateFrame(int round);
 
 			DATA* getPoint(int index);

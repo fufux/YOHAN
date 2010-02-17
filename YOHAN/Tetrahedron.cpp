@@ -297,7 +297,10 @@ void Tetrahedron::fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, DATA*
 	F[this->pointIndex[3] * 3 + 2] += fz;
 	*/
 
+	/********************/
 	/* Stress Matrix */
+	/********************/
+
 	/*	0-2
 		3-5
 		6-8
