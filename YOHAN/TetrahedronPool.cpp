@@ -105,7 +105,7 @@ char* TetrahedronPool::output(char* dir, int modelID)
 		for (std::vector<Tetrahedron*>::iterator iter = tetList.begin(); iter != tetList.end(); ++iter)
 		{
 			Tetrahedron* tet = *iter;
-			fwrite(tet->getPointIndex(), sizeof(int), 4, fp);
+			fwrite((void*)tet->getPointIndex(), sizeof(int), 4, fp);
 		}
 		fflush(fp);
 		fclose(fp);

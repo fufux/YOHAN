@@ -69,7 +69,7 @@ char* FacePool::output(char* dir, int modelID)
 		for (std::vector<int*>::iterator iter = faceList.begin(); iter != faceList.end(); ++iter)
 		{
 			int* faceIndex = *iter;
-			fwrite(faceIndex, sizeof(int), 3, fp);
+			fwrite((void*)faceIndex, sizeof(int), 3, fp);
 		}
 		fflush(fp);
 		fclose(fp);
