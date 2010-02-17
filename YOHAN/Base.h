@@ -91,9 +91,10 @@ namespace yohan
 			/* 
 			Index of tetrahedron, which allows to find the tetrahedrons correspondant with a given point.
 			The order of the tetrahedron in the list is implictly the same as the order in the "pointList".
-			"std::list<int>" signifies the tetrahedron list of the given point, which order is not important
+			"std::list<int*>" signifies the tetrahedron list of the given point, which order is not important
+			int* = int[2], 0- the index of tetrahedron, 1- the index in the pointIndex
 			*/
-			std::vector<std::list<int>*> tetrahedronIndexList;
+			std::vector<std::list<int*>*> tetrahedronIndexList;
 
 			/**/
 			char nodeFileName[256];
@@ -102,15 +103,19 @@ namespace yohan
 		public:
 			PointPool(const char* nodeFile, const char* faceFile, DATA speed[]);
 
-			void updateTetrahedraIndex(int pointIndex, int tetIndex);
+			void updateTetrahedraIndex(int pointIndex, int tetIndex, int indexOfPointIndex);
 
 			int getPointCount();
 
 			DATA* getPointInfo(int index);
 
+			std::list<int*>* getPointTetIndexList(int index);
+
 			void fillVector(DATA* V, DATA* XU);
 
 			void feedBackVector(DATA* V, DATA deltaTime);
+
+			void fracture(DATA limit);
 
 			void showInfo(int round);
 
@@ -172,6 +177,8 @@ namespace yohan
 			void fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, DATA* F, DATA gravity[]);
 
 			int* getPointIndex();
+
+			void fillStressVector(int indexOfPointIndex, DATA* pointData, DATA* res);
 
 			//temporal
 			void fillForceList(std::list<SceneForce> *fl, DATA deltaTime);

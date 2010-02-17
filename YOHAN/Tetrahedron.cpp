@@ -26,10 +26,10 @@ Tetrahedron::Tetrahedron(int id, const int pointIndex[], yohan::base::DATA const
 	this->constants = constants;
 
 	this->pointPoolRef = pointPoolRef;
-	this->pointPoolRef->updateTetrahedraIndex(this->pointIndex[0], id);
-	this->pointPoolRef->updateTetrahedraIndex(this->pointIndex[1], id);
-	this->pointPoolRef->updateTetrahedraIndex(this->pointIndex[2], id);
-	this->pointPoolRef->updateTetrahedraIndex(this->pointIndex[3], id);
+	this->pointPoolRef->updateTetrahedraIndex(this->pointIndex[0], id, 0);
+	this->pointPoolRef->updateTetrahedraIndex(this->pointIndex[1], id, 1);
+	this->pointPoolRef->updateTetrahedraIndex(this->pointIndex[2], id, 2);
+	this->pointPoolRef->updateTetrahedraIndex(this->pointIndex[3], id, 3);
 
 	this->volumeModelRef = volumeModelRef;
 }
@@ -338,6 +338,23 @@ void Tetrahedron::fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, DATA*
 int* Tetrahedron::getPointIndex()
 {
 	return this->pointIndex;
+}
+
+void Tetrahedron::fillStressVector(int indexOfPointIndex, DATA* pointData, DATA* res)
+{
+	DATA dx = pointData[0] - pointData[6];
+	DATA dy = pointData[1] - pointData[7];
+	DATA dz = pointData[2] - pointData[8];
+
+	DATA* s = stress[indexOfPointIndex];
+
+	// possible to reduce 3 items because they are all 0 (9, 13, 17)
+	res[0] = s[0] * dx + s[1] * dy + s[2] * dz;
+	res[1] = s[3] * dx + s[4] * dy + s[5] * dz;
+	res[2] = s[6] * dx + s[7] * dy + s[8] * dz;
+	res[3] = s[9] * dx + s[10] * dy + s[11] * dz;
+	res[4] = s[12] * dx + s[13] * dy + s[14] * dz;
+	res[5] = s[15] * dx + s[16] * dy + s[17] * dz;
 }
 
 

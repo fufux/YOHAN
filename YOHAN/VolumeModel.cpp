@@ -185,7 +185,32 @@ void VolumeModel::output(FILE* sceneFile, char* objectFileDir, int frameID)
 
 void VolumeModel::fracture()
 {
+	int n = pointPool->getPointCount();
+	for (int i = 0; i < n; i++)
+	{
+		DATA* pointData = pointPool->getPointInfo(i);
+		std::list<int*>* pointTetIndexList = pointPool->getPointTetIndexList(i);
 
+		DATA sum[6];
+		memset((void*)sum, 0, sizeof(DATA) * 6);
+
+		for (std::list<int*>::iterator iter = pointTetIndexList->begin(); iter != pointTetIndexList->end(); ++iter)
+		{
+			int* indexs = *iter;
+			/* 0 - tetIndex, 1 - indexOfPointIndex */
+
+			DATA res[6];
+			tetPool->getTetrahedron(indexs[0])->fillStressVector(indexs[1], pointData, res);
+
+			// sum
+			sum[0] += res[0];sum[1] += res[1];
+			sum[2] += res[2];sum[3] += res[3];
+			sum[4] += res[4];sum[5] += res[5];
+
+		}
+
+		
+	}
 }
 
 // temporal
