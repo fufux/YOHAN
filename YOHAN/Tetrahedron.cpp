@@ -297,6 +297,39 @@ void Tetrahedron::fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, DATA*
 	F[this->pointIndex[3] * 3 + 2] += fz;
 	*/
 
+	/* Stress Matrix */
+	/*	0-2
+		3-5
+		6-8
+		9-11
+		12-14
+		15-17
+	*/
+	DATA scoff = constants[2] / vol6;			// A3 / 6V
+	for (int i = 0; i < 4; i++)
+	{
+		stress[i][0] = scoff * b[i];					// bi
+		stress[i][1] = scoff * constants[0] * c[i];		// A1 * ci
+		stress[i][2] = scoff * constants[0] * d[i];		// A1 * di
+		stress[i][3] = scoff * constants[0] * b[i];		// A1 * bi
+		stress[i][4] = scoff * c[i];					// ci
+		stress[i][5] = stress[i][2];			// A1 * di
+		stress[i][6] = stress[i][3];			// A1 * bi
+		stress[i][7] = stress[i][1];			// A1 * ci
+		stress[i][8] = scoff * d[i];					// di
+		stress[i][9] = 0;
+		stress[i][10] = scoff * constants[1] * d[i];	// A2 * di
+		stress[i][11] = scoff * constants[1] * c[i];	// A2 * ci
+		stress[i][12] = stress[i][10];			// A2 * di
+		stress[i][13] = 0;
+		stress[i][14] = scoff * constants[1] * b[i];	// A2 * bi
+		stress[i][15] = stress[i][11];			// A2 * ci
+		stress[i][16] = stress[i][14];			// A2 * bi
+		stress[i][17] = 0;
+
+		scoff = -scoff;
+	}
+
 }
 
 int* Tetrahedron::getPointIndex()

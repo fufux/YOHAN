@@ -151,6 +151,10 @@ namespace yohan
 
 			/* The mass */
 			DATA mass;
+
+			/* The stress matrix for its 4 points */
+			/* [0:2]: normal stress , [3:5]: shear stress */
+			DATA stress[4][18];
 			
 
 			/* The stiffness matrix for this element */
