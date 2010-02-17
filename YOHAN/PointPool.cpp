@@ -281,26 +281,5 @@ char* PointPool::output(char* dir, int modelID)
 
 void PointPool::fracture(yohan::base::DATA limit)
 {
-	// for calcul
-	DATA res[6];
-
-	int i = 0;
-	for (std::vector<DATA*>::iterator iter = pointList.begin(); iter != pointList.end(); ++iter)
-	{
-		// clear
-		memset((res), 0, sizeof(DATA) * 6);
-
-		/* */
-		DATA* pointData = *iter;
-		std::list<int*>* tetListRef = this->tetrahedronIndexList[i];
-
-		for (std::list<int*>::iterator iter2 = tetListRef->begin(); iter2 != tetListRef->end(); ++iter2)
-		{
-			int* indexs = *iter2;
-
-			/* 0 - tetIndex, 1 - indexOfPointIndex */
-			this->
-		}
-
-	}
+	
 }
