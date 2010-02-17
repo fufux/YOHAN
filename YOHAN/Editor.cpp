@@ -93,7 +93,7 @@ void Editor::clear()
 	this->selectedForceField = -1;
 	this->debugData = scene::EDS_OFF;
 
-	env->getRootGUIElement()->remove();
+	//env->getRootGUIElement()->remove();
 }
 
 
@@ -371,7 +371,7 @@ void Editor::createGUI()
 	submenu = menu->getSubMenu(0);
 	submenu->addItem(L"Open scene...", GUI_ID_OPEN_SCENE);
 	submenu->addItem(L"Save scene...", GUI_ID_SAVE_SCENE);
-	submenu->addItem(L"Tetrahedralize scene...", GUI_ID_TETRAHEDRALIZE_SCENE);
+	submenu->addItem(L"Tetrahedralize & simulate scene...", GUI_ID_TETRAHEDRALIZE_AND_SIMULATE_SCENE);
 	submenu->addSeparator();
 	submenu->addItem(L"Open Model File...", GUI_ID_OPEN_MODEL);
 	submenu->addSeparator();
@@ -1120,8 +1120,8 @@ IMesh* Editor::getMeshWithAbsoluteCoordinates(IMeshSceneNode* node)
 	SMesh* mesh = new SMesh();
 	mesh->MeshBuffers.push_back(newBuf);
 	mesh->recalculateBoundingBox();
-	IMeshSceneNode* n = smgr->addMeshSceneNode( mesh );
-	n->setMaterialFlag(EMF_WIREFRAME, true);
+	//IMeshSceneNode* n = smgr->addMeshSceneNode( mesh );
+	//n->setMaterialFlag(EMF_WIREFRAME, true);
 
 	return mesh;
 }
