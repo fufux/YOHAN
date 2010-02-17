@@ -46,13 +46,13 @@ PointPool::PointPool(const char *nodeFile, const char* faceFile, DATA speed[])
 
 		// current position
 		//fscanf(fp, "%d%lf%lf%lf", &tmp, pointData, pointData + 1, pointData + 2);
-		fp >> tmp >> pointData[0] >> pointData[1] >> pointData[2];
+		fp >> tmp >> pointData[0] >> pointData[1] >> pointData[2];	// Y est vertical
 
 		// temporal, only for test
 		
-		pointData[0] += 1;
-		pointData[1] += 1;
-		pointData[2] += 1;
+		//pointData[0] += 1;
+		//pointData[1] += 1;
+		//pointData[2] += 1;
 		
 
 		// velority
