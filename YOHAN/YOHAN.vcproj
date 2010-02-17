@@ -201,6 +201,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FacePool.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Matrix.cpp"
 				>
 			</File>
@@ -234,6 +238,10 @@
 			</File>
 			<File
 				RelativePath=".\SceneController.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SceneRecorder.cpp"
 				>
 			</File>
 			<File
