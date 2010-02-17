@@ -26,15 +26,18 @@ PointPool::PointPool(const char *nodeFile, const char* faceFile, DATA speed[])
 
 	/* file .node */
 
-	FILE *fp = fopen(nodeFile, "r");
-	if (fp == NULL)
+	//FILE *fp = fopen(nodeFile, "r");
+	ifstream fp (nodeFile, ios::in);
+	//if (fp == NULL)
+	if (!fp || !fp.good())
 	{
 		printf("Can not open node file: %s", nodeFile);
 		fetalError();
 	}
 
 	// get number
-	fscanf(fp, "%d%d%d%d", &n, &tmp, &tmp, &tmp);
+	//fscanf(fp, "%d%d%d%d", &n, &tmp, &tmp, &tmp);
+	fp >> n >> tmp >> tmp >> tmp;
 
 	// the point list
 	for (int i = 0; i < n; i++)
@@ -42,7 +45,8 @@ PointPool::PointPool(const char *nodeFile, const char* faceFile, DATA speed[])
 		DATA* pointData = new DATA[PointPool::POINT_ARGU_NUM];
 
 		// current position
-		fscanf(fp, "%d%lf%lf%lf", &tmp, pointData, pointData + 1, pointData + 2);
+		//fscanf(fp, "%d%lf%lf%lf", &tmp, pointData, pointData + 1, pointData + 2);
+		fp >> tmp >> pointData[0] >> pointData[1] >> pointData[2];
 
 		// temporal, only for test
 		
@@ -67,26 +71,32 @@ PointPool::PointPool(const char *nodeFile, const char* faceFile, DATA speed[])
 	}
 
 	// close file
-	fclose(fp);
+	//fclose(fp);
+	fp.close();
+	fp.clear();
 
 
 	/* file .face */
 
-	fp = fopen(faceFile, "r");
-	if (fp == NULL)
+	//fp = fopen(faceFile, "r");
+	ifstream fp2 (faceFile, ios::in);
+	//if (fp == NULL)
+	if (!fp2 || !fp2.good())
 	{
 		printf("Can not open face file: %s", faceFile);
 		fetalError();
 	}
 
 	// get number
-	fscanf(fp, "%d%d", &nf, &tmp);
+	//fscanf(fp, "%d%d", &nf, &tmp);
+	fp2 >> nf >> tmp;
 
 	// the point visible list
 	for (int i = 0; i < nf; i++)
 	{
 		int pa, pb, pc;
-		fscanf(fp, "%d%d%d%d%d", &tmp, &pa, &pb, &pc, &tmp);
+		//fscanf(fp, "%d%d%d%d%d", &tmp, &pa, &pb, &pc, &tmp);
+		fp2 >> tmp >> pa >> pb >> pc >> tmp;
 
 		// should - 1 : index
 		visiblePointList[pa - 1] = true;
@@ -95,7 +105,9 @@ PointPool::PointPool(const char *nodeFile, const char* faceFile, DATA speed[])
 	}
 
 	// close file
-	fclose(fp);
+	//fclose(fp);
+	fp2.close();
+	fp2.clear();
 
 }
 
@@ -223,25 +235,35 @@ void PointPool::resolveConflit()
 char* PointPool::output(char* dir, int modelID)
 {
 	// .bnode
-	char tmp[16];
-	strcpy(nodeFileName, dir);
-	strcat(nodeFileName, "/");
-	strcat(nodeFileName, _itoa(modelID, tmp, 10));
-	strcat(nodeFileName, ".bnode");
+	//char tmp[16];
+	std::stringstream sstream;
+	sstream << dir << "/" << modelID << ".bnode";
+	strcpy_s(nodeFileName, 256, sstream.str().c_str());
+	/*strcpy_s(nodeFileName, 256, dir);
+	strcat_s(nodeFileName, 256, "/");
+	strcat_s(nodeFileName, 256, _itoa_s(modelID, tmp, 10));
+	strcat_s(nodeFileName, 256, ".bnode");*/
 
 	// output
-	FILE* fp = fopen(nodeFileName, "a+");
+	//FILE* fp = fopen(nodeFileName, "a+");
+	ofstream fp (nodeFileName, ios::out | ios::binary);
+
 
 	int size = pointList.size();
-	fwrite(&size, sizeof(int), 1, fp);
+	fp.write ((char*)&size, sizeof(int));
+	//fwrite(&size, sizeof(int), 1, fp);
 
 	for (std::vector<DATA*>::iterator iter = pointList.begin(); iter != pointList.end(); ++iter)
 	{
 		DATA* pointData = *iter;
-		fwrite(pointData, sizeof(DATA), 3, fp);
+		//fwrite(pointData, sizeof(DATA), 3, fp);
+		fp.write ((char*)pointData, sizeof(DATA) * 3);
 	}
-	fflush(fp);
-	fclose(fp);
+	fp.flush();
+	fp.close();
+	fp.clear();
+	//fflush(fp);
+	//fclose(fp);
 
 	// return the file name
 	return nodeFileName;

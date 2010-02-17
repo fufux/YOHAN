@@ -40,7 +40,7 @@ scene::ICameraSceneNode* camera[CAMERA_COUNT];
 /*
 This is the main method.
 */
-int main(int argc, _TCHAR* argv[])
+int __main(int argc, _TCHAR* argv[])
 {
 	// initialize random number generator
 	srand((unsigned int)time(NULL)); 
