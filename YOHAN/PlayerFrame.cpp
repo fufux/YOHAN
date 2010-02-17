@@ -162,24 +162,45 @@ PlayerFrame::PlayerFrame(FrameInfo info)
 				// add 4 polygons per tetrahedra. Not optimized !
 				s32 ajust_index = 0;
 				buffer->Indices[(u32)(i+0)] = (u32)(p1 + ajust_index);
-				buffer->Indices[(u32)(i+1)] = (u32)(p2 + ajust_index);
-				buffer->Indices[(u32)(i+2)] = (u32)(p3 + ajust_index);
+				buffer->Indices[(u32)(i+1)] = (u32)(p3 + ajust_index);
+				buffer->Indices[(u32)(i+2)] = (u32)(p2 + ajust_index);
+				core::triangle3df t4(
+					buffer->Vertices[(u32)(p1 + ajust_index)].Pos,
+					buffer->Vertices[(u32)(p3 + ajust_index)].Pos,
+					buffer->Vertices[(u32)(p2 + ajust_index)].Pos);
 				i += 3;
 
 				buffer->Indices[(u32)(i+0)] = (u32)(p1 + ajust_index);
 				buffer->Indices[(u32)(i+1)] = (u32)(p2 + ajust_index);
 				buffer->Indices[(u32)(i+2)] = (u32)(p4 + ajust_index);
+				core::triangle3df t3(
+					buffer->Vertices[(u32)(p1 + ajust_index)].Pos,
+					buffer->Vertices[(u32)(p2 + ajust_index)].Pos,
+					buffer->Vertices[(u32)(p4 + ajust_index)].Pos);
 				i += 3;
 
 				buffer->Indices[(u32)(i+0)] = (u32)(p3 + ajust_index);
-				buffer->Indices[(u32)(i+1)] = (u32)(p2 + ajust_index);
-				buffer->Indices[(u32)(i+2)] = (u32)(p4 + ajust_index);
+				buffer->Indices[(u32)(i+1)] = (u32)(p4 + ajust_index);
+				buffer->Indices[(u32)(i+2)] = (u32)(p2 + ajust_index);
+				core::triangle3df t1(
+					buffer->Vertices[(u32)(p3 + ajust_index)].Pos,
+					buffer->Vertices[(u32)(p4 + ajust_index)].Pos,
+					buffer->Vertices[(u32)(p2 + ajust_index)].Pos);
 				i += 3;
 
-				buffer->Indices[(u32)(i+0)] = (u32)(p3 + ajust_index);
-				buffer->Indices[(u32)(i+1)] = (u32)(p1 + ajust_index);
-				buffer->Indices[(u32)(i+2)] = (u32)(p4 + ajust_index);
+				buffer->Indices[(u32)(i+0)] = (u32)(p1 + ajust_index);
+				buffer->Indices[(u32)(i+1)] = (u32)(p4 + ajust_index);
+				buffer->Indices[(u32)(i+2)] = (u32)(p3 + ajust_index);
+				core::triangle3df t2(
+					buffer->Vertices[(u32)(p1 + ajust_index)].Pos,
+					buffer->Vertices[(u32)(p4 + ajust_index)].Pos,
+					buffer->Vertices[(u32)(p3 + ajust_index)].Pos);
 				i += 3;
+
+				buffer->Vertices[(u32)(p1 + ajust_index)].Normal = t1.getNormal();
+				buffer->Vertices[(u32)(p2 + ajust_index)].Normal = t2.getNormal();
+				buffer->Vertices[(u32)(p3 + ajust_index)].Normal = t3.getNormal();
+				buffer->Vertices[(u32)(p4 + ajust_index)].Normal = t4.getNormal();
 
 				// this is one line : inele >> index >> p1 >> p2 >> p3 >> p4;
 				inele.read(reinterpret_cast < char * > (&p1), sizeof(int));
