@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "PlayerFrame.h"
 #include "Editor.h"
 
 
@@ -19,6 +20,8 @@ Player::Player(void)
 	this->currentFrame = -1;
 	this->is_running = false;
 	this->editor = NULL;
+	this->name = "untitled";
+	this->baseDir = device->getFileSystem()->getWorkingDirectory();
 }
 
 Player::~Player(void)
@@ -65,7 +68,7 @@ void Player::clear()
 	this->currentFrame = -1;
 	this->is_playing = false;
 
-	env->getRootGUIElement()->remove();
+	//env->getRootGUIElement()->remove();
 }
 
 
@@ -80,17 +83,22 @@ void Player::displayNextFrame()
 	if (framesFileNames.size() == 0)
 		return;
 
-	s32 nextId = 0;
 	if (currFrame && currFrame != NULL)
-	{
-		nextId = currFrame->getId()+1;
 		delete currFrame;
-	}
+
+	if (currentFrame > 0 && currentFrame < (s32)frames.size())
+		frames[currentFrame]->hide();
+
+	this->is_playing = false;
+	
+	s32 nextId = currentFrame+1;
+	if (nextId < 0)
+		nextId = (s32)framesFileNames.size() - 1;
 	if (nextId >= (s32)framesFileNames.size())
 		nextId = 0;
 
-	currFrame = new PlayerFrame(framesFileNames[nextId].id, framesFileNames[nextId].nodefile, framesFileNames[nextId].elefile);
-	if (!(currFrame->getNode()) || currFrame->getNode() == NULL)
+	currFrame = new PlayerFrame(framesFileNames[nextId]);
+	if (currFrame->getNodes().size() == 0)
 	{
 		delete currFrame;
 		currentFrame = -1;
@@ -109,17 +117,22 @@ void Player::displayPreviousFrame()
 	if (framesFileNames.size() == 0)
 		return;
 
-	s32 nextId = 0;
 	if (currFrame && currFrame != NULL)
-	{
-		nextId = currFrame->getId()-1;
 		delete currFrame;
-	}
+
+	if (currentFrame >= 0 && currentFrame < (s32)frames.size())
+		frames[currentFrame]->hide();
+
+	this->is_playing = false;
+
+	s32 nextId = currentFrame-1;
 	if (nextId < 0)
 		nextId = (s32)framesFileNames.size() - 1;
+	if (nextId >= (s32)framesFileNames.size())
+		nextId = 0;
 
-	currFrame = new PlayerFrame(framesFileNames[nextId].id, framesFileNames[nextId].nodefile, framesFileNames[nextId].elefile);
-	if (!(currFrame->getNode()) || currFrame->getNode() == NULL)
+	currFrame = new PlayerFrame(framesFileNames[nextId]);
+	if (currFrame->getNodes().size() == 0)
 	{
 		delete currFrame;
 		currentFrame = -1;
@@ -144,8 +157,8 @@ void Player::displayFrameById(s32 id)
 	if (currFrame && currFrame != NULL)
 		delete currFrame;
 	
-	currFrame = new PlayerFrame(framesFileNames[id].id, framesFileNames[id].nodefile, framesFileNames[id].elefile);
-	if (!(currFrame->getNode()) || currFrame->getNode() == NULL)
+	currFrame = new PlayerFrame(framesFileNames[id]);
+	if (currFrame->getNodes().size() == 0)
 	{
 		delete currFrame;
 		currentFrame = -1;
@@ -162,7 +175,7 @@ void Player::displayFrameById(s32 id)
 
 void Player::playNextFrame()
 {
-	if (framesFileNames.size() == 0)
+	if (framesFileNames.size() == 0 || frames.size() == 0)
 		return;
 
 	++currentFrame;
@@ -172,6 +185,8 @@ void Player::playNextFrame()
 	{
 		if (currentFrame > 0)
 			frames[currentFrame-1]->hide();
+		else
+			frames.getLast()->hide();
 		frames[currentFrame]->display();
 	}
 	else
@@ -196,6 +211,9 @@ void Player::updateFrameNumber()
 // load the video xml file and stor its info in framesFileNames
 bool Player::load(irr::core::stringc filename)
 {
+	// reset the working directory
+	device->getFileSystem()->changeWorkingDirectoryTo( baseDir.c_str() );
+
 	IReadFile* file = device->getFileSystem()->createAndOpenFile( filename );
 	if (!file)
 	{
@@ -214,7 +232,6 @@ bool Player::load(irr::core::stringc filename)
 	*/
 	bool firstLoop = true;
 	bool is_valid_file = false;
-	int plop = 0;// TEMP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	while(xml->read())
 	{
@@ -245,10 +262,13 @@ bool Player::load(irr::core::stringc filename)
 				{
 					FrameInfo fi;
 					fi.id = xml->getAttributeValueAsInt(L"id");
-					fi.id = plop++; // TEMP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-					fi.nodefile = xml->getAttributeValue(L"nodefile");
-					fi.elefile = xml->getAttributeValue(L"elefile");
 					framesFileNames.push_back( fi );
+				}
+				else if (stringw("object") == xml->getNodeName())
+				{
+					framesFileNames.getLast().nodefiles.push_back( xml->getAttributeValue(L"nodefile") );
+					framesFileNames.getLast().facefiles.push_back( xml->getAttributeValue(L"facefile") );
+					framesFileNames.getLast().elefiles.push_back( xml->getAttributeValue(L"elefile") );
 				}
 			}
 		default:
@@ -267,22 +287,20 @@ bool Player::load(irr::core::stringc filename)
 }
 
 
-// this calls load and then pre-loads all frames ! Could be veeeeery slow !
-bool Player::loadAll(irr::core::stringc filename)
+// this calls load and then pre-loads all frames, but only with surfacic meshes
+bool Player::loadAll()
 {
-	bool success = this->load(filename);
-
 	for (u16 i=0; i < framesFileNames.size(); i++)
 	{
-		frames.push_back(new PlayerFrame(framesFileNames[i].id, framesFileNames[i].nodefile, framesFileNames[i].elefile));
-		if (!(frames.getLast()->getNode()) || frames.getLast()->getNode() == NULL)
+		frames.push_back(new PlayerFrame(framesFileNames[i], false));
+		if (frames.getLast()->getNodes().size() == 0)
 		{
 			delete frames.getLast();
 			frames.erase(frames.size()-1);
 		}
 	}
 
-	return success;
+	return true;
 }
 
 
@@ -346,7 +364,7 @@ void Player::createGUI()
 	image = driver->getTexture("help.png");
 	bar->addButton(GUI_ID_PLAYER_HELP_BUTTON, 0, L"Open Help", image, 0, false, true);
 
-	env->addEditBox(L"-1", core::rect<s32>(300,4,400,24), true, bar, GUI_ID_PLAYER_FRAME_NUMBER);
+	env->addEditBox(stringw( -1 ).c_str(), core::rect<s32>(300,4,400,24), true, bar, GUI_ID_PLAYER_FRAME_NUMBER);
 	image = driver->getTexture("goto.png");
 	IGUIButton* b = bar->addButton(GUI_ID_PLAYER_FRAME_NUMBER_BUTTON, 0, L"Go to this frame", image, 0, false, true);
 	b->setRelativePosition( core::rect<s32>(404,4,424,24) );
@@ -357,10 +375,14 @@ void Player::setDebugDataVisible(scene::E_DEBUG_SCENE_TYPE state)
 {
 	for (u16 i=0; i < frames.size(); i++)
 	{
-		frames[i]->getNode()->setDebugDataVisible(state);
+		for (u16 j=0; j < frames[i]->getNodes().size(); j++)
+			frames[i]->getNodes()[j]->setDebugDataVisible(state);
 	}
-	if (currFrame && currFrame->getNode())
-		currFrame->getNode()->setDebugDataVisible(state);
+	if (currFrame)
+	{
+		for (u16 j=0; j < currFrame->getNodes().size(); j++)
+			currFrame->getNodes()[j]->setDebugDataVisible(state);
+	}
 	this->debugData = state;
 }
 
@@ -372,6 +394,18 @@ s32 Player::isDebugDataVisible()
 
 void Player::play()
 {
+	if (framesFileNames.size() == 0)
+		return;
+
+	if (currFrame && currFrame != NULL)
+	{
+		delete currFrame;
+		currFrame = NULL;
+	}
+
+	if (frames.size() == 0)
+		loadAll();
+
 	is_playing = true;
 	lastTime = device->getTimer()->getTime();
 }

@@ -1,16 +1,16 @@
 #pragma once
 
 #include "StdAfx.h"
-#include "PlayerFrame.h"
 #include "PlayerEventReceiver.h"
 
 class Editor;
+class PlayerFrame;
 
 
 struct FrameInfo
 {
 	s32 id;
-	stringc nodefile, elefile;
+	core::array<stringc> nodefiles, facefiles, elefiles;
 };
 
 
@@ -28,7 +28,7 @@ public:
 	void clear();
 
 	// loads a video scene file and get ready to play it
-	bool loadAll(stringc filename);
+	bool loadAll();
 	bool load(stringc filename);
 
 	// allows us to change current frame in step-by-step mode
@@ -56,7 +56,14 @@ public:
 	// is the player running ?
 	bool isRunning();
 
+	void updateFrameNumber();
+
+	s32 currentFrame; // this allows us to know where we are in playing mode
 private:
+	// name of the scene
+	stringc name;
+	stringc baseDir;
+
 	// is the user currently using the player ? (it could be the editor)
 	bool is_running;
 
@@ -68,7 +75,6 @@ private:
 
 	// this is the list of all frames in the video for playing mode
 	core::array<PlayerFrame*> frames;
-	s32 currentFrame; // this allows us to know where we are in playing mode
 
 	// this is the current frame in step-by-step mode
 	PlayerFrame* currFrame;
@@ -87,6 +93,4 @@ private:
 
 	// usefull for playing mode. This is the least time we changed the displayyed frame
 	u32 lastTime;
-
-	void updateFrameNumber();
 };

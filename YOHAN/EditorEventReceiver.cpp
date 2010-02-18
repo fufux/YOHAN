@@ -113,8 +113,8 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 				case GUI_ID_SAVE_SCENE: // File -> Save scene
 					editor->askForFileName();
 					break;
-				case GUI_ID_TETRAHEDRALIZE_SCENE: // File -> Tetrahedralize scene
-					editor->quickTetAndSimulate();
+				case GUI_ID_TETRAHEDRALIZE_AND_SIMULATE_SCENE: // File -> Tetrahedralize scene
+					askForParameters();
 					break;
 				case GUI_ID_OPEN_MODEL: // File -> Open Model
 					opening = OPENING_MODEL;
@@ -236,6 +236,13 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 			case GUI_ID_CANCEL_DELETE_BUTTON:
 				if (root->getElementFromId(GUI_ID_CONFIRM_DELETE_WINDOW, true))
 					root->getElementFromId(GUI_ID_CONFIRM_DELETE_WINDOW, true)->remove();
+				break;
+			case GUI_ID_ASK_PARAMETERS_GO_BUTTON:
+				editor->quickTetAndSimulate();
+				break;
+			case GUI_ID_ASK_PARAMETERS_CANCEL_BUTTON:
+				if (root->getElementFromId(GUI_ID_ASK_PARAMETERS_WINDOW, true))
+					root->getElementFromId(GUI_ID_ASK_PARAMETERS_WINDOW, true)->remove();
 				break;
 			case GUI_ID_OPEN_DIALOG_BUTTON:
 				opening = OPENING_MODEL;
@@ -386,4 +393,29 @@ void EditorEventReceiver::showConfirmDeleteNode()
 
 	env->addButton(core::rect<s32>(60,90,100,110), wnd, GUI_ID_CONFIRM_DELETE_BUTTON, L"Delete");
 	env->addButton(core::rect<s32>(120,90,160,110), wnd, GUI_ID_CANCEL_DELETE_BUTTON, L"Cancel");
+}
+
+
+void EditorEventReceiver::askForParameters(bool previous_was_bad)
+{
+	// create the window
+	IGUIWindow* wnd = env->addWindow(core::rect<s32>(200,100,600,300),
+		true, L"Parameters", 0, GUI_ID_ASK_PARAMETERS_WINDOW);
+
+	if (previous_was_bad)
+		env->addStaticText(L"WRONG PARAMETERS, please try again. Choose the parameters for tetrahedrization and simulation.", core::rect<s32>(20,20,380,40), false, true, wnd);
+	else
+		env->addStaticText(L"Please, choose the parameters for tetrahedrization and simulation.", core::rect<s32>(20,20,380,40), false, true, wnd);
+
+	env->addStaticText(L"How many maximum tetrahedras do you want in each object of the scene ? (min: 10, max: 1,000,000)", core::rect<s32>(20,40,380,60), false, true, wnd);
+	env->addEditBox(L"5000", core::rect<s32>(40,60,80,76), true, wnd, GUI_ID_ASK_PARAMETERS_NBTET);
+
+	env->addStaticText(L"How many frames do you want to simulate ? (min: 1)", core::rect<s32>(20,80,380,100), false, true, wnd);
+	env->addEditBox(L"200", core::rect<s32>(40,100,80,116), true, wnd, GUI_ID_ASK_PARAMETERS_NBFRAME);
+
+	env->addStaticText(L"What do you want as Delta t ? (strict-min: 0)", core::rect<s32>(20,120,380,140), false, true, wnd);
+	env->addEditBox(L"0.01", core::rect<s32>(40,140,80,156), true, wnd, GUI_ID_ASK_PARAMETERS_DELTAT);
+
+	env->addButton(core::rect<s32>(60,170,100,186), wnd, GUI_ID_ASK_PARAMETERS_GO_BUTTON, L"GO!");
+	env->addButton(core::rect<s32>(320,170,360,186), wnd, GUI_ID_ASK_PARAMETERS_CANCEL_BUTTON, L"Cancel");
 }

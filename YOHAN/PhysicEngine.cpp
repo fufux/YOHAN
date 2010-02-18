@@ -6,7 +6,7 @@ using namespace yohan;
 using namespace base;
 
 
-int _main(int argc, _TCHAR* argv[])
+int __main(int argc, _TCHAR* argv[])
 {
 	char* sceneConfigFile = "../YOHAN/test/sceneexample2.xml";//argv[0]
 	char* sceneRecordFile = "../YOHAN/test/output";//argv[1]

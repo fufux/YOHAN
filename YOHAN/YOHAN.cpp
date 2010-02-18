@@ -40,7 +40,7 @@ scene::ICameraSceneNode* camera[CAMERA_COUNT];
 /*
 This is the main method.
 */
-int __main(int argc, _TCHAR* argv[])
+int main(int argc, _TCHAR* argv[])
 {
 	// initialize random number generator
 	srand((unsigned int)time(NULL)); 
@@ -88,6 +88,12 @@ int __main(int argc, _TCHAR* argv[])
 	Allow us to load files directly frome this folder without giving the explicit path
 	*/
 	device->getFileSystem()->addFileArchive("../YOHAN/irrlicht/media/", true, true, EFAT_FOLDER);
+
+	scene::ITerrainSceneNode* terrain = smgr->addTerrainSceneNode("terrain-heightmap.bmp");
+	terrain->setPosition(vector3df(-128*30.0f, 0.0f, -128*30.0f));
+	terrain->setScale(vector3df(30.f, 1.0f, 30.f));
+	terrain->setMaterialFlag(EMF_WIREFRAME, true);
+	terrain->setMaterialFlag(EMF_LIGHTING, false);
 
 	/*
 	Create the editor, GUI, etc.

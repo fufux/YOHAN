@@ -66,14 +66,13 @@ public:
 
 
 	// This method tetrahedralize the current scene and save the result in the given file and directory.
-	bool tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir);
+	bool tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir, f32 tetrahedraDensity);
 	// This method simulate the given volumic scene and save the result in a given directory
-	bool simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSceneOutDir);
+	bool simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSceneOutDir, s32 nbFrame, f32 deltaT);
 
 	// This simply calls tetrahedralizeScene and simulateScene with right arguments
 	void quickTetAndSimulate();
-
-
+	
 	// allow to change the position of the selected scene node
 	void setPositionRotationScaleOfSelectedNode();
 	void moveSelectedNode(vector3df vec);
