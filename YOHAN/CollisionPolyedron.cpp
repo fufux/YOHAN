@@ -1,5 +1,6 @@
 #include "CollisionPolyedron.h"
 
+
 CollisionPolyedron::CollisionPolyedron(void)
 {
 }
@@ -13,6 +14,7 @@ CollisionPolyedron::CollisionPolyedron(std::vector<CollisionFace>* facets, int p
 	faces = facets;
 	parents[0] = p1;
 	parents[1] = p2;
+	volume = 0;
 }
 
 std::vector<CollisionFace>* CollisionPolyedron::getFaces()
@@ -43,12 +45,12 @@ double CollisionPolyedron::calcVolume()
 		CollisionPoint& q = (*faces)[0][0];
 		for(int i=0; i<(int)(*faces).size(); i++){
 			for(int j=2; j<(*faces)[i].size(); j++){
-				resul += CollisionPoint::volOp(&q, &(*faces)[i][0], &(*faces)[i][j], &(*faces)[i][j-1]);
+				resul -= CollisionPoint::volOp(&q, &(*faces)[i][0], &(*faces)[i][j], &(*faces)[i][j-1]);
 			}
 		}
 	}
-	volume = resul;
-	return resul;
+	volume = resul/6;
+	return volume;
 }
 
 CollisionPoint* CollisionPolyedron::calcDir(int owner)

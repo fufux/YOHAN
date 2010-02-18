@@ -16,7 +16,7 @@ CollisionPoint::CollisionPoint(std::vector<double>* coord)
 	z = (*coord)[2];
 }
 
-CollisionPoint::CollisionPoint(yohan::base::DATA* coord)
+CollisionPoint::CollisionPoint(double* coord)
 {
 	x = coord[0];
 	y = coord[1];

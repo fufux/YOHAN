@@ -283,3 +283,8 @@ void PointPool::fracture(yohan::base::DATA limit)
 {
 	
 }
+
+int PointPool::getNbPoint()
+{
+	return this->pointList.size();
+}

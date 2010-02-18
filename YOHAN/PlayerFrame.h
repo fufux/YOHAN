@@ -6,7 +6,7 @@
 class PlayerFrame
 {
 public:
-	PlayerFrame(FrameInfo info);
+	PlayerFrame(FrameInfo info, bool load_volumic=true);
 	~PlayerFrame(void);
 
 	// display this frame in the scene
@@ -23,6 +23,7 @@ public:
 	static s32 totalLoadedFrames;
 
 	// these 3 variables allow us to prevent the same ele or face file from being realoded
+	static bool last_was_volumic;
 	static core::array<stringc> lastEleFileNames;
 	static core::array<stringc> lastFaceFileNames;
 	static core::array<scene::SMeshBuffer*> lastBuffers;

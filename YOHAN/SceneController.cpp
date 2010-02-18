@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 #include "Base.h"
-
+#include "CollisionPolyedron.h"
 #include <iostream>
 
 // for using the xml parser
@@ -316,4 +316,26 @@ void SceneController::simulate(char* filename, DATA delta_t, int nb_steps)
 	}
 
 	sr.endScene();
+}
+
+std::vector<CollisionPolyedron>* SceneController::CollisionDetection()
+{
+	std::vector<CollisionPolyedron>* resul = new std::vector<CollisionPolyedron>();
+	std::list<int>* violationPoint;
+	VolumeModel* model;
+	for(int it = 0; it < vmcList.size(); it++) {	
+		model = vmcList[it].getModel();
+		violationPoint = new std::list<int>();
+		// Detection of points below y=0
+		for(int i=0; i<model->getPointPoolSize(); i++){
+			if(model->getPoint(i)[2]<0){
+				violationPoint->push_back(i);
+			}
+		}
+		// Construction of overlaping polyhedrons
+		
+	}
+
+
+	return resul;
 }

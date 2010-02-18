@@ -28,7 +28,7 @@ public:
 	void clear();
 
 	// loads a video scene file and get ready to play it
-	bool loadAll(stringc filename);
+	bool loadAll();
 	bool load(stringc filename);
 
 	// allows us to change current frame in step-by-step mode

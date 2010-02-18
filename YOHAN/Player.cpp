@@ -83,12 +83,17 @@ void Player::displayNextFrame()
 	if (framesFileNames.size() == 0)
 		return;
 
-	s32 nextId = 0;
 	if (currFrame && currFrame != NULL)
-	{
-		nextId = currFrame->getId()+1;
 		delete currFrame;
-	}
+
+	if (currentFrame > 0 && currentFrame < (s32)frames.size())
+		frames[currentFrame]->hide();
+
+	this->is_playing = false;
+	
+	s32 nextId = currentFrame+1;
+	if (nextId < 0)
+		nextId = (s32)framesFileNames.size() - 1;
 	if (nextId >= (s32)framesFileNames.size())
 		nextId = 0;
 
@@ -112,14 +117,19 @@ void Player::displayPreviousFrame()
 	if (framesFileNames.size() == 0)
 		return;
 
-	s32 nextId = 0;
 	if (currFrame && currFrame != NULL)
-	{
-		nextId = currFrame->getId()-1;
 		delete currFrame;
-	}
+
+	if (currentFrame >= 0 && currentFrame < (s32)frames.size())
+		frames[currentFrame]->hide();
+
+	this->is_playing = false;
+
+	s32 nextId = currentFrame-1;
 	if (nextId < 0)
 		nextId = (s32)framesFileNames.size() - 1;
+	if (nextId >= (s32)framesFileNames.size())
+		nextId = 0;
 
 	currFrame = new PlayerFrame(framesFileNames[nextId]);
 	if (currFrame->getNodes().size() == 0)
@@ -165,7 +175,7 @@ void Player::displayFrameById(s32 id)
 
 void Player::playNextFrame()
 {
-	if (framesFileNames.size() == 0)
+	if (framesFileNames.size() == 0 || frames.size() == 0)
 		return;
 
 	++currentFrame;
@@ -175,6 +185,8 @@ void Player::playNextFrame()
 	{
 		if (currentFrame > 0)
 			frames[currentFrame-1]->hide();
+		else
+			frames.getLast()->hide();
 		frames[currentFrame]->display();
 	}
 	else
@@ -275,17 +287,12 @@ bool Player::load(irr::core::stringc filename)
 }
 
 
-// this calls load and then pre-loads all frames ! Could be veeeeery slow !
-bool Player::loadAll(irr::core::stringc filename)
+// this calls load and then pre-loads all frames, but only with surfacic meshes
+bool Player::loadAll()
 {
-	// reset the working directory
-	device->getFileSystem()->changeWorkingDirectoryTo( baseDir.c_str() );
-
-	bool success = this->load(filename);
-
 	for (u16 i=0; i < framesFileNames.size(); i++)
 	{
-		frames.push_back(new PlayerFrame(framesFileNames[i]));
+		frames.push_back(new PlayerFrame(framesFileNames[i], false));
 		if (frames.getLast()->getNodes().size() == 0)
 		{
 			delete frames.getLast();
@@ -293,7 +300,7 @@ bool Player::loadAll(irr::core::stringc filename)
 		}
 	}
 
-	return success;
+	return true;
 }
 
 
@@ -387,6 +394,18 @@ s32 Player::isDebugDataVisible()
 
 void Player::play()
 {
+	if (framesFileNames.size() == 0)
+		return;
+
+	if (currFrame && currFrame != NULL)
+	{
+		delete currFrame;
+		currFrame = NULL;
+	}
+
+	if (frames.size() == 0)
+		loadAll();
+
 	is_playing = true;
 	lastTime = device->getTimer()->getTime();
 }
