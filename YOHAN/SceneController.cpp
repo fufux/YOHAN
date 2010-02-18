@@ -299,14 +299,14 @@ void SceneController::simulate(char* filename)
 		{
 			VolumeModel* vm = iter->retrieveReport().getModel();
 
-			//record
-			sr.record(vm);
-
 			// simple detection
-			//vm->fillForceList(&forceList);
+			vm->fillForceList(&forceList);
 
 			// resolve conflict
-			//vm->resolveConflit();
+			vm->resolveConflit();
+
+			//record
+			sr.record(vm);
 		}
 
 		sr.endFrame();
