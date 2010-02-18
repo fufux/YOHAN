@@ -453,7 +453,7 @@ namespace yohan
 			SceneController(char* filename);
 
 			/* start to simulate */
-			void simulate(char* filename);
+			void simulate(char* filename, DATA delta_t=0.01, int nb_steps=10);
 
 		private:
 			/* collision detection functions should be write here */

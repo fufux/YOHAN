@@ -872,10 +872,40 @@ bool Editor::save(irr::core::stringc filename)
 }
 
 
+
+
+
 void Editor::quickTetAndSimulate()
 {
 	// reset the working directory
 	device->getFileSystem()->changeWorkingDirectoryTo( baseDir.c_str() );
+
+	// get parameters
+	gui::IGUIElement* root = env->getRootGUIElement();
+	if (!root->getElementFromId(GUI_ID_ASK_PARAMETERS_NBTET, true) ||
+		!root->getElementFromId(GUI_ID_ASK_PARAMETERS_NBFRAME, true) ||
+		!root->getElementFromId(GUI_ID_ASK_PARAMETERS_DELTAT, true))
+		return;
+
+	stringc s = "";
+	s = root->getElementFromId(GUI_ID_ASK_PARAMETERS_NBTET, true)->getText();
+	f32 tetrahedraDensity = (f32)atof(s.c_str());
+	s = root->getElementFromId(GUI_ID_ASK_PARAMETERS_NBFRAME, true)->getText();
+	s32 nbFrame = (s32)atoi(s.c_str());
+	s = root->getElementFromId(GUI_ID_ASK_PARAMETERS_DELTAT, true)->getText();
+	f32 deltaT = (f32)atof(s.c_str());
+
+	// check parameters
+	if (nbFrame < 1 || deltaT <= 0 || tetrahedraDensity < 10.0f || tetrahedraDensity > 1000000.0f )
+	{
+		if (root->getElementFromId(GUI_ID_ASK_PARAMETERS_WINDOW, true))
+			root->getElementFromId(GUI_ID_ASK_PARAMETERS_WINDOW, true)->remove();
+		er->askForParameters(true);
+		return;
+	}
+
+	if (root->getElementFromId(GUI_ID_ASK_PARAMETERS_WINDOW, true))
+		root->getElementFromId(GUI_ID_ASK_PARAMETERS_WINDOW, true)->remove();
 
 	// files and directories names
 	stringc outDirTetrahedralize = "tetrahedralized/";
@@ -899,7 +929,7 @@ void Editor::quickTetAndSimulate()
 	wnd->remove();
 
 	// tetrahedralize...
-	if ( tetrahedralizeScene(tetrahedralizedSceneFile, outDirTetrahedralize) )
+	if ( tetrahedralizeScene(tetrahedralizedSceneFile, outDirTetrahedralize, tetrahedraDensity) )
 	{
 		// display message
 		wnd = env->addMessageBox(L"Processing...", L"Tetrahedralizing succeed. Simulating... Please wait.", true, 0);
@@ -909,7 +939,7 @@ void Editor::quickTetAndSimulate()
 		wnd->remove();
 
 		// simulate...
-		if ( simulateScene(outDirTetrahedralize + "/" + tetrahedralizedSceneFile, simulatedSceneOutDir) )
+		if ( simulateScene(outDirTetrahedralize + "/" + tetrahedralizedSceneFile, simulatedSceneOutDir, nbFrame, deltaT) )
 		{
 			env->addMessageBox(L"Success", L"Simulation finished well.", true);
 		}
@@ -926,21 +956,25 @@ void Editor::quickTetAndSimulate()
 }
 
 
-bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSceneOutDir)
+bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSceneOutDir, s32 nbFrame, f32 deltaT)
 {
-	/*try
-	{*/
+	if (nbFrame < 1 || deltaT <= 0)
+		return false;
+
+	try
+	{
 		//load the scene file
 		SceneController* sc = new SceneController( (char*)tetrahedralizedSceneFile.c_str() );
 
 		//start to simulate, and try to record all the process into the given file
 		device->getLogger()->log((stringc("Call simulate(")+simulatedSceneOutDir+stringc(")")).c_str());
-		sc->simulate( (char*)simulatedSceneOutDir.c_str() );
-	/*}
+		sc->simulate( (char*)simulatedSceneOutDir.c_str(), (yohan::base::DATA)deltaT, (int)nbFrame );
+	}
 	catch(...)
 	{
+		device->getLogger()->log("Exception during the simulation. Find me in Editor.cpp, in the simulateScene method.");
 		return false;
-	}*/
+	}
 
 	return true;
 }
@@ -949,8 +983,11 @@ bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSc
 /*
 Ths method tetrahedralize the current scene and save the result in the given file and directory.
 */
-bool Editor::tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir)
+bool Editor::tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir, f32 tetrahedraDensity)
 {
+	if (tetrahedraDensity < 10.0f || tetrahedraDensity > 1000000.0f)
+		return false;
+
 	// Create / open the file and get ready to write XML
 	stringc filename = outDir + "/" + outTetrahedralizedFile;
 
@@ -973,7 +1010,7 @@ bool Editor::tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir)
 		n += stringc(i);
 		n = n.trim();
 
-		if (tetBuf(buf, (char*)n.c_str(), (char*)(outDir+"/").c_str(), (float)mesh->getBoundingBox().getVolume() / 1000.0f ) != 0)
+		if (tetBuf(buf, (char*)n.c_str(), (char*)(outDir+"/").c_str(), (float)mesh->getBoundingBox().getVolume() / tetrahedraDensity ) != 0)
 		{
 			xml->drop();
 			file->drop();

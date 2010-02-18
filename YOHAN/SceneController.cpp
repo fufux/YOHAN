@@ -253,9 +253,9 @@ SceneController::SceneController(char* filename)
 
 }
 
-void SceneController::simulate(char* filename)
+void SceneController::simulate(char* filename, DATA delta_t, int nb_steps)
 {
-	DATA delta_t = 0.0001;
+	//DATA delta_t = 0.0001;
 
 	int step = 0;
 
@@ -263,7 +263,7 @@ void SceneController::simulate(char* filename)
 
 	DATA totalTime = 0;
 
-	while (step < 10)
+	while (step < nb_steps)
 	{
 		//detect the collision 
 
@@ -279,7 +279,7 @@ void SceneController::simulate(char* filename)
 		forceList.clear();
 
 		//decide delta-t
-		delta_t = 0.01;
+		//delta_t = 0.01;
 
 		// send force field and start
 		for (std::vector<VolumeModelController>::iterator iter = vmcList.begin(); iter != vmcList.end(); ++iter)

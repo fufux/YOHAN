@@ -88,7 +88,14 @@ enum
 
 	GUI_ID_STATIC_TEXT_CAMERA_FPS,
 
-	GUI_ID_SWITCH_TO_PLAYER
+	GUI_ID_SWITCH_TO_PLAYER,
+
+	GUI_ID_ASK_PARAMETERS_WINDOW,
+	GUI_ID_ASK_PARAMETERS_GO_BUTTON,
+	GUI_ID_ASK_PARAMETERS_CANCEL_BUTTON,
+	GUI_ID_ASK_PARAMETERS_NBTET,
+	GUI_ID_ASK_PARAMETERS_NBFRAME,
+	GUI_ID_ASK_PARAMETERS_DELTAT
 };
 
 
@@ -106,6 +113,9 @@ public:
 	~EditorEventReceiver(void);
 	
 	bool OnEvent(const SEvent& event);
+
+	// display a window that asks for tet & simulation parameters. If previous_was_bad is true, display a warning.
+	void askForParameters(bool previous_was_bad=false);
 
 private:
 	// reference to the main editor object (which is the parent of this EditorEventReceiver)
