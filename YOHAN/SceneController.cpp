@@ -263,7 +263,7 @@ void SceneController::simulate(char* filename)
 
 	DATA totalTime = 0;
 
-	while (step < 1000)
+	while (step < 300)
 	{
 		//detect the collision 
 

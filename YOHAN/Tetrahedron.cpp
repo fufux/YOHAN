@@ -366,7 +366,7 @@ void Tetrahedron::fillForceList(std::list<SceneForce> *fl, DATA deltaTime)
 		int pindex = this->pointIndex[i];
 		DATA* pinfo = this->pointPoolRef->getPointInfo(pindex);
 
-		if (pinfo[2] < 0)	// z < 0
+		if (pinfo[1] < 0)	// y < 0
 		{
 			SceneForce sf;
 

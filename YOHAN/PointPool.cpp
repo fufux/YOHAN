@@ -232,11 +232,11 @@ void PointPool::resolveConflit()
 	{
 		DATA* pointData = *iter;
 
-		//if z < 0, z = 0, v(z) = 0
-		if (pointData[2] < 0)
+		//if y < 0, y = 0, v(y) = 0
+		if (pointData[1] < 0)
 		{
-			pointData[2] = 0;
-			pointData[5] = 0;
+			pointData[1] = 0;
+			pointData[4] = 0;
 		}
 	}
 }
