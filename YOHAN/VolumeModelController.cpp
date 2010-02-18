@@ -83,3 +83,8 @@ MotivationReport VolumeModelController::retrieveReport()
 
 	return e;
 }
+
+VolumeModel* VolumeModelController::getModel()
+{
+	return this->model;
+}

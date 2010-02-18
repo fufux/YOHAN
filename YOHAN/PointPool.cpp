@@ -269,3 +269,8 @@ char* PointPool::output(char* dir, int modelID)
 	return nodeFileName;
 	
 }
+
+int PointPool::getNbPoint()
+{
+	return this->pointList.size();
+}

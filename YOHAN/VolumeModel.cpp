@@ -194,3 +194,7 @@ void VolumeModel::resolveConflit()
 	this->pointPool->resolveConflit();
 }
 
+int VolumeModel::getPointPoolSize()
+{
+	return this->pointPool->getNbPoint();
+}

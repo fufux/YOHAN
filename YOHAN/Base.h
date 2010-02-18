@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef _STD_VECTOR_
 #define _STD_VECTOR_
 #include <vector>
@@ -19,6 +21,8 @@
 #endif
 
 #define _YOHAN_BASE_
+
+class CollisionPolyedron;
 
 namespace yohan
 {
@@ -107,6 +111,8 @@ namespace yohan
 			int getPointCount();
 
 			DATA* getPointInfo(int index);
+
+			int getNbPoint();
 
 			void fillVector(DATA* V, DATA* XU);
 
@@ -327,6 +333,8 @@ namespace yohan
 
 			void generateFrame(int round);
 
+			int getPointPoolSize();
+
 			DATA* getPoint(int index);
 
 			Tetrahedron* getTetrahedron(int index);
@@ -428,6 +436,8 @@ namespace yohan
 			/* */
 			VolumeModelController(const char* nodeFile, const char* faceFile, const char* eleFile, DATA speed[], const DATA materialPropriety[]);
 
+			VolumeModel* getModel();
+
 		};
 
 		
@@ -456,7 +466,8 @@ namespace yohan
 			void simulate(char* filename);
 
 		private:
-			/* collision detection functions should be write here */
+			/* collision detection returns the overlaping volumes */
+			std::vector<CollisionPolyedron>* CollisionDetection();
 
 		};
 

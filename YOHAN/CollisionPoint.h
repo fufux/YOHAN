@@ -1,16 +1,9 @@
 #pragma once
 
 #include <math.h>
-#include "Base.h"
-#ifndef _STD_VECTOR_
-#define _STD_VECTOR_
 #include <vector>
-#endif
-
-#ifndef _STD_LIST_
-#define _STD_LIST_
 #include <list>
-#endif
+
 
 /**
 
@@ -33,7 +26,7 @@ public:
 	// Constructs a Point/Vector with given coordinates
 	CollisionPoint(std::vector<double>*);
 	// Constructs a Point/Vector with given coordinates
-	CollisionPoint(yohan::base::DATA*);
+	CollisionPoint(double*);
 	// Destructs a Point/Vector
 	~CollisionPoint(void);
 	// Returns x
@@ -50,7 +43,7 @@ public:
 	void minus(CollisionPoint*);
 	// Multiplys the coordinates of one point to another
 	void mul(double);
-	// Calculates the volume define by the for points
+	// Calculates the volume define by the four points
 	static double volOp(CollisionPoint*,CollisionPoint*,CollisionPoint*,CollisionPoint*);
 	// Calculates the cross product (a1-a2)x(b1-b2)
 	static CollisionPoint* vect(CollisionPoint* a1, CollisionPoint* a2, CollisionPoint* b1, CollisionPoint* b2);
