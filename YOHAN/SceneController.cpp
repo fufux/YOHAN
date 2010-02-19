@@ -299,14 +299,15 @@ void SceneController::simulate(char* filename, DATA delta_t, int nb_steps)
 		{
 			VolumeModel* vm = iter->retrieveReport().getModel();
 
-			//record
-			sr.record(vm);
-
+			
 			// simple detection
-			//vm->fillForceList(&forceList);
+			vm->fillForceList(&forceList);
 
 			// resolve conflict
 			//vm->resolveConflit();
+
+			//record
+			sr.record(vm);
 		}
 
 		sr.endFrame();
@@ -320,13 +321,14 @@ void SceneController::simulate(char* filename, DATA delta_t, int nb_steps)
 
 std::vector<CollisionPolyedron>* SceneController::CollisionDetection()
 {
-	std::vector<CollisionPolyedron>* resul = new std::vector<CollisionPolyedron>();
-	std::list<int>* violationPoint;
+	std::vector<CollisionPolyedron>* polys;
+	std::vector<int>* violationPoint;
 	VolumeModel* model;
 	for(int it = 0; it < vmcList.size(); it++) {	
 		model = vmcList[it].getModel();
-		violationPoint = new std::list<int>();
+		violationPoint = new std::vector<int>();
 		// Detection of points below y=0
+		// Améliorable en ne regardant que les points de la surface et en propageant aux voisins. Puis enfin en se servant bouding boxes
 		for(int i=0; i<model->getPointPoolSize(); i++){
 			if(model->getPoint(i)[2]<0){
 				violationPoint->push_back(i);
@@ -337,5 +339,46 @@ std::vector<CollisionPolyedron>* SceneController::CollisionDetection()
 	}
 
 
-	return resul;
+	return polys;
+}
+
+std::vector<CollisionPolyedron>* SceneController::overlapCalc(std::vector<int>* violationPoint, int it)
+{
+	std::vector<CollisionPolyedron>* polys = new std::vector<CollisionPolyedron>();
+	VolumeModel* model = vmcList[it].getModel();
+	std::vector<std::vector<int>>* tetPtsList = new std::vector<std::vector<int>>();
+	std::list<int>* tets;
+	int ind;
+	bool added;
+	int j;
+	std::vector<int>* tet;
+	for(int i=0;i<violationPoint->size();i++){
+		tets = model->getTetIndList((*violationPoint)[i]);
+		for (std::list<int>::iterator iter = tets->begin(); iter != tets->end(); ++iter){
+			ind = *iter;
+			added = false;
+			j = 0;
+			while(!added && j<tetPtsList->size()){
+				if(ind==(*tetPtsList)[j][0]){
+					(*tetPtsList)[j].push_back((*violationPoint)[i]);
+					added = true;
+				}else if(ind>(*tetPtsList)[j][0]){
+					tet = new std::vector<int>();
+					tet->push_back(ind);
+					tet->push_back((*violationPoint)[i]);
+					tetPtsList->insert(tetPtsList->begin()+j, *tet);
+					added = true;
+				}
+				j++;
+			}
+			if(!added){
+				tet = new std::vector<int>();
+				tet->push_back(ind);
+				tet->push_back((*violationPoint)[i]);
+				tetPtsList->push_back(*tet);
+			}
+		}
+	}
+	
+	return polys;
 }

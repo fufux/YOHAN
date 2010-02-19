@@ -1,5 +1,5 @@
 #include "CollisionPoint.h"
-
+#include "stdafx.h"
 
 CollisionPoint::CollisionPoint(void): x(0), y(0), z(0)
 {

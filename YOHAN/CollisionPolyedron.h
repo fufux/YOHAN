@@ -14,7 +14,7 @@ class CollisionPolyedron
 private:
 	std::vector<CollisionFace>* faces;
 	// index of the two tetrahedrons from which the polyhedron comes from
-	int parents[2];
+	int* parents;
 	double volume;
 	CollisionPoint center;
 

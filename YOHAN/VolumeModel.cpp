@@ -198,3 +198,8 @@ int VolumeModel::getPointPoolSize()
 {
 	return this->pointPool->getNbPoint();
 }
+
+std::list<int>* VolumeModel::getTetIndList(int ind)
+{
+	return pointPool->getTetIndList(ind);
+}

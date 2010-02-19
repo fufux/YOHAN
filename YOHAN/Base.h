@@ -114,6 +114,8 @@ namespace yohan
 
 			int getNbPoint();
 
+			std::list<int>* getTetIndList(int ind);
+
 			void fillVector(DATA* V, DATA* XU);
 
 			void feedBackVector(DATA* V, DATA deltaTime);
@@ -335,6 +337,8 @@ namespace yohan
 
 			int getPointPoolSize();
 
+			std::list<int>* getTetIndList(int ind);
+
 			DATA* getPoint(int index);
 
 			Tetrahedron* getTetrahedron(int index);
@@ -468,6 +472,9 @@ namespace yohan
 		private:
 			/* collision detection returns the overlaping volumes */
 			std::vector<CollisionPolyedron>* CollisionDetection();
+			
+			/* Calculates overlaping polyherons for given reference points */
+			std::vector<CollisionPolyedron>* SceneController::overlapCalc(std::vector<int>* violationPoint,int ind);
 
 		};
 

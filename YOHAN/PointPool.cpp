@@ -143,6 +143,11 @@ void PointPool::fillVector(DATA* V, DATA* XU)
 		XU[i + 1] = pointData[1] - pointData[7];
 		XU[i + 2] = pointData[2] - pointData[8];
 
+		// mise a jour
+		pointData[6] = pointData[0];
+		pointData[7] = pointData[1];
+		pointData[8] = pointData[2];
+
 		i += 3;
 	}
 }
@@ -273,4 +278,9 @@ char* PointPool::output(char* dir, int modelID)
 int PointPool::getNbPoint()
 {
 	return this->pointList.size();
+}
+
+std::list<int>* PointPool::getTetIndList(int ind)
+{
+	return this->tetrahedronIndexList[ind];
 }

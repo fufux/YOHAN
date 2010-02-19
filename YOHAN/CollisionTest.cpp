@@ -12,7 +12,7 @@ CollisionTest::~CollisionTest(void)
 {
 }
 
-int main(int argc, char* argv[])
+int _main(int argc, char* argv[])
 {
 	FILE *stdoutToStdStream = freopen( "cout.txt", "w", stdout );
 	// Point creation
@@ -61,10 +61,15 @@ int main(int argc, char* argv[])
 	faces->push_back(*f1);
 	faces->push_back(*f2);
 	faces->push_back(*f3);
-	CollisionPolyedron* p = new CollisionPolyedron(faces,1,0);
+	CollisionPolyedron* p = new CollisionPolyedron(faces,1,owner);
 	double vol = p->calcVolume();
 	cout << "polyhedron volume: " << vol << "\n";
-
+	CollisionPoint* center = p->calcCenter();
+	cout << "polyhedron center: (" << center->getX() << "," << center->getY() << "," << center->getZ() << ")\n";
+	CollisionPoint* dir = p->calcDir(0);
+	cout << "polyhedron dir for 0: (" << dir->getX() << "," << dir->getY() << "," << dir->getZ() << ")\n";
+	dir = p->calcDir(1);
+	cout << "polyedron dir for 1: (" << dir->getX() << "," << dir->getY() << "," << dir->getZ() << ")\n";
 	// cube creation
 	CollisionPoint* c0 = new CollisionPoint(0,0,0);
 	CollisionPoint* c1 = new CollisionPoint(1,0,0);
@@ -120,8 +125,8 @@ int main(int argc, char* argv[])
 	CollisionPolyedron* cube = new CollisionPolyedron(faces,1,0);
 	vol = cube->calcVolume();
 	cout << "cube volume: " << vol << "\n";
-	vol = CollisionPoint::volOp(p3,p0,p1,p2);
-	cout << "volume: " << vol << "\n";
+	center = cube->calcCenter();
+	cout << "cube center: (" << center->getX() << "," << center->getY() << "," << center->getZ() << ")\n";
 
 
 	fclose(stdoutToStdStream);

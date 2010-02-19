@@ -1,5 +1,5 @@
 #include "CollisionPolyedron.h"
-
+#include "stdafx.h"
 
 CollisionPolyedron::CollisionPolyedron(void)
 {
@@ -12,6 +12,7 @@ CollisionPolyedron::~CollisionPolyedron(void)
 CollisionPolyedron::CollisionPolyedron(std::vector<CollisionFace>* facets, int p1, int p2)
 {
 	faces = facets;
+	parents = new int[2];
 	parents[0] = p1;
 	parents[1] = p2;
 	volume = 0;
@@ -48,15 +49,15 @@ double CollisionPolyedron::calcVolume()
 				resul -= CollisionPoint::volOp(&q, &(*faces)[i][0], &(*faces)[i][j], &(*faces)[i][j-1]);
 			}
 		}
+		volume = resul/6;
 	}
-	volume = resul/6;
 	return volume;
 }
 
 CollisionPoint* CollisionPolyedron::calcDir(int owner)
 {
 	CollisionPoint* resul;
-	std::vector<CollisionFace>* faces;
+	std::vector<CollisionFace>* facets;
 	CollisionPoint* dir;
 	// Test if this is collision with y=0 plan
 	if(parents[0]<0 || parents[1]<0){
@@ -66,18 +67,18 @@ CollisionPoint* CollisionPolyedron::calcDir(int owner)
 	}else{
 		resul = new CollisionPoint();
 		if(this->parents[0]==owner){
-			faces = this->getByOwner(parents[1]);
+			facets = this->getByOwner(parents[1]);
 		}else{
-			faces = this->getByOwner(parents[0]);
+			facets = this->getByOwner(parents[0]);
 		}
-		for(int i=0;i<(int)faces->size();i++){
-			for(int j=0;j<(int)faces[i].size();j++){
-				dir = CollisionPoint::vect(&(*faces)[i][j], &(*faces)[i][0], &(*faces)[i][j-1], &(*faces)[i][0]);
+		for(int i=0;i<(int)facets->size();i++){
+			for(int j=2;j<(int)(*facets)[i].size();j++){
+				dir = CollisionPoint::vect(&(*facets)[i][j], &(*facets)[i][0], &(*facets)[i][j-1], &(*facets)[i][0]);
 				resul->add(dir);
 				delete dir;
 			}
 		}
-		delete faces;
+		delete facets;
 		resul->mul(1/(resul->norm()));
 	}
 	return resul;
@@ -92,7 +93,7 @@ CollisionPoint* CollisionPolyedron::calcCenter()
 	double vol;
 	for(int i=0; i<(int)(*faces).size(); i++){
 		for(int j=2; j<(*faces)[i].size(); j++){
-			vol = CollisionPoint::det4(&q, &(*faces)[i][0], &(*faces)[i][j-1], &(*faces)[i][j]);
+			vol = abs(CollisionPoint::det4(&q, &(*faces)[i][0], &(*faces)[i][j-1], &(*faces)[i][j]))/6;
 			pt = new CollisionPoint();
 			pt->add(&q);
 			pt->add(&(*faces)[i][0]);
@@ -103,7 +104,8 @@ CollisionPoint* CollisionPolyedron::calcCenter()
 			delete pt;
 		}
 	}
-	resul->mul(1/(5*this->calcVolume()));
+	vol = this->calcVolume();
+	resul->mul(1/(4*vol));
 	return resul;
 }
 
