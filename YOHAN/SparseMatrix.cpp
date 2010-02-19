@@ -52,7 +52,7 @@ void SymmetricMumpsSquareSparseMatrix::setValue(int i, int j, DATA value)
 
 		//resizing
 		if (this->size == this->capacity - 1)
-			resize(this->capacity + this->order);	//one possible strategy
+			resize(this->capacity * 2);	//one possible strategy
 
 		//expand
 		this->rows[this->size] = i;
@@ -82,7 +82,7 @@ void SymmetricMumpsSquareSparseMatrix::addAndSetValue(int i, int j, DATA value)
 
 		//resizing
 		if (this->size == this->capacity - 1)
-			resize(this->capacity + this->order);	//one possible strategy
+			resize(this->capacity * 2);	//one possible strategy
 
 		//expand
 		this->rows[this->size] = i;
@@ -335,4 +335,6 @@ void SymmetricMumpsSquareSparseMatrix::calcul_MinusMatrixVec(DATA* vec, DATA* re
 	}
 }
 
-
+void SymmetricMumpsSquareSparseMatrix::show(char* fileName)
+{
+}

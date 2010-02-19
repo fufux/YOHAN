@@ -23,7 +23,8 @@ VolumeModelController::VolumeModelController(const char* nodeFile, const char* f
 void VolumeModelController::evoluteModel()
 {
 	// vitesse vector and x-u vector
-	this->model->fillVector();
+	// this->model->fillVector();
+	this->model->fillVector2();
 
 	while (!this->eventQueue.empty())
 	{
@@ -55,10 +56,11 @@ void VolumeModelController::evoluteModel()
 	
 
 	// combine the matrix and resolve the linear equation
-	this->model->calculate();
+	// this->model->calculate();
+	this->model->calculate2();
 
 	// the new vitesse are in F, feed them back
-	this->model->feedBackVector();
+	this->model->feedBackVector2();
 
 	// calculate the fracture
 	this->model->fracture();

@@ -65,6 +65,19 @@ PointPool::PointPool(const char *nodeFile, const char* faceFile, DATA speed[])
 		pointData[7] = pointData[1];
 		pointData[8] = pointData[2];
 
+		//acceleration
+		pointData[9] = 0;
+		pointData[10] = 0;
+		pointData[11] = 0;
+
+		//stress
+		pointData[12] = 0;
+		pointData[13] = 0;
+		pointData[14] = 0;
+		pointData[15] = 0;
+		pointData[16] = 0;
+		pointData[17] = 0;
+
 		pointList.push_back(pointData);
 		visiblePointList.push_back(false);
 		tetrahedronIndexList.push_back(new std::list<int*>());
@@ -156,6 +169,32 @@ void PointPool::fillVector(DATA* V, DATA* XU)
 	}
 }
 
+void PointPool::fillVector2(DATA* X, DATA* V, DATA* A)
+{
+	int i = 0;
+	for (std::vector<DATA*>::iterator iter = pointList.begin(); iter != pointList.end(); ++iter)
+	{
+		DATA* pointData = *iter;
+
+		// position
+		X[i] = pointData[0];
+		X[i + 1] = pointData[1];
+		X[i + 2] = pointData[2];
+
+		// velority
+		V[i] = pointData[3];
+		V[i + 1] = pointData[4];
+		V[i + 2] = pointData[5];
+
+		// acceleration
+		A[i] = pointData[9];
+		A[i + 1] = pointData[10];
+		A[i + 2] = pointData[11];
+
+		i += 3;
+	}
+}
+
 void PointPool::feedBackVector(DATA* V, DATA deltaTime)
 {
 	int i = 0;
@@ -177,6 +216,38 @@ void PointPool::feedBackVector(DATA* V, DATA deltaTime)
 		pointData[0] += pointData[3] * deltaTime;
 		pointData[1] += pointData[4] * deltaTime;
 		pointData[2] += pointData[5] * deltaTime;
+
+		i += 3;
+	}
+}
+
+void PointPool::feedBackVector2(DATA* X, DATA a0, DATA a2, DATA a3, DATA a6, DATA a7)
+{
+	int i = 0;
+	for (std::vector<DATA*>::iterator iter = pointList.begin(); iter != pointList.end(); ++iter)
+	{
+		DATA* pointData = *iter;
+
+		// save old acceleration
+		DATA oldAcc[3];
+		oldAcc[0] = pointData[9];
+		oldAcc[1] = pointData[10];
+		oldAcc[2] = pointData[11];
+
+		// acceleration
+		pointData[9] = a0 * (X[i] - pointData[0]) - a2 * pointData[3] - a3 * oldAcc[0];
+		pointData[10] = a0 * (X[i + 1] - pointData[1]) - a2 * pointData[4] - a3 * oldAcc[1];
+		pointData[11] = a0 * (X[i + 2] - pointData[2]) - a2 * pointData[5] - a3 * oldAcc[2];
+		
+		// velority
+		pointData[3] += a6 * oldAcc[0] + a7 * pointData[9];
+		pointData[4] += a6 * oldAcc[1] + a7 * pointData[10];
+		pointData[5] += a6 * oldAcc[2] + a7 * pointData[11];		
+
+		//position
+		pointData[0] = X[i];
+		pointData[1] = X[i + 1];
+		pointData[2] = X[i + 2];
 
 		i += 3;
 	}
@@ -287,4 +358,19 @@ void PointPool::fracture(yohan::base::DATA limit)
 int PointPool::getNbPoint()
 {
 	return this->pointList.size();
+}
+
+void PointPool::fillStress(DATA* F)
+{
+	int i = 0;
+	for (std::vector<DATA*>::iterator iter = pointList.begin(); iter != pointList.end(); ++iter)
+	{
+		DATA* pointData = *iter;
+
+		F[i] += pointData[12];
+		F[i + 1] += pointData[13];
+		F[i + 2] += pointData[14];
+
+		i += 3;
+	}
 }

@@ -1,5 +1,6 @@
 #include "Editor.h"
 #include "Base.h"
+#include "SceneController2.h"
 
 using namespace yohan;
 using namespace base;
@@ -964,7 +965,7 @@ bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSc
 	try
 	{
 		//load the scene file
-		SceneController* sc = new SceneController( (char*)tetrahedralizedSceneFile.c_str() );
+		SceneController2* sc = new SceneController2( (char*)tetrahedralizedSceneFile.c_str() );
 
 		//start to simulate, and try to record all the process into the given file
 		device->getLogger()->log((stringc("Call simulate(")+simulatedSceneOutDir+stringc(")")).c_str());

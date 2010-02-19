@@ -237,4 +237,46 @@ void SymmetricMumpsSquareSparseMatrix2::calcul_MinusMatrixVec(DATA* vec, DATA* r
 	}
 }
 
+void SymmetricMumpsSquareSparseMatrix2::show(char* fileName)
+{
+	DATA** tmp = new DATA*[order];
+	for (int i = 0; i < order; i++)
+	{
+		tmp[i] = new DATA[order];
+		memset((void*)tmp[i], 0, sizeof(DATA) * order);
+	}
+
+	for (int i = 0; i < size; i++)
+	{
+		int row = rows[i];
+		int col = columns[i];
+		tmp[row - 1][col - 1] += values[i];
+	}
+
+	FILE* fp = fopen(fileName, "a+");
+
+	for (int i = 0; i < order; i++)
+	{
+		for (int j = 0; j < order; j++)
+		{
+			fprintf(fp, "%.7lf\t", tmp[i][j]);
+		}
+
+		fprintf(fp, "\n");
+	}
+
+	fprintf(fp, "\n===========================\n");
+
+	fflush(fp);
+	fclose(fp);
+
+	for (int i = 0; i < order; i++)
+	{
+		delete[] tmp[i];
+	}
+	delete[] tmp;
+
+	
+}
+
 

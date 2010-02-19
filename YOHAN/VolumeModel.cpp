@@ -73,15 +73,26 @@ VolumeModel::VolumeModel(const char* nodeFile, const char* faceFile, const char*
 	this->V = new DATA[vecSize];
 	this->XU = new DATA[vecSize];
 
+	this->A = new DATA[vecSize];
+	this->TMP = new DATA[vecSize];
+
 	memset((void*)this->F, 0, vecSize * sizeof(DATA));
 	memset((void*)this->X, 0, vecSize * sizeof(DATA));
 	memset((void*)this->V, 0, vecSize * sizeof(DATA));
 	memset((void*)this->XU, 0, vecSize * sizeof(DATA));
+
+	memset((void*)this->A, 0, vecSize * sizeof(DATA));
+	memset((void*)this->TMP, 0, vecSize * sizeof(DATA));
 }
 
 void VolumeModel::fillMatrix(DATA gravity[])
 {
 	this->tetPool->fillMatrix(K, M, C, F, gravity);
+
+	/* for debug */
+	K->show("d:\\qq\\k.txt");
+	M->show("d:\\qq\\m.txt");
+	C->show("d:\\qq\\c.txt");
 }
 
 void VolumeModel::setDeltaTime(DATA t)
@@ -125,6 +136,44 @@ void VolumeModel::fillVector()
 	pointPool->fillVector(V, XU);
 }
 
+void VolumeModel::fillVector2()
+{
+	// make sure that size is correspondant with the quantity of point
+	int newOrder = pointPool->getPointCount() * 3;
+	if (vecSize < newOrder)
+	{
+		//delete
+		delete[] F;
+		delete[] X;
+		delete[] V;
+		delete[] XU;
+
+		delete[] A;
+		delete[] TMP;
+
+		//rellocate
+		vecSize = newOrder;
+		F = new DATA[vecSize];
+		X = new DATA[vecSize];
+		V = new DATA[vecSize];
+		XU = new DATA[vecSize];
+
+		A = new DATA[vecSize];
+		TMP = new DATA[vecSize];
+	}
+
+	// clear
+	memset((void*)this->F, 0, vecSize * sizeof(DATA));
+	memset((void*)this->X, 0, vecSize * sizeof(DATA));
+	memset((void*)this->V, 0, vecSize * sizeof(DATA));
+	memset((void*)this->XU, 0, vecSize * sizeof(DATA));
+
+	memset((void*)this->A, 0, vecSize * sizeof(DATA));
+	memset((void*)this->TMP, 0, vecSize * sizeof(DATA));
+
+	pointPool->fillVector2(X, V, A);
+}
+
 void VolumeModel::calculate()
 {
 	// delta_t * C = C_
@@ -150,9 +199,67 @@ void VolumeModel::calculate()
 
 }
 
+void VolumeModel::calculate2()
+{
+	// considering the stress
+	//pointPool->fillStress(F);
+
+	// constant
+	DATA gama = 0.6, beta = (0.5 + gama) * (0.5 + gama) / 4;
+
+	/* */
+	DATA a0 = 1 / (beta * deltaTime * deltaTime);
+	DATA a1 = gama / (beta * deltaTime);
+	DATA a2 = 1 / (beta * deltaTime);
+	DATA a3 = 1 / (2 * beta) - 1;
+	DATA a4 = gama / beta - 1;
+	DATA a5 = deltaTime / 2 * (gama / beta - 2);
+	DATA a6 = deltaTime * (1 - gama);
+	DATA a7 = gama * deltaTime;
+
+	// New K = K + a0 * M + a1 * C
+	K->calcul_plusAX(M, a0);
+	K->calcul_plusAX(C, a1);
+
+	// New f = f + M * (a0 * X + a2 * V + a3 * A) + C(a1 * X + a4 * V + a5 * A)
+	memcpy((void*)TMP, (void*)X, sizeof(DATA) * vecSize);
+	for (int i = 0; i < vecSize; i++)
+		TMP[i] = TMP[i] * a0 + V[i] * a2 + A[i] * a3;
+
+	M->calcul_PlusMatrixVec(TMP, F);
+
+	memcpy((void*)TMP, (void*)X, sizeof(DATA) * vecSize);
+	for (int i = 0; i < vecSize; i++)
+		TMP[i] = TMP[i] * a1 + V[i] * a4 + A[i] * a5;
+
+	C->calcul_PlusMatrixVec(TMP, F);
+
+	// resolve
+	solveLinearEquation(K, F);
+
+}
+
 void VolumeModel::feedBackVector()
 {
 	pointPool->feedBackVector(F, deltaTime);
+}
+
+void VolumeModel::feedBackVector2()
+{
+	// constant
+	DATA gama = 0.6, beta = (0.5 + gama) * (0.5 + gama) / 4;
+
+	/* */
+	DATA a0 = 1 / (beta * deltaTime * deltaTime);
+	DATA a1 = gama / (beta * deltaTime);
+	DATA a2 = 1 / (beta * deltaTime);
+	DATA a3 = 1 / (2 * beta) - 1;
+	DATA a4 = gama / beta - 1;
+	DATA a5 = deltaTime / 2 * (gama / beta - 2);
+	DATA a6 = deltaTime * (1 - gama);
+	DATA a7 = gama * deltaTime;
+
+	pointPool->feedBackVector2(F, a0, a2, a3, a6, a7);
 }
 
 void VolumeModel::generateFrame(int round)
@@ -185,6 +292,8 @@ void VolumeModel::output(FILE* sceneFile, char* objectFileDir, int frameID)
 
 void VolumeModel::fracture()
 {
+	FILE* fp = fopen("d:\\qq\\f.txt","a+");
+
 	int n = pointPool->getPointCount();
 	for (int i = 0; i < n; i++)
 	{
@@ -209,8 +318,21 @@ void VolumeModel::fracture()
 
 		}
 
-		
+		// conserve
+		pointData[12] = sum[0];
+		pointData[13] = sum[1];
+		pointData[14] = sum[2];
+		pointData[15] = sum[3];
+		pointData[16] = sum[4];
+		pointData[17] = sum[5];
+
+		//output
+		fprintf(fp, "%d -\t%.6lf\t%.6lf\t%.6lf\t%.6lf\t%.6lf\t%.6lf\n", i, sum[0], sum[1], sum[2], sum[3], sum[4], sum[5]);		
 	}
+
+	fprintf(fp, "\n==========================================\n");
+	fflush(fp);
+	fclose(fp);
 }
 
 // temporal

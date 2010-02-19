@@ -93,6 +93,8 @@ namespace yohan
 
 			void calcul_MinusMatrixVec(DATA* vec, DATA* res, DATA alpha);
 
+			void show(char* fileName);
+
 		private:
 			void resize(int newCapacity);
 		};
@@ -173,6 +175,8 @@ namespace yohan
 
 			void calcul_MinusMatrixVec(DATA* vec, DATA* res, DATA alpha);
 
+			void show(char* fileName);
+
 		private:
 			void resize(int newCapacity);
 		};
@@ -183,5 +187,6 @@ namespace yohan
 
 		/* vec(i) = vec(i) * alpha */
 		void calcul_vec_AX(DATA* vec, int size, DATA alpha);
+
 	}
 }

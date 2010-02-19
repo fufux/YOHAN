@@ -241,7 +241,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SceneController2.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SceneRecorder.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SceneRecorder2.cpp"
 				>
 			</File>
 			<File
@@ -293,7 +301,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VolumeModel2.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\VolumeModelController.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VolumeModelController2.cpp"
 				>
 			</File>
 			<File
@@ -355,11 +371,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SceneController2.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SceneRecord2.h"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
 			<File
 				RelativePath=".\targetver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VolumeModel2.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VolumeModelController2.h"
 				>
 			</File>
 		</Filter>

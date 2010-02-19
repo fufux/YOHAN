@@ -72,7 +72,7 @@ namespace yohan
 		class PointPool
 		{
 			/* The constant which indicates how many parameters are used to discribe a point's behavior */
-			static const int POINT_ARGU_NUM = 13;
+			static const int POINT_ARGU_NUM = 20;
 
 			/* 
 			The global information of each point.
@@ -81,8 +81,9 @@ namespace yohan
 			DATA[0:2] -- current postion
 			DATA[3:5] -- velotity
 			DATA[6:8] -- original position
+			DATA[9:11] -- acceleration
 
-			DATA[9:12] -- color
+			DATA[12:17]	-- stress
 
 			The size of this array is decided by POINT_ARGU_NUM
 			*/
@@ -117,11 +118,19 @@ namespace yohan
 
 			void fillVector(DATA* V, DATA* XU);
 
+			void fillVector2(DATA* X, DATA* V, DATA* A);
+
 			void feedBackVector(DATA* V, DATA deltaTime);
+
+			void feedBackVector2(DATA* X, DATA a0, DATA a2, DATA a3, DATA a6, DATA a7);
 
 			void fracture(DATA limit);
 
 			void showInfo(int round);
+
+			void fillStress(DATA* F);
+
+			std::list<int*>* getPointTetIndexList(int index);
 
 			// temporal
 
@@ -179,6 +188,8 @@ namespace yohan
 			Tetrahedron(int id, const int pointIndex[], DATA constants[], PointPool* pointPoolRef, VolumeModel* volumeModelRef);
 
 			void fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, DATA* F, DATA gravity[]);
+
+			void fillMatrix2(SquareSparseMatrix* K, SquareSparseMatrix* M, DATA* F, DATA gravity[]);
 
 			int* getPointIndex();
 
@@ -303,6 +314,12 @@ namespace yohan
 			/* The deplacement matrix (vector), always = X - U */
 			DATA* XU;
 
+			/* The acceleration vector */
+			DATA* A;
+
+			/* The vector for tmp calculation */
+			DATA* TMP;
+
 			/*
 			0 - Lambda
 			1 - u
@@ -336,9 +353,15 @@ namespace yohan
 
 			void calculate();
 
+			void calculate2();
+
 			void fillVector();
 
+			void fillVector2();
+
 			void feedBackVector();
+
+			void feedBackVector2();
 
 			void fracture();
 
@@ -565,6 +588,8 @@ namespace yohan
 			/* RES = RES - alpha * M * VEC */
 			/* res(i) -= (M(i,1) * vec(1) + M(i,2) * vec(2) + ...) * alpha */
 			virtual void calcul_MinusMatrixVec(DATA* vec, DATA* res, DATA alpha) = 0;
+
+			virtual void show(char* fileName) = 0;
 		};
 
 		
