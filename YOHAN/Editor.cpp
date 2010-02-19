@@ -108,6 +108,7 @@ void Editor::clear(bool clear_gui)
 	this->selectedNodeIndex = -1;
 	this->selectedForceField = -1;
 	this->debugData = scene::EDS_OFF;
+	this->name = "untitled";
 
 	// clear GUI
 	if (clear_gui)
@@ -408,6 +409,7 @@ void Editor::createGUI()
 
 	gui::IGUIContextMenu* submenu;
 	submenu = menu->getSubMenu(0);
+	submenu->addItem(L"New", GUI_ID_NEW_SCENE);
 	submenu->addItem(L"Open scene...", GUI_ID_OPEN_SCENE);
 	submenu->addItem(L"Save scene...", GUI_ID_SAVE_SCENE);
 	submenu->addItem(L"Tetrahedralize & simulate scene...", GUI_ID_TETRAHEDRALIZE_AND_SIMULATE_SCENE);
