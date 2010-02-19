@@ -49,6 +49,9 @@ void Player::switchToEditor()
 	{
 		this->stop();
 		editor->start();
+		// reset the working directory
+		device->getFileSystem()->changeWorkingDirectoryTo( baseDir.c_str() );
+		editor->load("tmp.xml");
 	}
 }
 

@@ -65,6 +65,9 @@ void Editor::switchToPlayer(stringc sceneDirToLoad)
 {
 	if (player != NULL)
 	{
+		// reset the working directory
+		device->getFileSystem()->changeWorkingDirectoryTo( baseDir.c_str() );
+		this->save("tmp.xml");
 		this->stop();
 		player->start();
 		if (sceneDirToLoad.size() > 0)
@@ -650,6 +653,9 @@ void Editor::removeForceFieldToolBox()
 
 bool Editor::load(irr::core::stringc filename)
 {
+	// reset the working directory
+	device->getFileSystem()->changeWorkingDirectoryTo( baseDir.c_str() );
+
 	IReadFile* file = device->getFileSystem()->createAndOpenFile( filename );
 	if (!file)
 	{
