@@ -92,6 +92,7 @@ public:
 
 	// usefull to switch & load to player
 	stringc getLastSimulatedSceneOutDir();
+	stringc getBaseDir();
 
 private:
 	// name of the scene

@@ -112,6 +112,7 @@ int main(int argc, _TCHAR* argv[])
 
 	// by default, we start the editor
 	editor->start();
+	editor->load("tmp.xml");
 
 	/*
 	Ok, now we have set up the scene, lets draw everything: We run the
@@ -150,6 +151,9 @@ int main(int argc, _TCHAR* argv[])
 			device->yield();
 
 	}
+
+	device->getFileSystem()->changeWorkingDirectoryTo( editor->getBaseDir().c_str() );
+	editor->save("tmp.xml");
 
 	editor->clear();
 	player->clear();
