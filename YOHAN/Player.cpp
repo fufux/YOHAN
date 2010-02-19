@@ -39,7 +39,11 @@ void Player::start()
 void Player::stop()
 {
 	this->is_running = false;
+	const core::list<IGUIElement*>& children = env->getRootGUIElement()->getChildren();
+	while (!children.empty())
+		(*children.getLast())->remove();
 	this->clear();
+	device->clearSystemMessages();
 }
 
 void Player::switchToEditor()
@@ -66,9 +70,7 @@ void Player::clear()
 	this->currFrame = NULL;
 	this->sceneFile = "";
 	this->currentFrame = -1;
-	this->is_playing = false;
-
-	//env->getRootGUIElement()->remove();
+	this->is_playing = false; 
 }
 
 

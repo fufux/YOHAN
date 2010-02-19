@@ -71,23 +71,6 @@ enum E_TEXTURE_CREATION_FLAG
 };
 
 
-//! Helper function, helps to get the desired texture creation format from the flags.
-/** \return Either ETCF_ALWAYS_32_BIT, ETCF_ALWAYS_16_BIT,
-ETCF_OPTIMIZED_FOR_QUALITY, or ETCF_OPTIMIZED_FOR_SPEED. */
-inline E_TEXTURE_CREATION_FLAG getTextureFormatFromFlags(u32 flags)
-{
-	if (flags & ETCF_OPTIMIZED_FOR_SPEED)
-		return ETCF_OPTIMIZED_FOR_SPEED;
-	if (flags & ETCF_ALWAYS_16_BIT)
-		return ETCF_ALWAYS_16_BIT;
-	if (flags & ETCF_ALWAYS_32_BIT)
-		return ETCF_ALWAYS_32_BIT;
-	if (flags & ETCF_OPTIMIZED_FOR_QUALITY)
-		return ETCF_OPTIMIZED_FOR_QUALITY;
-	return ETCF_OPTIMIZED_FOR_SPEED;
-}
-
-
 //! Interface of a Video Driver dependent Texture.
 /** An ITexture is created by an IVideoDriver by using IVideoDriver::addTexture
 or IVideoDriver::getTexture. After that, the texture may only be used by this
@@ -102,9 +85,8 @@ class ITexture : public virtual IReferenceCounted
 public:
 
 	//! constructor
-	ITexture(const io::path& name) : Name(name)
+	ITexture(const io::path& name) : NamedPath(name)
 	{
-		Name.make_lower();
 	}
 
 	//! Lock function.
@@ -115,10 +97,12 @@ public:
 	number of previous locks.
 	\param readOnly Specifies that no changes to the locked texture are
 	made. Unspecified behavior will arise if still write access happens.
+	\param mipmapLevel Number of the mipmapLevel to lock. 0 is main texture.
+	Non-existing levels will silently fail and return 0.
 	\return Returns a pointer to the pixel data. The format of the pixel can
 	be determined by using getColorFormat(). 0 is returned, if
 	the texture cannot be locked. */
-	virtual void* lock(bool readOnly = false) = 0;
+	virtual void* lock(bool readOnly = false, u32 mipmapLevel=0) = 0;
 
 	//! Unlock function. Must be called after a lock() to the texture.
 	/** One should avoid to call unlock more than once before another lock. */
@@ -126,12 +110,11 @@ public:
 
 	//! Get original size of the texture.
 	/** The texture is usually scaled, if it was created with an unoptimal
-	size. For example if the size of the texture file it was loaded from
-	was not a power of two. This returns the size of the texture, it had
-	before it was scaled. Can be useful when drawing 2d images on the
-	screen, which should have the exact size of the original texture. Use
-	ITexture::getSize() if you want to know the real size it has now stored
-	in the system.
+	size. For example if the size was not a power of two. This method
+	returns the size of the texture it had before it was scaled. Can be
+	useful when drawing 2d images on the screen, which should have the
+	exact size of the original texture. Use ITexture::getSize() if you want
+	to know the real size it has now stored in the system.
 	\return The original size of the texture. */
 	virtual const core::dimension2d<u32>& getOriginalSize() const = 0;
 
@@ -167,18 +150,34 @@ public:
 
 	//! Regenerates the mip map levels of the texture.
 	/** Required after modifying the texture, usually after calling unlock(). */
-	virtual void regenerateMipMapLevels() = 0;
+	virtual void regenerateMipMapLevels(void* mipmapData=0) = 0;
 
 	//! Check whether the texture is a render target
 	/** \return True if this is a render target, otherwise false. */
 	virtual bool isRenderTarget() const { return false; }
 
 	//! Get name of texture (in most cases this is the filename)
-	const io::path& getName() const { return Name; }
+	const io::SNamedPath& getName() const { return NamedPath; }
 
 protected:
 
-	io::path Name;
+	//! Helper function, helps to get the desired texture creation format from the flags.
+	/** \return Either ETCF_ALWAYS_32_BIT, ETCF_ALWAYS_16_BIT,
+	ETCF_OPTIMIZED_FOR_QUALITY, or ETCF_OPTIMIZED_FOR_SPEED. */
+	inline E_TEXTURE_CREATION_FLAG getTextureFormatFromFlags(u32 flags)
+	{
+		if (flags & ETCF_OPTIMIZED_FOR_SPEED)
+			return ETCF_OPTIMIZED_FOR_SPEED;
+		if (flags & ETCF_ALWAYS_16_BIT)
+			return ETCF_ALWAYS_16_BIT;
+		if (flags & ETCF_ALWAYS_32_BIT)
+			return ETCF_ALWAYS_32_BIT;
+		if (flags & ETCF_OPTIMIZED_FOR_QUALITY)
+			return ETCF_OPTIMIZED_FOR_QUALITY;
+		return ETCF_OPTIMIZED_FOR_SPEED;
+	}
+
+	io::SNamedPath NamedPath;
 };
 
 

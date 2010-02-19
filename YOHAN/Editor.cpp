@@ -57,7 +57,11 @@ void Editor::start()
 void Editor::stop()
 {
 	this->is_running = false;
+	const core::list<IGUIElement*>& children = env->getRootGUIElement()->getChildren();
+	while (!children.empty())
+		(*children.getLast())->remove();
 	this->clear();
+	device->clearSystemMessages();
 }
 
 void Editor::switchToPlayer()
@@ -93,8 +97,6 @@ void Editor::clear()
 	this->selectedNodeIndex = -1;
 	this->selectedForceField = -1;
 	this->debugData = scene::EDS_OFF;
-
-	//env->getRootGUIElement()->remove();
 }
 
 
@@ -331,6 +333,7 @@ void Editor::remove3DModel()
 		meshMaterials.erase(selectedNodeIndex);
 		initialSpeeds.erase(selectedNodeIndex);
 		selectedNodeIndex = -1;
+		removeSceneNodeToolBox();
 	}
 }
 
@@ -553,8 +556,7 @@ void Editor::createSceneNodeToolBox()
 void Editor::removeSceneNodeToolBox()
 {
 	// remove tool box if already there
-	IGUIElement* root = env->getRootGUIElement();
-	IGUIElement* e = root->getElementFromId(GUI_ID_SCENE_NODE_TOOL_BOX, true);
+	IGUIElement* e = env->getRootGUIElement()->getElementFromId(GUI_ID_SCENE_NODE_TOOL_BOX, true);
 	if (e)
 		e->remove();
 }
@@ -929,6 +931,9 @@ void Editor::quickTetAndSimulate()
 	driver->endScene();
 	wnd->remove();
 
+	// clear Player data to win memory
+	this->player->clear();
+
 	// tetrahedralize...
 	if ( tetrahedralizeScene(tetrahedralizedSceneFile, outDirTetrahedralize, tetrahedraDensity) )
 	{
@@ -954,6 +959,8 @@ void Editor::quickTetAndSimulate()
 		env->addMessageBox(CAPTION_ERROR, L"Tetrahedralizing failed ! Aborting.", true);
 	}
 
+	// clear system messages to prevent users input of being handled
+	device->clearSystemMessages();
 }
 
 
