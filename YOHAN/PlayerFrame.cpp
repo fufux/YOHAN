@@ -74,7 +74,7 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 		device->getLogger()->log((stringw("Loading ")+stringw(nb_of_points)+L" points from "+stringw(nodeFileName.c_str())+L"...").c_str());
 
 		// default color
-		video::SColor clr(255,100,100,200);
+		video::SColor clr(255,255,0,0);
 
 		// lets add the vertices to the buffer
 		buffer->Vertices.reallocate( nb_of_points );
@@ -344,7 +344,6 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 			continue;
 		}
 		node->setVisible(false);
-		//node->setMaterialFlag(video::EMF_WIREFRAME, true);
 
 		this->nodes.push_back( node );
 

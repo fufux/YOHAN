@@ -25,7 +25,7 @@ public:
 	void stop();
 	void switchToEditor();
 	// call this to remove all nodes of the player
-	void clear();
+	void clear(bool clear_gui=true);
 
 	// loads a video scene file and get ready to play it
 	bool loadAll();

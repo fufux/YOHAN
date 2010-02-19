@@ -30,14 +30,15 @@ enum XmlNodeType
 
 Editor::Editor(void)
 {
+	this->debugData = scene::EDS_OFF;
 	this->er = new EditorEventReceiver(this);
 	this->selectedNodeIndex = -1;
 	this->selectedForceField = -1;
-	this->debugData = scene::EDS_OFF;
 	this->is_running = false;
 	this->player = NULL;
 	this->name = "untitled";
 	this->baseDir = device->getFileSystem()->getWorkingDirectory();
+	this->lastSimulatedSceneOutDir = "";
 }
 
 Editor::~Editor(void)
@@ -46,29 +47,28 @@ Editor::~Editor(void)
 
 void Editor::start()
 {
-	device->setEventReceiver(this->er);
 	this->clear();
 	this->createGUI();
+	device->setEventReceiver(this->er);
 	this->is_running = true;
+	this->lastSimulatedSceneOutDir = "";
 }
 
 
 void Editor::stop()
 {
 	this->is_running = false;
-	const core::list<IGUIElement*>& children = env->getRootGUIElement()->getChildren();
-	while (!children.empty())
-		(*children.getLast())->remove();
 	this->clear();
-	device->clearSystemMessages();
 }
 
-void Editor::switchToPlayer()
+void Editor::switchToPlayer(stringc sceneDirToLoad)
 {
 	if (player != NULL)
 	{
 		this->stop();
 		player->start();
+		if (sceneDirToLoad.size() > 0)
+			player->load(sceneDirToLoad + "/scene.xml");
 	}
 }
 
@@ -83,8 +83,13 @@ stringc Editor::getName()
 	return name;
 }
 
+stringc Editor::getLastSimulatedSceneOutDir()
+{
+	return lastSimulatedSceneOutDir;
+}
 
-void Editor::clear()
+
+void Editor::clear(bool clear_gui)
 {
 	for (u16 i=0; i < nodes.size(); i++)
 		nodes[i]->remove();
@@ -96,6 +101,22 @@ void Editor::clear()
 	this->selectedNodeIndex = -1;
 	this->selectedForceField = -1;
 	this->debugData = scene::EDS_OFF;
+
+	// clear GUI
+	if (clear_gui)
+	{
+		device->clearSystemMessages();
+		device->setEventReceiver(NULL);
+		device->clearSystemMessages();
+		core::list<IGUIElement*> children = env->getRootGUIElement()->getChildren();
+		core::list<IGUIElement*>::Iterator it;
+		for (it = children.begin(); it != children.end(); ++it)
+		{
+			IGUIElement* e = (IGUIElement*)(*it);
+			if (e->getID() > GUI_ID_ref && e->getID() < GUI_ID_ref + 1000)
+				e->remove();
+		}
+	}
 }
 
 
@@ -363,8 +384,16 @@ void Editor::askForFileName()
 
 void Editor::createGUI()
 {
+	gui::IGUIElement* root = env->getRootGUIElement();
+
 	// create menu
-	gui::IGUIContextMenu* menu = env->addMenu();
+	gui::IGUIContextMenu* menu;
+	if (root->getElementFromId(GUI_ID_MENU, true))
+		((gui::IGUIContextMenu*)root->getElementFromId(GUI_ID_MENU, true))->remove();
+		//menu = (gui::IGUIContextMenu*)root->getElementFromId(GUI_ID_MENU, true);
+
+	menu = env->addMenu(0, GUI_ID_MENU);
+
 	menu->addItem(L"File", -1, true, true);
 	menu->addItem(L"View", -1, true, true);
 	menu->addItem(L"Camera", -1, true, true);
@@ -385,14 +414,14 @@ void Editor::createGUI()
 	submenu->addItem(L"toggle model debug information", GUI_ID_TOGGLE_DEBUG_INFO, true, true);
 
 	submenu = submenu->getSubMenu(0);
-	submenu->addItem(L"Off", GUI_ID_DEBUG_OFF);
-	submenu->addItem(L"Bounding Box", GUI_ID_DEBUG_BOUNDING_BOX);
-	submenu->addItem(L"Normals", GUI_ID_DEBUG_NORMALS);
-	submenu->addItem(L"Skeleton", GUI_ID_DEBUG_SKELETON);
-	submenu->addItem(L"Wire overlay", GUI_ID_DEBUG_WIRE_OVERLAY);
-	submenu->addItem(L"Half-Transparent", GUI_ID_DEBUG_HALF_TRANSPARENT);
-	submenu->addItem(L"Buffers bounding boxes", GUI_ID_DEBUG_BUFFERS_BOUNDING_BOXES);
-	submenu->addItem(L"All", GUI_ID_DEBUG_ALL);
+	submenu->addItem(L"Off", GUI_ID_DEBUG_OFF, true, false, (isDebugDataVisible() == scene::EDS_OFF));
+	submenu->addItem(L"Bounding Box", GUI_ID_DEBUG_BOUNDING_BOX, true, false, (isDebugDataVisible() == scene::EDS_BBOX));
+	submenu->addItem(L"Normals", GUI_ID_DEBUG_NORMALS, true, false, (isDebugDataVisible() == scene::EDS_NORMALS));
+	submenu->addItem(L"Skeleton", GUI_ID_DEBUG_SKELETON, true, false, (isDebugDataVisible() == scene::EDS_SKELETON));
+	submenu->addItem(L"Wire overlay", GUI_ID_DEBUG_WIRE_OVERLAY, true, false, (isDebugDataVisible() == scene::EDS_MESH_WIRE_OVERLAY));
+	submenu->addItem(L"Half-Transparent", GUI_ID_DEBUG_HALF_TRANSPARENT, true, false, (isDebugDataVisible() == scene::EDS_HALF_TRANSPARENCY));
+	submenu->addItem(L"Buffers bounding boxes", GUI_ID_DEBUG_BUFFERS_BOUNDING_BOXES, true, false, (isDebugDataVisible() == scene::EDS_BBOX_BUFFERS));
+	submenu->addItem(L"All", GUI_ID_DEBUG_ALL, true, false, (isDebugDataVisible() == scene::EDS_FULL));
 
 	submenu = menu->getSubMenu(2);
 	submenu->addItem(L"Maya Style", GUI_ID_CAMERA_MAYA);
@@ -408,7 +437,12 @@ void Editor::createGUI()
 
 	// create toolbar
 
-	gui::IGUIToolBar* bar = env->addToolBar();
+	gui::IGUIToolBar* bar;
+	if (root->getElementFromId(GUI_ID_TOOLBAR, true))
+		((gui::IGUIToolBar*)root->getElementFromId(GUI_ID_TOOLBAR, true))->remove();
+		//bar = (gui::IGUIToolBar*)root->getElementFromId(GUI_ID_TOOLBAR, true);
+	
+	bar = env->addToolBar(0, GUI_ID_TOOLBAR);
 
 	video::ITexture* image = driver->getTexture("open.png");
 	bar->addButton(GUI_ID_OPEN_DIALOG_BUTTON, 0, L"Open a model", image, 0, false, true);
@@ -677,6 +711,7 @@ bool Editor::load(irr::core::stringc filename)
 						// clean current scene
 						this->clear();
 						this->createGUI();
+						device->setEventReceiver(this->er);
 					}
 				}
 
@@ -931,7 +966,7 @@ void Editor::quickTetAndSimulate()
 	wnd->remove();
 
 	// clear Player data to win memory
-	this->player->clear();
+	this->player->clear(false);
 
 	// tetrahedralize...
 	if ( tetrahedralizeScene(tetrahedralizedSceneFile, outDirTetrahedralize, tetrahedraDensity) )
@@ -946,7 +981,8 @@ void Editor::quickTetAndSimulate()
 		// simulate...
 		if ( simulateScene(outDirTetrahedralize + "/" + tetrahedralizedSceneFile, simulatedSceneOutDir, nbFrame, deltaT) )
 		{
-			env->addMessageBox(L"Success", L"Simulation finished well.", true);
+			this->lastSimulatedSceneOutDir = simulatedSceneOutDir;
+			this->er->askForSwitch();
 		}
 		else
 		{

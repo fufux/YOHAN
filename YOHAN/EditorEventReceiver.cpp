@@ -244,6 +244,15 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 				if (root->getElementFromId(GUI_ID_ASK_PARAMETERS_WINDOW, true))
 					root->getElementFromId(GUI_ID_ASK_PARAMETERS_WINDOW, true)->remove();
 				break;
+			case GUI_ID_ASK_SWITCH_YES_BUTTON:
+				if (root->getElementFromId(GUI_ID_ASK_SWITCH_WINDOW, true))
+					root->getElementFromId(GUI_ID_ASK_SWITCH_WINDOW, true)->remove();
+				editor->switchToPlayer(editor->getLastSimulatedSceneOutDir());;
+				break;
+			case GUI_ID_ASK_SWITCH_NO_BUTTON:
+				if (root->getElementFromId(GUI_ID_ASK_SWITCH_WINDOW, true))
+					root->getElementFromId(GUI_ID_ASK_SWITCH_WINDOW, true)->remove();
+				break;
 			case GUI_ID_OPEN_DIALOG_BUTTON:
 				opening = OPENING_MODEL;
 				env->addFileOpenDialog(L"Please select a model file to open");
@@ -436,4 +445,17 @@ void EditorEventReceiver::askForParameters(bool previous_was_bad)
 		env->addButton(core::rect<s32>(60,y,100,y+16), wnd, GUI_ID_ASK_PARAMETERS_GO_BUTTON, L"GO!");
 		env->addButton(core::rect<s32>(320,y,360,y+16), wnd, GUI_ID_ASK_PARAMETERS_CANCEL_BUTTON, L"Cancel");
 	}
+}
+
+
+void EditorEventReceiver::askForSwitch()
+{
+	// create the window
+	IGUIWindow* wnd = env->addWindow(core::rect<s32>(300,200,500,350),
+		true, L"Success", 0, GUI_ID_ASK_SWITCH_WINDOW);
+
+	env->addStaticText(L"Simulation finished well.\r\nDo you want to switch to the player and open the video now ?", core::rect<s32>(20,20,180,80), false, true, wnd);
+
+	env->addButton(core::rect<s32>(60,90,100,110), wnd, GUI_ID_ASK_SWITCH_YES_BUTTON, L"Yes");
+	env->addButton(core::rect<s32>(120,90,160,110), wnd, GUI_ID_ASK_SWITCH_NO_BUTTON, L"No");
 }
