@@ -114,27 +114,34 @@ int main(int argc, _TCHAR* argv[])
 	*/
 	while(device->run())
 	{
-		driver->beginScene(true, true, SColor(255,100,101,140));
-
-		player->run(); // this will return imediately if player is not currently runing
-
-		smgr->drawAll();
-		env->drawAll();
-
-		driver->endScene();
-
-		stringw caption = L"";
-		if (editor->isRunning())
+		if (device->isWindowActive())
 		{
-			caption += L"Editor - [";
-			caption += editor->getName();
-			caption += L"]";
+			driver->beginScene(true, true, SColor(255,100,101,140));
+
+			player->run(); // this will return imediately if player is not currently runing
+
+			smgr->drawAll();
+			env->drawAll();
+
+			driver->endScene();
+
+			stringw caption = L"";
+			if (editor->isRunning())
+			{
+				caption += L"Editor - [";
+				caption += editor->getName();
+				caption += L"]";
+			}
+			else if (player->isRunning())
+			{
+				caption += L"Player";
+			}
+			device->setWindowCaption( caption.c_str() );
+
 		}
-		else if (player->isRunning())
-		{
-			caption += L"Player";
-		}
-		device->setWindowCaption( caption.c_str() );
+		else
+			device->yield();
+
 	}
 
 	editor->clear();

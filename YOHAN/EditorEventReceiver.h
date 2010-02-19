@@ -6,7 +6,7 @@ class Editor;
 // Values used to identify individual GUI elements
 enum
 {
-	GUI_ID_SCENE_NODE_TOOL_BOX,
+	GUI_ID_SCENE_NODE_TOOL_BOX = 1000,
 	GUI_ID_TOOL_BOX_X_POSITION,
 	GUI_ID_TOOL_BOX_Y_POSITION,
 	GUI_ID_TOOL_BOX_Z_POSITION,

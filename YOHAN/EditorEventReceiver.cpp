@@ -398,24 +398,42 @@ void EditorEventReceiver::showConfirmDeleteNode()
 
 void EditorEventReceiver::askForParameters(bool previous_was_bad)
 {
-	// create the window
-	IGUIWindow* wnd = env->addWindow(core::rect<s32>(200,100,600,300),
-		true, L"Parameters", 0, GUI_ID_ASK_PARAMETERS_WINDOW);
-
-	if (previous_was_bad)
-		env->addStaticText(L"WRONG PARAMETERS, please try again. Choose the parameters for tetrahedrization and simulation.", core::rect<s32>(20,20,380,40), false, true, wnd);
+	if (editor->getAllSceneNodes().size() == 0)
+	{
+		env->addMessageBox(L"Warning", L"There is nothing in the scene...");
+	}
 	else
-		env->addStaticText(L"Please, choose the parameters for tetrahedrization and simulation.", core::rect<s32>(20,20,380,40), false, true, wnd);
+	{
+		// create the window
+		IGUIWindow* wnd = env->addWindow(core::rect<s32>(200,100,600,380),
+			true, L"Parameters", 0, GUI_ID_ASK_PARAMETERS_WINDOW);
 
-	env->addStaticText(L"How many maximum tetrahedras do you want in each object of the scene ? (min: 10, max: 1,000,000)", core::rect<s32>(20,40,380,60), false, true, wnd);
-	env->addEditBox(L"5000", core::rect<s32>(40,60,80,76), true, wnd, GUI_ID_ASK_PARAMETERS_NBTET);
+		s32 y=20;
+		if (editor->getName() == "untitled")
+		{
+			env->addStaticText(L"WARNING: this scene has never been saved and thus is named [untitled]. The simulation output will overwrite all files in \"simulated/untitled\" !", core::rect<s32>(20,y,380,y+30), false, true, wnd);
+			y += 30;
+		}
 
-	env->addStaticText(L"How many frames do you want to simulate ? (min: 1)", core::rect<s32>(20,80,380,100), false, true, wnd);
-	env->addEditBox(L"200", core::rect<s32>(40,100,80,116), true, wnd, GUI_ID_ASK_PARAMETERS_NBFRAME);
+		env->addStaticText(L"WARNING: If you press \"GO!\", all player data will be unloaded. You will need to reload a video to watch it.", core::rect<s32>(20,y,380,y+30), false, true, wnd);
+		
+		y += 30;
+		if (previous_was_bad)
+			env->addStaticText(L"WRONG PARAMETERS, please try again. Choose the parameters for tetrahedrization and simulation.", core::rect<s32>(20,y,380,y+30), false, true, wnd);
+		else
+			env->addStaticText(L"Please, choose the parameters for tetrahedrization and simulation.", core::rect<s32>(20,y,380,y+30), false, true, wnd);
 
-	env->addStaticText(L"What do you want as Delta t ? (strict-min: 0)", core::rect<s32>(20,120,380,140), false, true, wnd);
-	env->addEditBox(L"0.01", core::rect<s32>(40,140,80,156), true, wnd, GUI_ID_ASK_PARAMETERS_DELTAT);
-
-	env->addButton(core::rect<s32>(60,170,100,186), wnd, GUI_ID_ASK_PARAMETERS_GO_BUTTON, L"GO!");
-	env->addButton(core::rect<s32>(320,170,360,186), wnd, GUI_ID_ASK_PARAMETERS_CANCEL_BUTTON, L"Cancel");
+		y += 30;
+		env->addStaticText(L"How many maximum tetrahedras do you want in each object of the scene ? (min: 10, max: 1,000,000)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
+		env->addEditBox(L"5000", core::rect<s32>(40,y+20,80,y+36), true, wnd, GUI_ID_ASK_PARAMETERS_NBTET);
+		y += 40;
+		env->addStaticText(L"How many frames do you want to simulate ? (min: 1)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
+		env->addEditBox(L"200", core::rect<s32>(40,y+20,80,y+36), true, wnd, GUI_ID_ASK_PARAMETERS_NBFRAME);
+		y += 40;
+		env->addStaticText(L"What do you want as Delta t ? (strict-min: 0)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
+		env->addEditBox(L"0.01", core::rect<s32>(40,y+20,80,y+36), true, wnd, GUI_ID_ASK_PARAMETERS_DELTAT);
+		y += 50;
+		env->addButton(core::rect<s32>(60,y,100,y+16), wnd, GUI_ID_ASK_PARAMETERS_GO_BUTTON, L"GO!");
+		env->addButton(core::rect<s32>(320,y,360,y+16), wnd, GUI_ID_ASK_PARAMETERS_CANCEL_BUTTON, L"Cancel");
+	}
 }
