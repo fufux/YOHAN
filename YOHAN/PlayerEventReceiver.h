@@ -6,7 +6,7 @@ class Player;
 // Values used to identify individual GUI elements
 enum
 {
-	GUI_ID_PLAYER_NEXT_FRAME,
+	GUI_ID_PLAYER_NEXT_FRAME = 2000,
 	GUI_ID_PLAYER_PREVIOUS_FRAME,
 	GUI_ID_PLAYER_PLAY,
 	GUI_ID_PLAYER_FRAME_NUMBER,

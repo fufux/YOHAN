@@ -12,7 +12,7 @@ CollisionTest::~CollisionTest(void)
 {
 }
 
-int main(int argc, char* argv[])
+int _main(int argc, char* argv[])
 {
 	FILE *stdoutToStdStream = freopen( "cout.txt", "w", stdout );
 	// Point creation
