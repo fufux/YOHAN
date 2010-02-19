@@ -91,6 +91,10 @@ stringc Editor::getLastSimulatedSceneOutDir()
 	return lastSimulatedSceneOutDir;
 }
 
+stringc Editor::getBaseDir()
+{
+	return baseDir;
+}
 
 void Editor::clear(bool clear_gui)
 {
