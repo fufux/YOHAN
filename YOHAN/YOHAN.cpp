@@ -60,6 +60,7 @@ int main(int argc, _TCHAR* argv[])
 	driver = device->getVideoDriver();
 	smgr = device->getSceneManager();
 	env = device->getGUIEnvironment();
+	smgr->setAmbientLight(SColorf(0.2f,0.2f,0.2f));
 
 	// Set GUI to have a low transparency
 	for (s32 i=0; i < irr::gui::EGDC_COUNT ; ++i)
@@ -89,9 +90,15 @@ int main(int argc, _TCHAR* argv[])
 	*/
 	device->getFileSystem()->addFileArchive("../YOHAN/irrlicht/media/", true, true, EFAT_FOLDER);
 
-	scene::ITerrainSceneNode* terrain = smgr->addTerrainSceneNode("terrain-heightmap.bmp");
-	terrain->setPosition(vector3df(-128*30.0f, 0.0f, -128*30.0f));
-	terrain->setScale(vector3df(30.f, 1.0f, 30.f));
+	scene::ITerrainSceneNode* terrain = smgr->addTerrainSceneNode(
+		"terrain-heightmap.bmp",
+		0,
+		-1,
+		vector3df(-128*30.0f, 0.0f, -128*30.0f),
+		vector3df(0,0,0),
+		vector3df(30.f, 1.0f, 30.f),
+		SColor(255,180,255,180),
+		5);
 	terrain->setMaterialFlag(EMF_WIREFRAME, true);
 	terrain->setMaterialFlag(EMF_LIGHTING, false);
 
@@ -112,7 +119,7 @@ int main(int argc, _TCHAR* argv[])
 	more. This would be when the user closes the window or presses ALT+F4
 	(or whatever keycode closes a window).
 	*/
-	while(device->run())
+  	while(device->run())
 	{
 		if (device->isWindowActive())
 		{

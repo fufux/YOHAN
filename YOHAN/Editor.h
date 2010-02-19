@@ -21,9 +21,9 @@ public:
 	// call this to launch/stop all the editor
 	void start();
 	void stop();
-	void switchToPlayer();
+	void switchToPlayer(stringc sceneDirToLoad="");
 	// call this to remove all nodes of the scene editor
-	void clear();
+	void clear(bool clear_gui=true);
 
 	/*
 	These methods allow us to get easily all scene info in order to tetrahedralize it.
@@ -90,6 +90,9 @@ public:
 	bool isRunning();
 	stringc getName();
 
+	// usefull to switch & load to player
+	stringc getLastSimulatedSceneOutDir();
+
 private:
 	// name of the scene
 	stringc name;
@@ -128,5 +131,8 @@ private:
 
 	// this allows us to access the player in order to start it
 	Player* player;
+
+	// usefull to switch & load to player
+	stringc lastSimulatedSceneOutDir;
 	
 };

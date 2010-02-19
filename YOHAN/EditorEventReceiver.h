@@ -6,7 +6,9 @@ class Editor;
 // Values used to identify individual GUI elements
 enum
 {
-	GUI_ID_SCENE_NODE_TOOL_BOX = 1000,
+	GUI_ID_ref = 1000,
+
+	GUI_ID_SCENE_NODE_TOOL_BOX,
 	GUI_ID_TOOL_BOX_X_POSITION,
 	GUI_ID_TOOL_BOX_Y_POSITION,
 	GUI_ID_TOOL_BOX_Z_POSITION,
@@ -95,7 +97,11 @@ enum
 	GUI_ID_ASK_PARAMETERS_CANCEL_BUTTON,
 	GUI_ID_ASK_PARAMETERS_NBTET,
 	GUI_ID_ASK_PARAMETERS_NBFRAME,
-	GUI_ID_ASK_PARAMETERS_DELTAT
+	GUI_ID_ASK_PARAMETERS_DELTAT,
+
+	GUI_ID_ASK_SWITCH_WINDOW,
+	GUI_ID_ASK_SWITCH_YES_BUTTON,
+	GUI_ID_ASK_SWITCH_NO_BUTTON
 };
 
 
@@ -116,6 +122,9 @@ public:
 
 	// display a window that asks for tet & simulation parameters. If previous_was_bad is true, display a warning.
 	void askForParameters(bool previous_was_bad=false);
+
+	// display a window that asks if the user would like to play the last generated video directly
+	void askForSwitch();
 
 private:
 	// reference to the main editor object (which is the parent of this EditorEventReceiver)

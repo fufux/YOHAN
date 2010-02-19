@@ -13,6 +13,7 @@ extern scene::ICameraSceneNode* camera[CAMERA_COUNT];
 
 Player::Player(void)
 {
+	this->debugData = scene::EDS_MESH_WIRE_OVERLAY;
 	this->er = new PlayerEventReceiver(this);
 	this->currFrame = NULL;
 	this->sceneFile = "";
@@ -30,20 +31,16 @@ Player::~Player(void)
 
 void Player::start()
 {
-	device->setEventReceiver(this->er);
 	this->clear();
 	this->createGUI();
+	device->setEventReceiver(this->er);
 	this->is_running = true;
 }
 
 void Player::stop()
 {
 	this->is_running = false;
-	const core::list<IGUIElement*>& children = env->getRootGUIElement()->getChildren();
-	while (!children.empty())
-		(*children.getLast())->remove();
 	this->clear();
-	device->clearSystemMessages();
 }
 
 void Player::switchToEditor()
@@ -60,7 +57,7 @@ bool Player::isRunning()
 	return is_running;
 }
 
-void Player::clear()
+void Player::clear(bool clear_gui)
 {
 	for (u16 i=0; i < frames.size(); i++)
 		delete frames[i];
@@ -70,7 +67,23 @@ void Player::clear()
 	this->currFrame = NULL;
 	this->sceneFile = "";
 	this->currentFrame = -1;
-	this->is_playing = false; 
+	this->is_playing = false;
+
+	// clear GUI
+	if (clear_gui)
+	{
+		device->clearSystemMessages();
+		device->setEventReceiver(NULL);
+		device->clearSystemMessages();
+		core::list<IGUIElement*> children = env->getRootGUIElement()->getChildren();
+		core::list<IGUIElement*>::Iterator it;
+		for (it = children.begin(); it != children.end(); ++it)
+		{
+			IGUIElement* e = (IGUIElement*)(*it);
+			if (e->getID() > GUI_ID_ref && e->getID() < GUI_ID_ref + 1000)
+				e->remove();
+		}
+	}
 }
 
 
@@ -82,15 +95,6 @@ void Player::setEditor(Editor* editor)
 
 void Player::displayNextFrame()
 {
-	if (framesFileNames.size() == 0)
-		return;
-
-	if (currFrame && currFrame != NULL)
-		delete currFrame;
-
-	if (currentFrame > 0 && currentFrame < (s32)frames.size())
-		frames[currentFrame]->hide();
-
 	this->is_playing = false;
 	
 	s32 nextId = currentFrame+1;
@@ -99,32 +103,12 @@ void Player::displayNextFrame()
 	if (nextId >= (s32)framesFileNames.size())
 		nextId = 0;
 
-	currFrame = new PlayerFrame(framesFileNames[nextId]);
-	if (currFrame->getNodes().size() == 0)
-	{
-		delete currFrame;
-		currentFrame = -1;
-		currFrame = NULL;
-		return;
-	}
-	currentFrame = currFrame->getId();
-	currFrame->display();
-	setDebugDataVisible( this->debugData );
-	updateFrameNumber();
+	displayFrameById(nextId);
 }
 
 
 void Player::displayPreviousFrame()
 {
-	if (framesFileNames.size() == 0)
-		return;
-
-	if (currFrame && currFrame != NULL)
-		delete currFrame;
-
-	if (currentFrame >= 0 && currentFrame < (s32)frames.size())
-		frames[currentFrame]->hide();
-
 	this->is_playing = false;
 
 	s32 nextId = currentFrame-1;
@@ -133,18 +117,7 @@ void Player::displayPreviousFrame()
 	if (nextId >= (s32)framesFileNames.size())
 		nextId = 0;
 
-	currFrame = new PlayerFrame(framesFileNames[nextId]);
-	if (currFrame->getNodes().size() == 0)
-	{
-		delete currFrame;
-		currentFrame = -1;
-		currFrame = NULL;
-		return;
-	}
-	currentFrame = currFrame->getId();
-	currFrame->display();
-	setDebugDataVisible( this->debugData );
-	updateFrameNumber();
+	displayFrameById(nextId);
 }
 
 
@@ -155,6 +128,9 @@ void Player::displayFrameById(s32 id)
 		updateFrameNumber();
 		return;
 	}
+
+	if (currentFrame > 0 && currentFrame < (s32)frames.size())
+		frames[currentFrame]->hide();
 
 	if (currFrame && currFrame != NULL)
 		delete currFrame;
@@ -202,10 +178,28 @@ void Player::playNextFrame()
 
 void Player::updateFrameNumber()
 {
+	// update Frame number in the edit box
 	if (env->getRootGUIElement()->getElementFromId(GUI_ID_PLAYER_FRAME_NUMBER, true))
 	{
 		IGUIEditBox* box = (IGUIEditBox*)(env->getRootGUIElement()->getElementFromId(GUI_ID_PLAYER_FRAME_NUMBER, true));
 		box->setText( stringw(this->currentFrame).c_str() );
+	}
+
+	// update play/pause button
+	if (env->getRootGUIElement()->getElementFromId(GUI_ID_PLAYER_PLAY, true))
+	{
+		if (is_playing)
+		{
+			IGUIButton* b = (IGUIButton*)env->getRootGUIElement()->getElementFromId(GUI_ID_PLAYER_PLAY, true);
+			b->setImage(er->image_pause);
+			b->setToolTipText(L"Pause");
+		}
+		else
+		{
+			IGUIButton* b = (IGUIButton*)env->getRootGUIElement()->getElementFromId(GUI_ID_PLAYER_PLAY, true);
+			b->setImage(er->image_play);
+			b->setToolTipText(L"Play");
+		}
 	}
 }
 
@@ -257,6 +251,7 @@ bool Player::load(irr::core::stringc filename)
 						// clean current scene
 						this->clear();
 						this->createGUI();
+						device->setEventReceiver(this->er);
 					}
 				}
 
@@ -308,8 +303,16 @@ bool Player::loadAll()
 
 void Player::createGUI()
 {
+	gui::IGUIElement* root = env->getRootGUIElement();
+
 	// create menu
-	gui::IGUIContextMenu* menu = env->addMenu();
+	gui::IGUIContextMenu* menu;
+	if (root->getElementFromId(GUI_ID_MENU, true))
+		((gui::IGUIContextMenu*)root->getElementFromId(GUI_ID_MENU, true))->remove();
+		//menu = (gui::IGUIContextMenu*)root->getElementFromId(GUI_ID_MENU, true);
+
+	menu = env->addMenu(0, GUI_ID_MENU);
+	
 	menu->addItem(L"File", -1, true, true);
 	menu->addItem(L"View", -1, true, true);
 	menu->addItem(L"Camera", -1, true, true);
@@ -326,14 +329,14 @@ void Player::createGUI()
 	submenu->addItem(L"toggle model debug information", GUI_ID_PLAYER_TOGGLE_DEBUG_INFO, true, true);
 
 	submenu = submenu->getSubMenu(0);
-	submenu->addItem(L"Off", GUI_ID_PLAYER_DEBUG_OFF);
-	submenu->addItem(L"Bounding Box", GUI_ID_PLAYER_DEBUG_BOUNDING_BOX);
-	submenu->addItem(L"Normals", GUI_ID_PLAYER_DEBUG_NORMALS);
-	submenu->addItem(L"Skeleton", GUI_ID_PLAYER_DEBUG_SKELETON);
-	submenu->addItem(L"Wire overlay", GUI_ID_PLAYER_DEBUG_WIRE_OVERLAY);
-	submenu->addItem(L"Half-Transparent", GUI_ID_PLAYER_DEBUG_HALF_TRANSPARENT);
-	submenu->addItem(L"Buffers bounding boxes", GUI_ID_PLAYER_DEBUG_BUFFERS_BOUNDING_BOXES);
-	submenu->addItem(L"All", GUI_ID_PLAYER_DEBUG_ALL);
+	submenu->addItem(L"Off", GUI_ID_PLAYER_DEBUG_OFF, true, false, (isDebugDataVisible() == scene::EDS_OFF));
+	submenu->addItem(L"Bounding Box", GUI_ID_PLAYER_DEBUG_BOUNDING_BOX, true, false, (isDebugDataVisible() == scene::EDS_BBOX));
+	submenu->addItem(L"Normals", GUI_ID_PLAYER_DEBUG_NORMALS, true, false, (isDebugDataVisible() == scene::EDS_NORMALS));
+	submenu->addItem(L"Skeleton", GUI_ID_PLAYER_DEBUG_SKELETON, true, false, (isDebugDataVisible() == scene::EDS_SKELETON));
+	submenu->addItem(L"Wire overlay", GUI_ID_PLAYER_DEBUG_WIRE_OVERLAY, true, false, (isDebugDataVisible() == scene::EDS_MESH_WIRE_OVERLAY));
+	submenu->addItem(L"Half-Transparent", GUI_ID_PLAYER_DEBUG_HALF_TRANSPARENT, true, false, (isDebugDataVisible() == scene::EDS_HALF_TRANSPARENCY));
+	submenu->addItem(L"Buffers bounding boxes", GUI_ID_PLAYER_DEBUG_BUFFERS_BOUNDING_BOXES, true, false, (isDebugDataVisible() == scene::EDS_BBOX_BUFFERS));
+	submenu->addItem(L"All", GUI_ID_PLAYER_DEBUG_ALL, true, false, (isDebugDataVisible() == scene::EDS_FULL));
 
 	submenu = menu->getSubMenu(2);
 	submenu->addItem(L"Maya Style", GUI_ID_PLAYER_CAMERA_MAYA);
@@ -349,7 +352,11 @@ void Player::createGUI()
 
 	// create toolbar
 
-	gui::IGUIToolBar* bar = env->addToolBar();
+	gui::IGUIToolBar* bar;
+	if (root->getElementFromId(GUI_ID_TOOLBAR, true))
+		((gui::IGUIToolBar*)root->getElementFromId(GUI_ID_TOOLBAR, true))->remove();
+	
+	bar = env->addToolBar(0, GUI_ID_TOOLBAR);
 
 	video::ITexture* image = driver->getTexture("open.png");
 	bar->addButton(GUI_ID_PLAYER_OPEN_VIDEO_BUTTON, 0, L"Open a video", image, 0, false, true);

@@ -172,22 +172,16 @@ bool PlayerEventReceiver::OnEvent(const SEvent &event)
 				if (!player->is_playing)
 				{
 					player->play();
-					if (root->getElementFromId(GUI_ID_PLAYER_PLAY, true))
-					{
-						IGUIButton* b = (IGUIButton*)root->getElementFromId(GUI_ID_PLAYER_PLAY, true);
-						b->setImage(image_pause);
-						b->setToolTipText(L"Pause");
-					}
+					IGUIButton* b = (IGUIButton*)root->getElementFromId(GUI_ID_PLAYER_PLAY, true);
+					b->setImage(image_pause);
+					b->setToolTipText(L"Pause");
 				}
 				else
 				{
 					player->pause();
-					if (root->getElementFromId(GUI_ID_PLAYER_PLAY, true))
-					{
-						IGUIButton* b = (IGUIButton*)root->getElementFromId(GUI_ID_PLAYER_PLAY, true);
-						b->setImage(image_play);
-						b->setToolTipText(L"Play");
-					}
+					IGUIButton* b = (IGUIButton*)root->getElementFromId(GUI_ID_PLAYER_PLAY, true);
+					b->setImage(image_play);
+					b->setToolTipText(L"Play");
 				}
 				break;
 			case GUI_ID_PLAYER_OPEN_VIDEO_BUTTON:
