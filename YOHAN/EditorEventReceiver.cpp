@@ -106,6 +106,10 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 
 				switch(id)
 				{
+				case GUI_ID_NEW_SCENE: // File -> New
+					editor->stop();
+					editor->start();
+					break;
 				case GUI_ID_OPEN_SCENE: // File -> Open scene
 					opening = OPENING_SCENE;
 					env->addFileOpenDialog(L"Please select a scene file to open");
