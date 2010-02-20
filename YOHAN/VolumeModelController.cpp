@@ -63,7 +63,7 @@ void VolumeModelController::evoluteModel()
 	this->model->feedBackVector2();
 
 	// calculate the fracture
-	this->model->fracture();
+	//this->model->fracture();
 
 	// generate a frame
 	//this->model->generateFrame(round);

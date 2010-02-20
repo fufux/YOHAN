@@ -3,6 +3,10 @@
 #include "Base.h"
 #include "CollisionPolyedron.h"
 #include <iostream>
+#include "SceneRecord2.h"
+#include "VolumeModel2.h"
+#include "VolumeModelController2.h"
+#include "SceneController2.h"
 
 // for using the xml parser
 #include <xercesc/parsers/XercesDOMParser.hpp>
@@ -17,10 +21,10 @@ using namespace xercesc;
 using namespace yohan;
 using namespace base;
 
-SceneController::SceneController(char* filename)
+SceneController2::SceneController2(char* filename)
 {
 	// allocation
-	this->vmcList = std::vector<VolumeModelController>();
+	this->vmcList = std::vector<VolumeModelController2>();
 	this->forceList = std::list<struct SceneForce>();
 
 	/* parse */
@@ -140,7 +144,7 @@ SceneController::SceneController(char* filename)
 				}
 
 				// add into the list
-				VolumeModelController vmc = VolumeModelController(nodeFile, faceFile, eleFile, speed, materialPropriety);
+				VolumeModelController2 vmc = VolumeModelController2(nodeFile, faceFile, eleFile, speed, materialPropriety);
 				this->vmcList.push_back(vmc);
 
 				// deallocate the tmp resource
@@ -253,21 +257,31 @@ SceneController::SceneController(char* filename)
 
 }
 
-void SceneController::simulate(char* filename, DATA delta_t, int nb_steps)
+void SceneController2::simulate(char* filename, DATA delta_t, int nb_steps)
 {
 	//DATA delta_t = 0.0001;
 
 	int step = 0;
 
-	SceneRecorder sr = SceneRecorder(filename);
+	SceneRecorder2 sr = SceneRecorder2(filename);
 
 	DATA totalTime = 0;
+
+	/*
+	SceneForce sfi;
+	sfi.intensity[0] = 3;sfi.intensity[1] = 3;sfi.intensity[2] = 3;
+	sfi.vmeshID = 0;
+	sfi.vertexID = 0;
+
+	forceList.push_back(sfi);
+	*/
 
 	while (step < nb_steps)
 	{
 		//detect the collision 
 
 		/* response the collision by generate events for each VolumeModelController in this round */
+		
 
 		// send force
 		for (std::list<SceneForce>::iterator iter = forceList.begin(); iter != forceList.end(); ++iter)
@@ -282,7 +296,7 @@ void SceneController::simulate(char* filename, DATA delta_t, int nb_steps)
 		//delta_t = 0.01;
 
 		// send force field and start
-		for (std::vector<VolumeModelController>::iterator iter = vmcList.begin(); iter != vmcList.end(); ++iter)
+		for (std::vector<VolumeModelController2>::iterator iter = vmcList.begin(); iter != vmcList.end(); ++iter)
 		{
 			MotivationEvent* e = new ForceFieldEvent(true, this->gravity, delta_t);
 			iter->sendEvent(e);
@@ -295,12 +309,12 @@ void SceneController::simulate(char* filename, DATA delta_t, int nb_steps)
 
 		//for each VolumeModelController vmc
 			//vmc.retrieveReport();
-		for (std::vector<VolumeModelController>::iterator iter = vmcList.begin(); iter != vmcList.end(); ++iter)
+		for (std::vector<VolumeModelController2>::iterator iter = vmcList.begin(); iter != vmcList.end(); ++iter)
 		{
-			VolumeModel* vm = iter->retrieveReport().getModel();
+			VolumeModel2* vm = iter->getModel();
 
 			// simple detection
-			vm->fillForceList(&forceList);
+			//vm->fillForceList(&forceList);
 
 			// resolve conflict
 			//vm->resolveConflit();
@@ -316,26 +330,4 @@ void SceneController::simulate(char* filename, DATA delta_t, int nb_steps)
 	}
 
 	sr.endScene();
-}
-
-std::vector<CollisionPolyedron>* SceneController::CollisionDetection()
-{
-	std::vector<CollisionPolyedron>* resul = new std::vector<CollisionPolyedron>();
-	std::list<int>* violationPoint;
-	VolumeModel* model;
-	for(int it = 0; it < vmcList.size(); it++) {	
-		model = vmcList[it].getModel();
-		violationPoint = new std::list<int>();
-		// Detection of points below y=0
-		for(int i=0; i<model->getPointPoolSize(); i++){
-			if(model->getPoint(i)[2]<0){
-				violationPoint->push_back(i);
-			}
-		}
-		// Construction of overlaping polyhedrons
-		
-	}
-
-
-	return resul;
 }

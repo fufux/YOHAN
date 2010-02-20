@@ -535,6 +535,7 @@ void Tetrahedron::fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, DATA*
 	/********************/
 
 	DATA m60 = vol6 * constants[5], m120 = vol6 * constants[6];
+	DATA sign = 1;
 	
 	for (int i = 0; i < 4; i++)
 	{
@@ -545,17 +546,21 @@ void Tetrahedron::fillMatrix(SquareSparseMatrix* K, SquareSparseMatrix* M, DATA*
 			
 			if (i == j)
 			{
-				M->addAndSetValue(ri, ci, m60);
-				M->addAndSetValue(ri + 1, ci + 1, m60);
-				M->addAndSetValue(ri + 2, ci + 2, m60);
+				M->addAndSetValue(ri, ci, sign * m60);
+				M->addAndSetValue(ri + 1, ci + 1, sign * m60);
+				M->addAndSetValue(ri + 2, ci + 2, sign * m60);
 			}
 			else
 			{
-				M->addAndSetValue(ri, ci, m120);
-				M->addAndSetValue(ri + 1, ci + 1, m120);
-				M->addAndSetValue(ri + 2, ci + 2, m120);
+				M->addAndSetValue(ri, ci, sign * m120);
+				M->addAndSetValue(ri + 1, ci + 1, sign * m120);
+				M->addAndSetValue(ri + 2, ci + 2, sign * m120);
 			}
+
+			//sign *= -1;
 		}
+
+		//sign *= -1;
 	}
 
 	/* Force Matrix */
@@ -681,9 +686,9 @@ void Tetrahedron::fillForceList(std::list<SceneForce> *fl, DATA deltaTime)
 			DATA m = this->mass / 4;
 			//DATA penalityForce = ((-pinfo[2] - pinfo[5] * deltaTime) * 2 / (deltaTime * deltaTime) + 9.8) * m * 10 ;	// coeffient
 			
-			sf.intensity[0] = m * -pinfo[3] / deltaTime;
+			sf.intensity[0] = m * -pinfo[4] / deltaTime * 0.1;
 			sf.intensity[1] = m * -pinfo[4] / deltaTime;
-			sf.intensity[2] = m * -pinfo[5] / deltaTime;
+			sf.intensity[2] = m * -pinfo[4] / deltaTime * 0.1;
 
 			//add into list
 			for (int i = 0; i < 4; i++)

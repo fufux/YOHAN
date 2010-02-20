@@ -205,7 +205,7 @@ void VolumeModel::calculate2()
 	//pointPool->fillStress(F);
 
 	// constant
-	DATA gama = 0.6, beta = (0.5 + gama) * (0.5 + gama) / 4;
+	DATA gama = 0.52, beta = (0.5 + gama) * (0.5 + gama) / 4;
 
 	/* */
 	DATA a0 = 1 / (beta * deltaTime * deltaTime);
