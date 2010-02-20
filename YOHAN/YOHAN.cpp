@@ -42,6 +42,8 @@ This is the main method.
 */
 int main(int argc, _TCHAR* argv[])
 {
+	FILE *stdoutToStdStream = freopen( "cout.txt", "w", stdout );
+
 	// initialize random number generator
 	srand((unsigned int)time(NULL)); 
 
@@ -153,7 +155,8 @@ int main(int argc, _TCHAR* argv[])
 	}
 
 	device->getFileSystem()->changeWorkingDirectoryTo( editor->getBaseDir().c_str() );
-	editor->save("tmp.xml");
+	if (editor->isRunning())
+		editor->save("tmp.xml");
 
 	editor->clear();
 	player->clear();
