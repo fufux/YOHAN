@@ -177,19 +177,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\CollisionFace.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\CollisionPoint.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\CollisionPolyedron.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\CollisionTest.cpp"
 				>
 			</File>
 			<File
@@ -201,23 +189,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\FacePool.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Matrix.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MotivationEvent.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MumpsTest.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PhysicEngine.cpp"
 				>
 			</File>
 			<File
@@ -233,23 +205,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PointPool.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SceneController.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SceneRecorder.cpp"
+				RelativePath=".\Point.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\SparseMatrix.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SparseMatrix2.cpp"
 				>
 			</File>
 			<File
@@ -281,19 +241,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\TetrahedronPool.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Util.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\VolumeModel.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\VolumeModelController.cpp"
+				RelativePath=".\Volume.cpp"
 				>
 			</File>
 			<File
@@ -306,26 +258,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\Base.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CollisionFace.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CollisionPoint.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CollisionPolyedron.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CollisionTest.h"
-				>
-			</File>
 			<File
 				RelativePath=".\Editor.h"
 				>
@@ -351,6 +283,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Point.h"
+				>
+			</File>
+			<File
 				RelativePath=".\resource.h"
 				>
 			</File>
@@ -359,7 +295,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\targetver.h"
+				RelativePath=".\Tetrahedron.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Volume.h"
 				>
 			</File>
 		</Filter>

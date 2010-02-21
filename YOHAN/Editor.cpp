@@ -1,8 +1,4 @@
 #include "Editor.h"
-#include "Base.h"
-
-using namespace yohan;
-using namespace base;
 
 
 extern IrrlichtDevice* device;
@@ -1019,11 +1015,11 @@ bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSc
 	try
 	{
 		//load the scene file
-		SceneController* sc = new SceneController( (char*)tetrahedralizedSceneFile.c_str() );
+		/*SceneController* sc = new SceneController( (char*)tetrahedralizedSceneFile.c_str() );
 
 		//start to simulate, and try to record all the process into the given file
 		device->getLogger()->log((stringc("Call simulate(")+simulatedSceneOutDir+stringc(")")).c_str());
-		sc->simulate( (char*)simulatedSceneOutDir.c_str(), (yohan::base::DATA)deltaT, (int)nbFrame );
+		sc->simulate( (char*)simulatedSceneOutDir.c_str(), (double)deltaT, (int)nbFrame );*/
 	}
 	catch(...)
 	{

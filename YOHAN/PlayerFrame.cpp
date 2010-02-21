@@ -1,5 +1,4 @@
 #include "PlayerFrame.h"
-#include "Base.h" // because we need to know the type DATA
 
 extern IrrlichtDevice* device;
 extern IVideoDriver* driver;
@@ -44,7 +43,7 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 
 		int nb_of_points, nb_of_tetrahedra, nb_of_faces;
 		int p1, p2, p3, p4;
-		yohan::base::DATA x, y, z;
+		double x, y, z;
 
 		// used to know if an error occured in the while loop
 		bool error = false;
@@ -80,16 +79,16 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 		buffer->Vertices.reallocate( nb_of_points );
 
 		// this is one line : innode >> index >> x >> y >> z;
-		innode.read(reinterpret_cast < char * > (&x), sizeof(yohan::base::DATA));
-		innode.read(reinterpret_cast < char * > (&y), sizeof(yohan::base::DATA));
-		innode.read(reinterpret_cast < char * > (&z), sizeof(yohan::base::DATA));
+		innode.read(reinterpret_cast < char * > (&x), sizeof(double));
+		innode.read(reinterpret_cast < char * > (&y), sizeof(double));
+		innode.read(reinterpret_cast < char * > (&z), sizeof(double));
 		while (!innode.eof() && innode.good())// && (int)buffer->Vertices.size() < nb_of_points)
 		{
 			buffer->Vertices.push_back(video::S3DVertex((f32)x, (f32)y, (f32)z, 1,0,0, clr, 0,0));
 			// this is one line : innode >> index >> x >> y >> z;
-			innode.read(reinterpret_cast < char * > (&x), sizeof(yohan::base::DATA));
-			innode.read(reinterpret_cast < char * > (&y), sizeof(yohan::base::DATA));
-			innode.read(reinterpret_cast < char * > (&z), sizeof(yohan::base::DATA));
+			innode.read(reinterpret_cast < char * > (&x), sizeof(double));
+			innode.read(reinterpret_cast < char * > (&y), sizeof(double));
+			innode.read(reinterpret_cast < char * > (&z), sizeof(double));
 		}
 
 		innode.close();

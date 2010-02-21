@@ -4,18 +4,7 @@
 
 #include <cstdio>
 
-using namespace yohan;
-using namespace base;
 using namespace matrix;
-
-/* SquareSparseMatrix */
-
-SquareSparseMatrix::~SquareSparseMatrix()
-{
-	//empty, need to verify
-}
-
-/* End -- SquareSparseMatrix */
 
 /* SymmetricMumpsSquareSparseMatrix */
 
@@ -23,80 +12,46 @@ SymmetricMumpsSquareSparseMatrix::SymmetricMumpsSquareSparseMatrix(int n)
 {
 	this->size = 0;
 	this->order = n;
-	this->capacity = n;	// intial capacity = order
+	this->capacity = n * 2;	// intial capacity = order * 2
 
 	this->columns = new int[capacity];
 	this->rows = new int[capacity];
-	this->values = new DATA[capacity];
-
-	this->positionBuffer = std::map<int,int>();
+	this->values = new double[capacity];
 }
 
 
 
-void SymmetricMumpsSquareSparseMatrix::setValue(int i, int j, DATA value)
+void SymmetricMumpsSquareSparseMatrix::setValue(int i, int j, double value)
 {
-	//check if this position is already taken
-	int key = i * this->order + j;
-	std::map<int,int>::iterator iter = this->positionBuffer.find(key);
-
-	if (iter != this->positionBuffer.end())
+	for (int k = 0; k < size; k++)
 	{
-		//found
-		int index = iter->second;
-		this->values[index] = value;
+		if (rows[k] == i && columns[k] == j)
+			rows[k] = -1;	// will be ignore by MUMPS
 	}
-	else
-	{
-		/* not found */
 
-		//resizing
-		if (this->size == this->capacity - 1)
-			resize(this->capacity + this->order);	//one possible strategy
+	//resizing
+	if (size == capacity - 1)
+		resize(capacity + order * 2);
 
-		//expand
-		this->rows[this->size] = i;
-		this->columns[this->size] = j;
-		this->values[this->size] = value;
+	rows[size] = i;
+	columns[size] = j;
+	values[size] = value;
 
-		this->positionBuffer[key] = this->size;
-		this->size++;
-	}	
+	++size;
+
 }
 
-void SymmetricMumpsSquareSparseMatrix::addAndSetValue(int i, int j, DATA value)
+void SymmetricMumpsSquareSparseMatrix::addAndSetValue(int i, int j, double value)
 {
-	//check if this position is already taken
-	int key = i * this->order + j;
-	std::map<int,int>::iterator iter = this->positionBuffer.find(key);
+	//resizing
+	if (size == capacity - 1)
+		resize(capacity * 2);
 
-	if (iter != this->positionBuffer.end())
-	{
-		//found
-		int index = iter->second;
-		this->values[index] += value;
-	}
-	else
-	{
-		/* not found */
+	rows[size] = i;
+	columns[size] = j;
+	values[size] = value;
 
-		//resizing
-		if (this->size == this->capacity - 1)
-			resize(this->capacity + this->order);	//one possible strategy
-
-		//expand
-		this->rows[this->size] = i;
-		this->columns[this->size] = j;
-		this->values[this->size] = value;
-
-		this->positionBuffer[key] = this->size;
-		this->size++;
-	}	
-}
-
-int SymmetricMumpsSquareSparseMatrix::getType()
-{	
-	return SquareSparseMatrix::TYPE_SymmetricMumpsSquareSparse;
+	++size;
 }
 
 int SymmetricMumpsSquareSparseMatrix::getOrder()
@@ -106,44 +61,31 @@ int SymmetricMumpsSquareSparseMatrix::getOrder()
 
 SymmetricMumpsSquareSparseMatrix::~SymmetricMumpsSquareSparseMatrix()
 {
-	/* Remark: for int, DATA, we could use DELETE instead of DELETE[] to obtain some performance */
+	/* Remark: for int, double, we could use DELETE instead of DELETE[] to obtain some performance */
 	delete[] this->columns;
 	delete[] this->rows;
 	delete[] this->values;
-
-	//delete this->positionBuffer;
-
-	//super
-
 }
 
 void SymmetricMumpsSquareSparseMatrix::clear()
 {
+	memset((void*)columns, 0, size * sizeof(int));
+	memset((void*)rows, 0, size * sizeof(int));
+	memset((void*)values, 0, size * sizeof(double));
+
 	this->size = 0;
-	this->positionBuffer.clear();
 }
 
 void SymmetricMumpsSquareSparseMatrix::resize(int newCapacity)
 {
 	int* newColumns = new int[newCapacity];
 	int* newRows = new int[newCapacity];
-	DATA* newValues = new DATA[newCapacity];
-	
-	/*
-	//copy - version 1
+	double* newValues = new double[newCapacity];
 
-	for (int i = 0; i < this->size; i++)
-	{
-		newColumns[i] = this->columns[i];
-		newRows[i] = this->rows[i];
-		newValues[i] = this->values[i];
-	}
-	*/
-
-	//copy - version 2
+	//copy
 	memcpy((void*)newColumns, (void*)this->columns, this->size * sizeof(int));
 	memcpy((void*)newRows, (void*)this->rows, this->size * sizeof(int));
-	memcpy((void*)newValues, (void*)this->values, this->size * sizeof(DATA));
+	memcpy((void*)newValues, (void*)this->values, this->size * sizeof(double));
 
 	//release the olds
 	delete[] this->columns;
@@ -163,122 +105,60 @@ void SymmetricMumpsSquareSparseMatrix::changeOrder(int newOrder)
 	clear();
 }
 
-DATA SymmetricMumpsSquareSparseMatrix::getValue(int i, int j)
+double SymmetricMumpsSquareSparseMatrix::getValue(int i, int j)
 {
-	int key = i * this->order + j;
-	std::map<int,int>::iterator iter = this->positionBuffer.find(key);
-
-	if (iter != this->positionBuffer.end())
+	double val = 0;
+	for (int k = 0; k < size; k++)
 	{
-		//found
-		int index = iter->second;
-		return values[index];
+		if (rows[k] == i && columns[k] == j)
+			val += values[k];
 	}
 
-	//not found;
-	return 0;
+	return val;
 }
 
-/*
-void SymmetricMumpsSquareSparseMatrix::calcul_AXplusBY(DATA alpha, SquareSparseMatrix* X, DATA beta, SquareSparseMatrix* Y)
+void SymmetricMumpsSquareSparseMatrix::calcul_AXplusBY(double alpha, SymmetricMumpsSquareSparseMatrix* X, double beta, SymmetricMumpsSquareSparseMatrix* Y)
 {
+	SymmetricMumpsSquareSparseMatrix* A;
+	SymmetricMumpsSquareSparseMatrix* B;
 
-	if (X->getType() == SquareSparseMatrix::TYPE_SymmetricMumpsSquareSparse &&
-		Y->getType() == SquareSparseMatrix::TYPE_SymmetricMumpsSquareSparse)
+	// A.size < B.size
+	if (X->getSize() < Y->getSize())
 	{
-		SymmetricMumpsSquareSparseMatrix* A;
-		SymmetricMumpsSquareSparseMatrix* B;
-
-		if (X->getSize() < Y->getSize())
-		{
-			A = (SymmetricMumpsSquareSparseMatrix*)X;
-			B = (SymmetricMumpsSquareSparseMatrix*)Y;
-		}
-		else
-		{
-			A = (SymmetricMumpsSquareSparseMatrix*)Y;
-			B = (SymmetricMumpsSquareSparseMatrix*)X;
-
-			DATA tmp = alpha;
-			alpha = beta;
-			beta = tmp;
-		}
-
-		std::map<int,int> testMap = std::map<int,int>();
-
-		for (int i = 0; i < A->size; i++)
-		{
-			int row = A->rows[i];
-			int column = A->columns[i];
-
-			this->setValue(row, column, A->values[i] * alpha + B->getValue(row, column) * beta);
-
-			int key = row * this->order + column;
-			testMap[key] = 0;
-		}
-
-		for (int i = 0; i < B->size; i++)
-		{
-			int row = B->rows[i];
-			int column = B->columns[i];
-	
-			int key = row * this->order + column;
-			if (testMap.find(key) != testMap.end())	// already added
-				continue;
-
-			this->setValue(row, column, B->values[i] * beta + A->getValue(row, column) * alpha);
-		}
+		A = (SymmetricMumpsSquareSparseMatrix*)X;
+		B = (SymmetricMumpsSquareSparseMatrix*)Y;
 	}
 	else
 	{
-		printf("Check your matrix, their type is not correct.");
-		fetalError();
+		A = (SymmetricMumpsSquareSparseMatrix*)Y;
+		B = (SymmetricMumpsSquareSparseMatrix*)X;
+
+		double tmp = alpha;
+		alpha = beta;
+		beta = tmp;
 	}
-}
-*/
 
-void SymmetricMumpsSquareSparseMatrix::calcul_AXplusBY(DATA alpha, SquareSparseMatrix* X, DATA beta, SquareSparseMatrix* Y)
-{
+	// copy all from B (the longer one) and multiply by beta 
+	// use memcpy for performance
 
-	if (X->getType() == SquareSparseMatrix::TYPE_SymmetricMumpsSquareSparse &&
-		Y->getType() == SquareSparseMatrix::TYPE_SymmetricMumpsSquareSparse)
-	{
-		SymmetricMumpsSquareSparseMatrix* A;
-		SymmetricMumpsSquareSparseMatrix* B;
+	this->clear();
+	if(this->capacity < B->size + A->size)
+		resize(B->size + A->size);
 
-		// A.size < B.size
-		if (X->getSize() < Y->getSize())
-		{
-			A = (SymmetricMumpsSquareSparseMatrix*)X;
-			B = (SymmetricMumpsSquareSparseMatrix*)Y;
-		}
-		else
-		{
-			A = (SymmetricMumpsSquareSparseMatrix*)Y;
-			B = (SymmetricMumpsSquareSparseMatrix*)X;
+	//copy
+	memcpy((void*)this->columns, (void*)B->columns, B->size * sizeof(int));
+	memcpy((void*)this->rows, (void*)B->rows, B->size * sizeof(int));
+	memcpy((void*)this->values, (void*)B->values, B->size * sizeof(double));
+	this->size = B->size;
 
-			DATA tmp = alpha;
-			alpha = beta;
-			beta = tmp;
-		}
+	//multiply
+	for (int i = 0; i < this->size; i++)
+		values[i] *= beta;
 
-		// copy all from B (the longer one) 
-		// could use memcpy for performance
+	//* this(i,j) = this(i,j) + alpha * A */
+	for (int i = 0; i < A->size; i++)		
+		this->addAndSetValue(A->rows[i], A->columns[i], A->values[i] * alpha);
 
-		this->clear();
-		for (int i = 0; i < B->size; i++)
-			this->setValue(B->rows[i], B->columns[i], B->values[i] * beta);
-
-		//* this(i,j) = this(i,j) + alpha * A */
-		for (int i = 0; i < A->size; i++)
-			this->addAndSetValue(A->rows[i], A->columns[i], A->values[i] * alpha);
-
-	}
-	else
-	{
-		printf("Check your matrix, their type is not correct.");
-		fetalError();
-	}
 }
 
 inline int SymmetricMumpsSquareSparseMatrix::getSize()
@@ -287,49 +167,46 @@ inline int SymmetricMumpsSquareSparseMatrix::getSize()
 }
 
 /* this(i,j) = this(i,j) * alpha */
-void SymmetricMumpsSquareSparseMatrix::calcul_AX(DATA alpha)
+void SymmetricMumpsSquareSparseMatrix::calcul_AX(double alpha)
 {
 	for (int i = 0; i < size; i++)
 		values[i] *= alpha;
 }
 
 /* this(i,j) = this(i,j) + alpha * X */
-void SymmetricMumpsSquareSparseMatrix::calcul_plusAX(SquareSparseMatrix* X, DATA alpha)
+void SymmetricMumpsSquareSparseMatrix::calcul_plusAX(SymmetricMumpsSquareSparseMatrix* X, double alpha)
 {
-	if (X->getType() == SquareSparseMatrix::TYPE_SymmetricMumpsSquareSparse)
-	{
-		SymmetricMumpsSquareSparseMatrix* A = (SymmetricMumpsSquareSparseMatrix*)X;
-		
-		for (int i = 0; i < A->size; i++)
-			this->addAndSetValue(A->rows[i], A->columns[i], A->values[i] * alpha);
-	}
-	else
-	{
-		printf("Check your matrix, their type is not correct.");
-		fetalError();
-	}
-
+	SymmetricMumpsSquareSparseMatrix* A = (SymmetricMumpsSquareSparseMatrix*)X;
+	
+	for (int i = 0; i < A->size; i++)
+		this->addAndSetValue(A->rows[i], A->columns[i], A->values[i] * alpha);
 }
 
 /* RES = RES + M*VEC */
 /* res(i) += M(i,1) * vec(1) + M(i,2) * vec(2) + ... */
-void SymmetricMumpsSquareSparseMatrix::calcul_PlusMatrixVec(DATA* vec, DATA* res)
+void SymmetricMumpsSquareSparseMatrix::calcul_PlusMatrixVec(double* vec, double* res)
 {
 	for (int i = 0; i < size; i++)
 	{
 		int column = columns[i];	
 		int row = rows[i];
 
+		if (row < 0 || column < 0)
+			continue;
+
 		res[row - 1] += values[i] * vec[column - 1];	// conform
 	}
 }
 
-void SymmetricMumpsSquareSparseMatrix::calcul_MinusMatrixVec(DATA* vec, DATA* res, DATA alpha)
+void SymmetricMumpsSquareSparseMatrix::calcul_MinusMatrixVec(double* vec, double* res, double alpha)
 {
 	for (int i = 0; i < size; i++)
 	{
 		int column = columns[i];
 		int row = rows[i];
+
+		if (row < 0 || column < 0)
+			continue;
 
 		res[row - 1] -= values[i] * vec[column - 1] * alpha;	// conform
 	}

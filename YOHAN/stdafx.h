@@ -14,6 +14,11 @@
 #include <time.h>
 #include <string>
 #include <sstream>
+#include <math.h>
+#include <vector>
+#include <list>
+
+#include <windows.h>
 
 #include <irrlicht.h>
 
@@ -35,4 +40,5 @@ using namespace gui;
 int myRandom(int a, int b);
 float myRandom(float a, float b);
 double myRandom(double a, double b);
+void createDir(const char* dirName);
 // TODO : faites référence ici aux en-têtes supplémentaires nécessaires au programme

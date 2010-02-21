@@ -20,3 +20,11 @@ double myRandom(double a, double b)
 {
 	return ( a + (double)( (double)rand() / (double)RAND_MAX * (b - a) ) );
 }
+
+/* This implementation is only for Windows, if you want to use it in Linux or for other platform, use mkdir instead */
+void createDir(const char* dirName)
+{
+	WCHAR wsz[256];
+	swprintf(wsz, L"%S", dirName);
+	CreateDirectory(wsz, NULL);
+}
