@@ -1,4 +1,5 @@
 #include "Editor.h"
+#include "Scene.h"
 
 
 extern IrrlichtDevice* device;
@@ -1012,6 +1013,9 @@ bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSc
 	if (nbFrame < 1 || deltaT <= 0)
 		return false;
 
+	std::string tsf = tetrahedralizedSceneFile.c_str();
+	std::string ssod = simulatedSceneOutDir.c_str();
+
 	try
 	{
 		//load the scene file
@@ -1020,6 +1024,14 @@ bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSc
 		//start to simulate, and try to record all the process into the given file
 		device->getLogger()->log((stringc("Call simulate(")+simulatedSceneOutDir+stringc(")")).c_str());
 		sc->simulate( (char*)simulatedSceneOutDir.c_str(), (double)deltaT, (int)nbFrame );*/
+		Scene* scene = new Scene();
+
+		if (scene->load(tsf))
+			scene->simulate(ssod, deltaT, nbFrame);
+		else
+			cout << "Scene loading failed" << endl;
+
+
 	}
 	catch(...)
 	{

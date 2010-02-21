@@ -290,7 +290,7 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 					}
 
 					// add 1 polygon per face.
-					s32 ajust_index = -1;
+					s32 ajust_index = 0;
 					buffer->Indices[(u32)(i+0)] = (u32)(p1 + ajust_index);
 					buffer->Indices[(u32)(i+1)] = (u32)(p3 + ajust_index);
 					buffer->Indices[(u32)(i+2)] = (u32)(p2 + ajust_index);

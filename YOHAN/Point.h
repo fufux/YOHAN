@@ -17,6 +17,8 @@ public:
 	double* getU();
 	bool isSurface();
 	void setIsSurface(bool is_surface);
+	double getMass();
+	vector<Tetrahedron*>* getTetrahedra();
 
 private:
 	// ID of the point
@@ -30,7 +32,7 @@ private:
 	double u[3]; // array of size 3
 
 	// list of tetrahedrons containing this point
-	vector<Tetrahedron*> tetrahedrons;
+	vector<Tetrahedron*> tetrahedra;
 
 	// true if this point is on the surface of the volume
 	bool is_surface;

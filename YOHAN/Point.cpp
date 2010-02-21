@@ -46,3 +46,16 @@ void Point::setIsSurface(bool is_surface)
 {
 	this->is_surface = is_surface;
 }
+
+vector<Tetrahedron*>* Point::getTetrahedra()
+{
+	return &tetrahedra;
+}
+
+double Point::getMass()
+{
+	double mass = 0;
+	for(int i=0; i<tetrahedra.size(); i++)
+		mass += tetrahedra[i]->getMass()/4;
+	return mass;
+}

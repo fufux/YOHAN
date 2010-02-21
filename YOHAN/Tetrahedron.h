@@ -12,6 +12,7 @@ public:
 	vector<Point*> getPoints();
 	double** getBeta();
 	double*** getForceJacobian();
+	double getMass();
 
 private:
 	int id;
@@ -27,4 +28,7 @@ private:
 	for each element." (see main article)
 	*/
 	double forceJacobian[16][3][3]; // 4x4x3x3
+
+	// mass of this tetrahedron
+	double mass;
 };

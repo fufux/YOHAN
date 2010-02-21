@@ -3,18 +3,50 @@
 
 using namespace util;
 
-double* util::prodVect(double* a1, double* b1, double* a2, double* b2)
+double util::det3(double** a){
+	return a[0][0]*a[1][1]*a[2][2]+a[1][0]*a[2][1]*a[0][2]+a[2][0]*a[0][1]*a[1][2]
+	-a[0][2]*a[1][1]*a[2][0]-a[1][2]*a[2][1]*a[0][0]-a[2][2]*a[0][1]*a[1][0];
+}
+
+double util::crossAndDotProd(double* p0, double* p1, double* p2, double* p3){
+	double x[3];
+	double y[3];
+	double z[3];
+	for(int i=0;i<3;i++){
+		x[i] = p1[i] - p0[i];
+		y[i] = p2[i] - p0[i];
+		z[i] = p3[i] - p0[i];
+	}
+	return z[0]*(x[1]*y[2]-x[2]*y[1]) + z[1]*(x[2]*y[0]-x[0]*y[2]) + z[2]*(x[0]*y[1]-x[1]*y[0]);
+}
+
+double* util::crossProd(double* p0, double* p1, double* p2){
+	double* n = new double[3];
+	double x[3];
+	double y[3];
+	for(int i=0;i<3;i++){
+		x[i] = p1[i] - p0[i];
+		y[i] = p2[i] - p0[i];
+	}
+	n[0] = x[1]*y[2]-x[2]*y[1];
+	n[1] = x[2]*y[0]-x[0]*y[2];
+	n[2] = x[0]*y[1]-x[1]*y[0];
+	return n;
+}
+
+double util::dotProd(double* p0, double* p1, double* p2){
+	return (p1[0]-p0[0])*(p2[0]-p0[0]) + (p1[1]-p0[1])*(p2[1]-p0[1]) + (p1[2]-p0[2])*(p2[2]-p0[2]);
+}
+
+
+std::string util::ws2s(const std::wstring& s)
 {
-	double* result = new double[3];
-	double x1,x2,y1,y2,z1,z2;
-	x1 = a1[0] - b1[0];
-	y1 = a1[1] - b1[1];
-	z1 = a1[2] - b1[2];
-	x2 = a2[0] - b2[0];
-	y2 = a2[1] - b2[1];
-	z2 = a2[2] - b2[2];
-	result[0] = y1*z2 - y2*z1;
-	result[1] = z1*x2 - z2*x1;
-	result[2] = x1*y2 - x2*y1;
-	return result;
+	int len;
+	int slength = (int)s.length() + 1;
+	len = WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, 0, 0, 0, 0);
+	char* buf = new char[len];
+	WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, buf, len, 0, 0);
+	std::string r(buf);
+	delete[] buf;
+	return r;
 }
