@@ -55,7 +55,7 @@ vector<Tetrahedron*>* Point::getTetrahedra()
 double Point::getMass()
 {
 	double mass = 0;
-	for(int i=0; i<tetrahedra.size(); i++)
+	for(int i=0; i<(int)tetrahedra.size(); i++)
 		mass += tetrahedra[i]->getMass()/4;
 	return mass;
 }

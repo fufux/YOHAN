@@ -23,6 +23,12 @@ double* Scene::getForceField()
 	return forceField;
 }
 
+double Scene::getDeltaT()
+{
+	return deltaT;
+}
+
+
 
 bool Scene::load(std::string tetrahedralizedSceneFile)
 {
@@ -332,8 +338,10 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		currentTime += deltaT;
 
 		// compute
-		for(int i=0; i<(int)volumes.size(); i++)
+		for(int i=0; i<(int)volumes.size(); i++){
+			volumes[i]->collisionBidon();
 			volumes[i]->evolve(deltaT);
+		}
 
 		// save step
 		saveStep(filename);

@@ -14,6 +14,7 @@ public:
 	bool simulate(std::string simulatedSceneOutDir, double deltaT, int nbSteps);
 
 	double* getForceField();
+	double getDeltaT();
 
 private:
 	double deltaT;

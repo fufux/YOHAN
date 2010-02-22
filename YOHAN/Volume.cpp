@@ -141,7 +141,7 @@ bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFil
 		vector<Point*> vp;
 		for (int j=0; j<4; j++)
 			vp.push_back( points[p[j]] );
-		Tetrahedron* t = new Tetrahedron(id, vp);
+		Tetrahedron* t = new Tetrahedron(id, this, vp);
 		tetrahedra.push_back( t );
 		for (int j=0; j<4; j++)
 			points[p[j]]->getTetrahedra()->push_back( t );
@@ -266,7 +266,81 @@ vector<std::string> Volume::save(std::string dir)
 void Volume::generateK()
 {
 	K->clear();
-	K->addAndSetValue(1,1,0);
+	double** q = new double*[3];
+	double** dx = new double*[3];
+	double** jac = new double*[3];
+	double** tmp = new double*[3];
+	for(int i=0;i<3;i++){
+		q[i] = new double[3];
+		dx[i] = new double[3];
+		jac[i] = new double[3];
+		tmp[i] = new double[3];
+	}
+	for(int t=0;t<(int)tetrahedra.size();t++){
+		vector<Point*>& pts = tetrahedra[t]->getPoints();
+
+		// compute Q
+		double* x1 = pts[0]->getX();
+		double* x2 = pts[1]->getX();
+		double* x3 = pts[2]->getX();
+		double* x4 = pts[3]->getX();
+		dx[0][0] = x2[0]-x1[0];
+		dx[1][0] = x2[1]-x1[1];
+		dx[2][0] = x2[2]-x1[2];
+		dx[0][1] = x3[0]-x1[0];
+		dx[1][1] = x3[1]-x1[1];
+		dx[2][1] = x3[2]-x1[2];
+		dx[0][2] = x4[0]-x1[0];
+		dx[1][2] = x4[1]-x1[1];
+		dx[2][2] = x4[2]-x1[2];
+
+		util::matrixProd(tmp, dx, tetrahedra[t]->getBeta());
+
+		for(int i=0;i<3;i++){
+			for(int j=0;j<3;j++){
+				//q[i][j] = 0;
+				q[i][j] = tmp[i][j]/(10);
+			}
+			//q[i][i]=1;
+		}
+
+		for (int i = 0; i < 4; i++)
+		{
+			int ri = pts[i]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
+			for (int j = 0; j < 4; j++)
+			{
+				int ci = pts[j]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
+				
+				// Compute Jij
+				util::matrixProd(tmp, q, tetrahedra[t]->getCoreJacobian()[i*4+j]);
+				util::matrixProdTrans(jac, tmp, q);
+
+				// 9 items for stiffness matrix
+				K->addAndSetValue(ri, ci, jac[0][0]);
+				K->addAndSetValue(ri, ci + 1, jac[0][1]);
+				K->addAndSetValue(ri, ci + 2, jac[0][2]);
+				K->addAndSetValue(ri + 1, ci, jac[1][0]);
+				K->addAndSetValue(ri + 1, ci + 1, jac[1][1]);
+				K->addAndSetValue(ri + 1, ci + 2, jac[1][2]);
+				K->addAndSetValue(ri + 2, ci, jac[2][0]);
+				K->addAndSetValue(ri + 2, ci + 1, jac[2][1]);
+				K->addAndSetValue(ri + 2, ci + 2, jac[2][2]);
+
+			}
+		}
+	}
+
+	// Desallocation
+	for(int ii=0;ii<3;ii++){
+		delete []q[ii];
+		delete []dx[ii];
+		delete []tmp[ii];
+		delete []jac[ii];
+	}
+	delete [] q;
+	delete [] dx;
+	delete [] tmp;
+	delete [] jac;
 }
 
 void Volume::generateC()
@@ -372,11 +446,22 @@ void Volume::updateVolume(double deltaT)
 		// update velocity
 		points[i]->getV()[0] = f[3*i];
 		points[i]->getV()[1] = f[3*i+1];
-		cout << "speedy " << points[i]->getV()[1] <<endl;
 		points[i]->getV()[2] = f[3*i+2];
 		// update position
 		points[i]->getX()[0] += f[3*i] * deltaT;
 		points[i]->getX()[1] += f[3*i+1] * deltaT;
 		points[i]->getX()[2] += f[3*i+2] * deltaT;
+	}
+}
+
+
+
+void Volume::collisionBidon()
+{
+	for (int i=0; i<points.size(); i++)
+	{
+		if (points[i]->getX()[1] < 0) {
+			forces[3*i+1] = -points[i]->getMass()*points[i]->getX()[1]*100;
+		}
 	}
 }

@@ -50,3 +50,42 @@ std::string util::ws2s(const std::wstring& s)
 	delete[] buf;
 	return r;
 }
+
+void util::prodVecTransVec(double*** core,int ind, double k, double* n, double* nt)
+{
+	for(int i=0;i<3;i++){
+		for(int j=0;j<3;j++){
+			core[ind][i][j]+=k*n[i]*nt[j];
+		}
+	}
+}
+
+void util::scalVecVecId(double*** core, int ind, double k, double* n, double* nt)
+{
+	for(int i=0;i<3;i++)
+		core[ind][i][i] += k*n[i]*nt[i];
+}
+
+// r is the result and must be allocated before !
+void util::matrixProd(double** r, double** a, double** b)
+{
+	for(int i=0;i<3;i++){
+		for(int j=0;j<3;j++){
+			r[i][j] = 0;
+			for(int k=0;k<3;k++)
+				r[i][j] += a[i][k]*b[k][j];
+		}
+	}
+}
+
+// r is the result and must be allocated before !
+void util::matrixProdTrans(double** r, double** a, double** b)
+{
+	for(int i=0;i<3;i++){
+		for(int j=0;j<3;j++){
+			r[i][j] = 0;
+			for(int k=0;k<3;k++)
+				r[i][j] += a[i][k]*b[j][k];
+		}
+	}
+}

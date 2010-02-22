@@ -39,6 +39,8 @@ public:
 	double* getForceField();
 	double* getForces();
 
+	void collisionBidon();
+
 private:
 	int id;
 
