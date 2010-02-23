@@ -26,7 +26,7 @@ Tetrahedron::Tetrahedron(int id, Volume* volume, vector<Point*> points)
 	beta(0,2) = u4[0]-u1[0];
 	beta(1,2) = u4[1]-u1[1];
 	beta(2,2) = u4[2]-u1[2];
-	beta = beta.inverse();
+	beta.computeInverse( &beta);
 //cout << "beta:" << endl << beta << endl;
 
 	// compute core jacobian

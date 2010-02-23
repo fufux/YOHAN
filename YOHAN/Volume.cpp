@@ -266,37 +266,6 @@ vector<std::string> Volume::save(std::string dir)
 void Volume::generateK()
 {
 	K->clear();
-	/*double** q = new double*[3];
-	double** dx = new double*[3];
-	double** jac = new double*[3];
-	double** tmp = new double*[3];
-	double** inv = new double*[3];
-	for(int i=0;i<3;i++){
-		q[i] = new double[3];
-		dx[i] = new double[3];
-		jac[i] = new double[3];
-		tmp[i] = new double[3];
-		inv[i] = new double[3];
-	}*/
-
-	//Matrix3d mq;
-	//for(int i=1;i<=3;i++){
-	//	for(int j=1;j<=3;j++){
-	//		mq(i-1,j-1)=sqrt((double)(i*i+j));
-	//	}
-	//}
-	//cout << "Q:\r\n"<< mq << endl;
-	//Matrix3d minv;
-	//mq.computeInverse(&minv);
-	//cout << "ID:\r\n"<< (minv*mq) << endl;
-	//for(int i=1;i<=3;i++){
-	//	for(int j=1;j<=3;j++){
-	//		mq(i-1,j-1)=sqrt((double)(i*i+j));
-	//	}
-	//}
-	//util::polarDecomposition(&mq);
-	//cout << "Q:\r\n"<< mq << endl;
-
 	Matrix3d dx,q,jac,tmp;
 
 	for(int t=0;t<(int)tetrahedra.size();t++){
@@ -317,15 +286,8 @@ void Volume::generateK()
 		dx(1,2) = x4[1]-x1[1];
 		dx(2,2) = x4[2]-x1[2];
 
-		cout << "dx:" << endl << dx << endl;
-		cout << "beta:" << endl << tetrahedra[t]->getBeta() << endl;
-
 		q = dx * tetrahedra[t]->getBeta();
 		util::polarDecomposition( &q );
-
-		//util::matrixProd(tmp, dx, tetrahedra[t]->getBeta());
-
-		//util::polarDecomposition(q, tmp, inv);
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -335,10 +297,8 @@ void Volume::generateK()
 				int ci = pts[j]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
 				
 				// Compute Jij
-				//util::matrixProd(tmp, q, tetrahedra[t]->getCoreJacobian()[i*4+j]);
 				tmp = q * tetrahedra[t]->getCoreJacobian()[i*4+j];
 				jac = tmp * q.transpose();
-				//util::matrixProdTrans(jac, tmp, q);
 
 				// 9 items for stiffness matrix
 				K->addAndSetValue(ri, ci, jac(0,0));
@@ -354,20 +314,6 @@ void Volume::generateK()
 			}
 		}
 	}
-
-	// Desallocation
-	//for(int ii=0;ii<3;ii++){
-	//	delete []q[ii];
-	//	delete []dx[ii];
-	//	delete []tmp[ii];
-	//	delete []jac[ii];
-	//	delete []inv[ii];
-	//}
-	//delete [] q;
-	//delete [] dx;
-	//delete [] tmp;
-	//delete [] jac;
-	//delete [] inv;
 }
 
 void Volume::generateC()
