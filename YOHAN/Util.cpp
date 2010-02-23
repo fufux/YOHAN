@@ -48,9 +48,6 @@ double util::normMinus(double** x, double** y)
 void util::polarDecomposition(Matrix3d* x)
 {
 	Eigen::SVD<Matrix3d> svd;
-	cout << "X:" << endl << *x << endl;
 	svd.compute(*x);
-	cout << "SVD" << endl;
 	*x = svd.matrixU() * svd.matrixV().adjoint();
-	cout << "X:" << endl << *x << endl;
 }
