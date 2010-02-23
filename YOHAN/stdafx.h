@@ -18,6 +18,7 @@
 #include <vector>
 #include <list>
 
+#define NOMINMAX
 #include <windows.h>
 
 #include <irrlicht.h>

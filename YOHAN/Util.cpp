@@ -1,11 +1,22 @@
-
+#include <Eigen/Core>
+#include <Eigen/LU>
 #include "Util.h"
 
+// import most common Eigen types 
+USING_PART_OF_NAMESPACE_EIGEN
 using namespace util;
 
+
+
 double util::det3(double** a){
-	return a[0][0]*a[1][1]*a[2][2]+a[1][0]*a[2][1]*a[0][2]+a[2][0]*a[0][1]*a[1][2]
-	-a[0][2]*a[1][1]*a[2][0]-a[1][2]*a[2][1]*a[0][0]-a[2][2]*a[0][1]*a[1][0];
+	/*return a[0][0]*a[1][1]*a[2][2]+a[1][0]*a[2][1]*a[0][2]+a[2][0]*a[0][1]*a[1][2]
+	-a[0][2]*a[1][1]*a[2][0]-a[1][2]*a[2][1]*a[0][0]-a[2][2]*a[0][1]*a[1][0];*/
+	Matrix3d ma;
+	for (int i=0; i < 3; i++){
+		for (int j=0; j < 3; j++)
+			ma << a[i][j];
+	}
+	return ma.determinant();
 }
 
 double util::crossAndDotProd(double* p0, double* p1, double* p2, double* p3){
@@ -69,29 +80,53 @@ void util::scalVecVecId(double*** core, int ind, double k, double* n, double* nt
 // r is the result and must be allocated before !
 void util::matrixProd(double** r, double** a, double** b)
 {
-	for(int i=0;i<3;i++){
+	/*for(int i=0;i<3;i++){
 		for(int j=0;j<3;j++){
 			r[i][j] = 0;
 			for(int k=0;k<3;k++)
 				r[i][j] += a[i][k]*b[k][j];
 		}
+	}*/
+	Matrix3d ma, mb, mr;
+	for (int i=0; i < 3; i++){
+		for (int j=0; j < 3; j++){
+			ma(i,j) = a[i][j];
+			mb(i,j) = b[i][j];
+		}
+	}
+	mr = ma*mb;
+	for (int i=0; i < 3; i++){
+		for (int j=0; j < 3; j++)
+			r[i][j] = mr(i,j);
 	}
 }
 
 // r is the result and must be allocated before !
 void util::matrixProdTrans(double** r, double** a, double** b)
 {
-	for(int i=0;i<3;i++){
+	/*for(int i=0;i<3;i++){
 		for(int j=0;j<3;j++){
 			r[i][j] = 0;
 			for(int k=0;k<3;k++)
 				r[i][j] += a[i][k]*b[j][k];
 		}
+	}*/
+	Matrix3d ma, mb, mr;
+	for (int i=0; i < 3; i++){
+		for (int j=0; j < 3; j++){
+			ma(i,j) = a[i][j];
+			mb(i,j) = b[j][i];
+		}
+	}
+	mr = ma*mb;
+	for (int i=0; i < 3; i++){
+		for (int j=0; j < 3; j++)
+			r[i][j] = mr(i,j);
 	}
 }
 
 void util::inv(double** inv, double** a)
-{
+{/*
 	double det = util::det3(a);
 
 	inv[0][0] = (a[1][1]*a[2][2]-a[1][2]*a[2][1])/det;
@@ -103,6 +138,18 @@ void util::inv(double** inv, double** a)
 	inv[0][2] = (a[0][1]*a[1][2]-a[0][2]*a[1][1])/det;
 	inv[1][2] = (a[0][2]*a[1][0]-a[0][0]*a[1][2])/det;
 	inv[2][2] = (a[0][0]*a[1][1]-a[0][1]*a[1][0])/det;
+*/
+	Matrix3d ma, minv;
+	for (int i=0; i < 3; i++){
+		for (int j=0; j < 3; j++)
+			ma(i,j) = a[i][j];
+	}
+	cout << "ma:\r\n"<<ma<<endl;
+	minv = ma.inverse();
+	for (int i=0; i < 3; i++){
+		for (int j=0; j < 3; j++)
+			inv[i][j] = minv(i,j);
+	}
 }
 
 double util::norm(double** x)
@@ -134,171 +181,21 @@ double util::normMinus(double** x, double** y)
 }
 
 void util::polarDecomposition(double** x_plus, double** x, double** inv)
-{	
-	for(int n=0;n<100;n++){
-		util::inv(inv, x);
+{
+	for (int n=0;n<100;n++) {
+		util::inv( inv, x );
 		for(int i=0;i<3;i++){
 			for(int j=0;j<3;j++){
 				x_plus[i][j] = (x[i][j]-inv[j][i])/2;
 			}
 		}
-		if(normMinus(x_plus,x)/norm(x) < 1e-14)break;
+		cout << "plop "<<normMinus(x_plus,x)<<" p "<<norm(x)<< " p "<<normMinus(x_plus,x)/norm(x)<<endl;
+		if(normMinus(x_plus,x)/norm(x) < 1e-7) return;
 		for(int i=0;i<3;i++){
 			for(int j=0;j<3;j++){
 				x[i][j] = x_plus[i][j];
 			}
 		}
 	}
+	cout << "FAILLLL"<<endl;
 }
-
-
-
-/*
-void util::exchange_row(double** M, int k, int l, int m, int n) {
-	if (k<=0 || l<=0 || k>n || l>n || k==l)
-		return;
-	double tmp;
-	for (int j=0; j<n; j++)
-	{
-		tmp = M[k-1][j];
-		M[k-1][j] = M[l-1][j];
-		M[l-1][j] = tmp;
-	}	
-}
-
-
-
-bool util::vectorIntContains(vector<int>* v, int e)
-{
-	for (int i=0; i < v->size(); i++)
-	{
-		if ((*v)[i] == e) return true;
-	}
-	return false;
-}
-
-
-bool util::inv(double** B, double** M, int m, int n) {
-
-	//Pour stocker les lignes pour lesquels un pivot a déjà été trouvé
-	vector<int> I;
-
-	//Pour stocker les colonnes pour lesquels un pivot a déjà été trouvé
-	vector<int> J;
-
-	//Pour calculer l'inverse de la matrice initiale
-	double** A = new double*[m];
-	for (int i=0; i<m; i++)
-		A[i] = new double[n];
-
-	//Copie de M dans A et Mise en forme de B : B=I
-	for (int i=0; i<n; i++)
-	{
-		for (int j=0; j<n; j++)
-		{
-			A[i][j] = M[i][j];
-			if (i==j)
-				B[i][j] = 1;
-			else 
-				B[i][j] = 0;
-		}
-	}
-
-	//Paramètres permettant l'arrêt prématuré des boucles ci-dessous si calcul impossible	
-	bool bk = true;
-	bool bl = true;
-
-	//Paramètres de contrôle pour la recherche de pivot
-	int cnt_row = 0;
-	int cnt_col = 0;
-
-	//paramètre de stockage de coefficients
-	double a, tmp;	
-
-	for (int k=0; k<n && bk; k++) 
-	{
-		if (!vectorIntContains(&I, k))
-		{
-			I.push_back(k);
-			cnt_row++;
-			bl = true;
-			for (int l=0; l<n && bl; l++) 
-			{
-				if (!vectorIntContains(&J, l)) 
-				{
-					a = A[k][l]; 			
-					if (a != 0) 
-					{
-						J.push_back(l);
-						cnt_col++;			    
-						bl = false; //permet de sortir de la boucle car le pivot a été trouvé
-						for (int p=0; p<n; p++)
-						{
-							if (p != k)
-							{
-								tmp = A[p][l];
-								for (int q=0; q<n; q++)
-								{
-									A[p][q] = A[p][q] - A[k][q]*(tmp/a);
-									B[p][q] = B[p][q] - B[k][q]*(tmp/a);
-								}
-							}	
-						}
-					}			
-				}
-			}
-			if (cnt_row != cnt_col) 
-			{
-				//Matrix is singular";
-				//Pas de pivot possible, donc pas d'inverse possible! On sort de la boucle
-				bk = false;
-				k = n; 
-			}	       
-		}
-	}
-
-	if (!bk)
-	{
-		//Le pivot n'a pas pu être trouve précédemment, ce qui a donne bk = false
-		cout << "Matrix is singular" << endl;
-		for (int i=0; i<n; i++) {
-			for (int j=0; j<n; j++) {
-				B[j][i] = M[j][i];
-			}
-		}
-		for (int i=0; i<m; i++)
-			delete []A[i];
-		delete []A;
-		return false;
-	}
-	else 
-	{
-		//Réorganisation des colonnes de sorte que A=I et B=Inv(M). Méthode de Gauss-Jordan
-		for (int l=0; l<n; l++)
-		{
-			for (int k=0; k<n; k++)
-			{
-				a = A[k][l];
-				if (a != 0)
-				{
-					A[k][l] = 1;
-					for (int p=0; p<n; p++)
-					{
-						B[k][p] = B[k][p]/a;
-					}
-					if (k != l)
-					{
-						exchange_row(A,k+1,l+1,n,n);
-						exchange_row(B,k+1,l+1,n,n);
-					}
-					k = n; //Pour sortir de la boucle car le coefficient non nul a été trouve
-				}
-			}
-		}
-		for (int i=0; i<m; i++)
-			delete []A[i];
-		delete []A;
-		return true;	
-	}	
-}
-*/
