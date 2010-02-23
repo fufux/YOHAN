@@ -119,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="Eigen\*;xercesc\include;mumps\include;irrlicht\include;tetgen"
+				AdditionalIncludeDirectories="Eigen;xercesc\include;mumps\include;irrlicht\include;tetgen"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
