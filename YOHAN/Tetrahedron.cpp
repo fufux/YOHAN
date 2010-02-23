@@ -44,6 +44,7 @@ Tetrahedron::Tetrahedron(int id, Volume* volume, vector<Point*> points)
 
 	// compute core jacobian
 	double** n = new double*[4];
+	double area = 0;
 	for (int i=0; i<4; i++)
 		n[i] = new double[3];
 	
@@ -67,6 +68,14 @@ Tetrahedron::Tetrahedron(int id, Volume* volume, vector<Point*> points)
 	}else{
 		n[3] = util::crossProd(points[0]->getX(),points[2]->getX(),points[1]->getX());
 	}
+	for (int i=0; i<4; i++)
+		area += util::norm(n[i]);
+	for (int i=0; i<4; i++){
+		for (int j=0; j<3; j++){
+			n[i][j] /= area;
+		}
+	}
+
 	
 	
 	// initialise ----

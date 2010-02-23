@@ -105,6 +105,11 @@ void util::inv(double** inv, double** a)
 	inv[2][2] = (a[0][0]*a[1][1]-a[0][1]*a[1][0])/det;
 }
 
+double util::norm(double* x)
+{
+	return sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
+}
+
 double util::norm(double** x)
 {
 	double norm = 0;
@@ -135,14 +140,17 @@ double util::normMinus(double** x, double** y)
 
 void util::polarDecomposition(double** x_plus, double** x, double** inv)
 {	
-	for(int n=0;n<100;n++){
+	for(int n=0;n<10000;n++){
 		util::inv(inv, x);
 		for(int i=0;i<3;i++){
 			for(int j=0;j<3;j++){
 				x_plus[i][j] = (x[i][j]-inv[j][i])/2;
 			}
 		}
-		if(normMinus(x_plus,x)/norm(x) < 1e-14)break;
+		if(normMinus(x_plus,x)/norm(x) < 1e-14){
+			cout << n << endl;
+			break;
+		}
 		for(int i=0;i<3;i++){
 			for(int j=0;j<3;j++){
 				x[i][j] = x_plus[i][j];

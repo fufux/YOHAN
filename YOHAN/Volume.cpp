@@ -278,39 +278,39 @@ void Volume::generateK()
 		tmp[i] = new double[3];
 		inv[i] = new double[3];
 	}
-	for(int i=1;i<=3;i++){
-		for(int j=1;j<=3;j++){
-			q[i-1][j-1]=sqrt((double)(i*i+j));
-		}
-	}
-	util::polarDecomposition(tmp, q, inv);
-	for(int i=0;i<3;i++){
-		for(int j=0;j<3;j++){
-			cout << "_Qij["<<i<<"]["<<j<<"]=" << q[i][j] << endl;
-		}
-	}
-	for(int i=1;i<=3;i++){
-		for(int j=1;j<=3;j++){
-			q[i-1][j-1]=sqrt((double)(i*i+j));
-		}
-	}
-	util::inv(inv, q);
-	for(int i=0;i<3;i++){
-		for(int j=0;j<3;j++){
-			cout << "Qij["<<i<<"]["<<j<<"]=" << q[i][j] << endl;
-		}
-	}
-	for(int i=0;i<3;i++){
-		for(int j=0;j<3;j++){
-			cout << "INV["<<i<<"]["<<j<<"]=" << inv[i][j] << endl;
-		}
-	}
-	util::matrixProd(tmp, q, inv);
-	for(int i=0;i<3;i++){
-		for(int j=0;j<3;j++){
-			cout << "tmp["<<i<<"]["<<j<<"]=" << tmp[i][j] << endl;
-		}
-	}
+	//for(int i=1;i<=3;i++){
+	//	for(int j=1;j<=3;j++){
+	//		q[i-1][j-1]=sqrt((double)(i*i+j));
+	//	}
+	//}
+	//util::polarDecomposition(tmp, q, inv);
+	//for(int i=0;i<3;i++){
+	//	for(int j=0;j<3;j++){
+	//		cout << "_Qij["<<i<<"]["<<j<<"]=" << q[i][j] << endl;
+	//	}
+	//}
+	//for(int i=1;i<=3;i++){
+	//	for(int j=1;j<=3;j++){
+	//		q[i-1][j-1]=sqrt((double)(i*i+j));
+	//	}
+	//}
+	//util::inv(inv, q);
+	//for(int i=0;i<3;i++){
+	//	for(int j=0;j<3;j++){
+	//		cout << "Qij["<<i<<"]["<<j<<"]=" << q[i][j] << endl;
+	//	}
+	//}
+	//for(int i=0;i<3;i++){
+	//	for(int j=0;j<3;j++){
+	//		cout << "INV["<<i<<"]["<<j<<"]=" << inv[i][j] << endl;
+	//	}
+	//}
+	//util::matrixProd(tmp, q, inv);
+	//for(int i=0;i<3;i++){
+	//	for(int j=0;j<3;j++){
+	//		cout << "tmp["<<i<<"]["<<j<<"]=" << tmp[i][j] << endl;
+	//	}
+	//}
 	for(int t=0;t<(int)tetrahedra.size();t++){
 		vector<Point*>& pts = tetrahedra[t]->getPoints();
 
