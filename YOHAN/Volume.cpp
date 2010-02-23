@@ -266,7 +266,7 @@ vector<std::string> Volume::save(std::string dir)
 void Volume::generateK()
 {
 	K->clear();
-	double** q = new double*[3];
+	/*double** q = new double*[3];
 	double** dx = new double*[3];
 	double** jac = new double*[3];
 	double** tmp = new double*[3];
@@ -277,40 +277,28 @@ void Volume::generateK()
 		jac[i] = new double[3];
 		tmp[i] = new double[3];
 		inv[i] = new double[3];
-	}
-	for(int i=1;i<=3;i++){
-		for(int j=1;j<=3;j++){
-			q[i-1][j-1]=sqrt((double)(i*i+j));
-		}
-	}
-	util::polarDecomposition(tmp, q, inv);
-	for(int i=0;i<3;i++){
-		for(int j=0;j<3;j++){
-			cout << "_Qij["<<i<<"]["<<j<<"]=" << q[i][j] << endl;
-		}
-	}
-	for(int i=1;i<=3;i++){
-		for(int j=1;j<=3;j++){
-			q[i-1][j-1]=sqrt((double)(i*i+j));
-		}
-	}
-	util::inv(inv, q);
-	for(int i=0;i<3;i++){
-		for(int j=0;j<3;j++){
-			cout << "Qij["<<i<<"]["<<j<<"]=" << q[i][j] << endl;
-		}
-	}
-	for(int i=0;i<3;i++){
-		for(int j=0;j<3;j++){
-			cout << "INV["<<i<<"]["<<j<<"]=" << inv[i][j] << endl;
-		}
-	}
-	util::matrixProd(tmp, q, inv);
-	for(int i=0;i<3;i++){
-		for(int j=0;j<3;j++){
-			cout << "tmp["<<i<<"]["<<j<<"]=" << tmp[i][j] << endl;
-		}
-	}
+	}*/
+
+	//Matrix3d mq;
+	//for(int i=1;i<=3;i++){
+	//	for(int j=1;j<=3;j++){
+	//		mq(i-1,j-1)=sqrt((double)(i*i+j));
+	//	}
+	//}
+	//cout << "Q:\r\n"<< mq << endl;
+	//Matrix3d minv;
+	//mq.computeInverse(&minv);
+	//cout << "ID:\r\n"<< (minv*mq) << endl;
+	//for(int i=1;i<=3;i++){
+	//	for(int j=1;j<=3;j++){
+	//		mq(i-1,j-1)=sqrt((double)(i*i+j));
+	//	}
+	//}
+	//util::polarDecomposition(&mq);
+	//cout << "Q:\r\n"<< mq << endl;
+
+	Matrix3d dx,q,jac,tmp;
+
 	for(int t=0;t<(int)tetrahedra.size();t++){
 		vector<Point*>& pts = tetrahedra[t]->getPoints();
 
@@ -319,19 +307,25 @@ void Volume::generateK()
 		double* x2 = pts[1]->getX();
 		double* x3 = pts[2]->getX();
 		double* x4 = pts[3]->getX();
-		dx[0][0] = x2[0]-x1[0];
-		dx[1][0] = x2[1]-x1[1];
-		dx[2][0] = x2[2]-x1[2];
-		dx[0][1] = x3[0]-x1[0];
-		dx[1][1] = x3[1]-x1[1];
-		dx[2][1] = x3[2]-x1[2];
-		dx[0][2] = x4[0]-x1[0];
-		dx[1][2] = x4[1]-x1[1];
-		dx[2][2] = x4[2]-x1[2];
+		dx(0,0) = x2[0]-x1[0];
+		dx(1,0) = x2[1]-x1[1];
+		dx(2,0) = x2[2]-x1[2];
+		dx(0,1) = x3[0]-x1[0];
+		dx(1,1) = x3[1]-x1[1];
+		dx(2,1) = x3[2]-x1[2];
+		dx(0,2) = x4[0]-x1[0];
+		dx(1,2) = x4[1]-x1[1];
+		dx(2,2) = x4[2]-x1[2];
 
-		util::matrixProd(tmp, dx, tetrahedra[t]->getBeta());
+		cout << "dx:" << endl << dx << endl;
+		cout << "beta:" << endl << tetrahedra[t]->getBeta() << endl;
 
-		util::polarDecomposition(q, tmp, inv);
+		q = dx * tetrahedra[t]->getBeta();
+		util::polarDecomposition( &q );
+
+		//util::matrixProd(tmp, dx, tetrahedra[t]->getBeta());
+
+		//util::polarDecomposition(q, tmp, inv);
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -341,37 +335,39 @@ void Volume::generateK()
 				int ci = pts[j]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
 				
 				// Compute Jij
-				util::matrixProd(tmp, q, tetrahedra[t]->getCoreJacobian()[i*4+j]);
-				util::matrixProdTrans(jac, tmp, q);
+				//util::matrixProd(tmp, q, tetrahedra[t]->getCoreJacobian()[i*4+j]);
+				tmp = q * tetrahedra[t]->getCoreJacobian()[i*4+j];
+				jac = tmp * q.transpose();
+				//util::matrixProdTrans(jac, tmp, q);
 
 				// 9 items for stiffness matrix
-				K->addAndSetValue(ri, ci, jac[0][0]);
-				K->addAndSetValue(ri, ci + 1, jac[0][1]);
-				K->addAndSetValue(ri, ci + 2, jac[0][2]);
-				K->addAndSetValue(ri + 1, ci, jac[1][0]);
-				K->addAndSetValue(ri + 1, ci + 1, jac[1][1]);
-				K->addAndSetValue(ri + 1, ci + 2, jac[1][2]);
-				K->addAndSetValue(ri + 2, ci, jac[2][0]);
-				K->addAndSetValue(ri + 2, ci + 1, jac[2][1]);
-				K->addAndSetValue(ri + 2, ci + 2, jac[2][2]);
+				K->addAndSetValue(ri, ci, jac(0,0));
+				K->addAndSetValue(ri, ci + 1, jac(0,1));
+				K->addAndSetValue(ri, ci + 2, jac(0,2));
+				K->addAndSetValue(ri + 1, ci, jac(1,0));
+				K->addAndSetValue(ri + 1, ci + 1, jac(1,1));
+				K->addAndSetValue(ri + 1, ci + 2, jac(1,2));
+				K->addAndSetValue(ri + 2, ci, jac(2,0));
+				K->addAndSetValue(ri + 2, ci + 1, jac(2,1));
+				K->addAndSetValue(ri + 2, ci + 2, jac(2,2));
 
 			}
 		}
 	}
 
 	// Desallocation
-	for(int ii=0;ii<3;ii++){
-		delete []q[ii];
-		delete []dx[ii];
-		delete []tmp[ii];
-		delete []jac[ii];
-		delete []inv[ii];
-	}
-	delete [] q;
-	delete [] dx;
-	delete [] tmp;
-	delete [] jac;
-	delete [] inv;
+	//for(int ii=0;ii<3;ii++){
+	//	delete []q[ii];
+	//	delete []dx[ii];
+	//	delete []tmp[ii];
+	//	delete []jac[ii];
+	//	delete []inv[ii];
+	//}
+	//delete [] q;
+	//delete [] dx;
+	//delete [] tmp;
+	//delete [] jac;
+	//delete [] inv;
 }
 
 void Volume::generateC()
@@ -492,7 +488,7 @@ void Volume::collisionBidon()
 	for (int i=0; i<(int)points.size(); i++)
 	{
 		if (points[i]->getX()[1] < 0) {
-			forces[3*i+1] = -points[i]->getMass()*points[i]->getX()[1]*100;
+			forces[3*i+1] = -points[i]->getMass()*points[i]->getX()[1]/(scene->getDeltaT()*scene->getDeltaT());
 		}
 	}
 }

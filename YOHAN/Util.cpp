@@ -1,5 +1,4 @@
-#include <Eigen/Core>
-#include <Eigen/LU>
+#include <Eigen/Eigen>
 #include "Util.h"
 
 // import most common Eigen types 
@@ -80,53 +79,29 @@ void util::scalVecVecId(double*** core, int ind, double k, double* n, double* nt
 // r is the result and must be allocated before !
 void util::matrixProd(double** r, double** a, double** b)
 {
-	/*for(int i=0;i<3;i++){
+	for(int i=0;i<3;i++){
 		for(int j=0;j<3;j++){
 			r[i][j] = 0;
 			for(int k=0;k<3;k++)
 				r[i][j] += a[i][k]*b[k][j];
 		}
-	}*/
-	Matrix3d ma, mb, mr;
-	for (int i=0; i < 3; i++){
-		for (int j=0; j < 3; j++){
-			ma(i,j) = a[i][j];
-			mb(i,j) = b[i][j];
-		}
-	}
-	mr = ma*mb;
-	for (int i=0; i < 3; i++){
-		for (int j=0; j < 3; j++)
-			r[i][j] = mr(i,j);
 	}
 }
 
 // r is the result and must be allocated before !
 void util::matrixProdTrans(double** r, double** a, double** b)
 {
-	/*for(int i=0;i<3;i++){
+	for(int i=0;i<3;i++){
 		for(int j=0;j<3;j++){
 			r[i][j] = 0;
 			for(int k=0;k<3;k++)
 				r[i][j] += a[i][k]*b[j][k];
 		}
-	}*/
-	Matrix3d ma, mb, mr;
-	for (int i=0; i < 3; i++){
-		for (int j=0; j < 3; j++){
-			ma(i,j) = a[i][j];
-			mb(i,j) = b[j][i];
-		}
-	}
-	mr = ma*mb;
-	for (int i=0; i < 3; i++){
-		for (int j=0; j < 3; j++)
-			r[i][j] = mr(i,j);
 	}
 }
 
 void util::inv(double** inv, double** a)
-{/*
+{
 	double det = util::det3(a);
 
 	inv[0][0] = (a[1][1]*a[2][2]-a[1][2]*a[2][1])/det;
@@ -138,18 +113,7 @@ void util::inv(double** inv, double** a)
 	inv[0][2] = (a[0][1]*a[1][2]-a[0][2]*a[1][1])/det;
 	inv[1][2] = (a[0][2]*a[1][0]-a[0][0]*a[1][2])/det;
 	inv[2][2] = (a[0][0]*a[1][1]-a[0][1]*a[1][0])/det;
-*/
-	Matrix3d ma, minv;
-	for (int i=0; i < 3; i++){
-		for (int j=0; j < 3; j++)
-			ma(i,j) = a[i][j];
-	}
-	cout << "ma:\r\n"<<ma<<endl;
-	minv = ma.inverse();
-	for (int i=0; i < 3; i++){
-		for (int j=0; j < 3; j++)
-			inv[i][j] = minv(i,j);
-	}
+
 }
 
 double util::norm(double** x)
@@ -180,22 +144,12 @@ double util::normMinus(double** x, double** y)
 	return norm;
 }
 
-void util::polarDecomposition(double** x_plus, double** x, double** inv)
+void util::polarDecomposition(Matrix3d* x)
 {
-	for (int n=0;n<100;n++) {
-		util::inv( inv, x );
-		for(int i=0;i<3;i++){
-			for(int j=0;j<3;j++){
-				x_plus[i][j] = (x[i][j]-inv[j][i])/2;
-			}
-		}
-		cout << "plop "<<normMinus(x_plus,x)<<" p "<<norm(x)<< " p "<<normMinus(x_plus,x)/norm(x)<<endl;
-		if(normMinus(x_plus,x)/norm(x) < 1e-7) return;
-		for(int i=0;i<3;i++){
-			for(int j=0;j<3;j++){
-				x[i][j] = x_plus[i][j];
-			}
-		}
-	}
-	cout << "FAILLLL"<<endl;
+	Eigen::SVD<Matrix3d> svd;
+	cout << "X:" << endl << *x << endl;
+	svd.compute(*x);
+	cout << "SVD" << endl;
+	*x = svd.matrixU() * svd.matrixV().adjoint();
+	cout << "X:" << endl << *x << endl;
 }

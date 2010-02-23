@@ -4,6 +4,8 @@
 #include "Matrix.h"
 #include "Point.h"
 #include "Tetrahedron.h"
+#include <Eigen/Eigen>
+USING_PART_OF_NAMESPACE_EIGEN
 
 using namespace matrix;
 

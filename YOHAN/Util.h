@@ -1,6 +1,10 @@
 #pragma once
 
 #include "stdafx.h"
+#include <Eigen/Eigen>
+
+// import most common Eigen types 
+USING_PART_OF_NAMESPACE_EIGEN
 
 namespace util
 {
@@ -23,7 +27,7 @@ namespace util
 	double norm(double** x);
 	double normMinus(double** x, double** y);
 	// x is the in/out and old_x, inv must be allocated at double 3x3
-	void polarDecomposition(double** x, double** old_x, double** inv);
+	void polarDecomposition(Matrix3d* x);
 
 	void inv( double **Y, double **A);
 	double det3( double **mat);
