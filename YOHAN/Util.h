@@ -16,4 +16,12 @@ namespace util
 	void matrixProd(double** r, double** a, double** b);
 	// r is the result and must be allocated before !
 	void matrixProdTrans(double** r, double** a, double** b);
+	// inv is output, a is input, they must be allocated before
+	//void exchange_row(double** M, int k, int l, int m, int n);
+	//bool vectorIntContains(vector<int>* v, int e);
+	void inv(double** B, double** M);
+	double norm(double** x);
+	double normMinus(double** x, double** y);
+	// x is the in/out and old_x, inv must be allocated at double 3x3
+	void polarDecomposition(double** x, double** old_x, double** inv);
 }

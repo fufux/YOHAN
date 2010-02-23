@@ -270,11 +270,46 @@ void Volume::generateK()
 	double** dx = new double*[3];
 	double** jac = new double*[3];
 	double** tmp = new double*[3];
+	double** inv = new double*[3];
 	for(int i=0;i<3;i++){
 		q[i] = new double[3];
 		dx[i] = new double[3];
 		jac[i] = new double[3];
 		tmp[i] = new double[3];
+		inv[i] = new double[3];
+	}
+	for(int i=1;i<=3;i++){
+		for(int j=1;j<=3;j++){
+			q[i-1][j-1]=sqrt((double)(i*i+j));
+		}
+	}
+	util::polarDecomposition(tmp, q, inv);
+	for(int i=0;i<3;i++){
+		for(int j=0;j<3;j++){
+			cout << "_Qij["<<i<<"]["<<j<<"]=" << q[i][j] << endl;
+		}
+	}
+	for(int i=1;i<=3;i++){
+		for(int j=1;j<=3;j++){
+			q[i-1][j-1]=sqrt((double)(i*i+j));
+		}
+	}
+	util::inv(inv, q);
+	for(int i=0;i<3;i++){
+		for(int j=0;j<3;j++){
+			cout << "Qij["<<i<<"]["<<j<<"]=" << q[i][j] << endl;
+		}
+	}
+	for(int i=0;i<3;i++){
+		for(int j=0;j<3;j++){
+			cout << "INV["<<i<<"]["<<j<<"]=" << inv[i][j] << endl;
+		}
+	}
+	util::matrixProd(tmp, q, inv);
+	for(int i=0;i<3;i++){
+		for(int j=0;j<3;j++){
+			cout << "tmp["<<i<<"]["<<j<<"]=" << tmp[i][j] << endl;
+		}
 	}
 	for(int t=0;t<(int)tetrahedra.size();t++){
 		vector<Point*>& pts = tetrahedra[t]->getPoints();
@@ -296,13 +331,7 @@ void Volume::generateK()
 
 		util::matrixProd(tmp, dx, tetrahedra[t]->getBeta());
 
-		for(int i=0;i<3;i++){
-			for(int j=0;j<3;j++){
-				//q[i][j] = 0;
-				q[i][j] = tmp[i][j]/(10);
-			}
-			//q[i][i]=1;
-		}
+		util::polarDecomposition(q, tmp, inv);
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -336,11 +365,13 @@ void Volume::generateK()
 		delete []dx[ii];
 		delete []tmp[ii];
 		delete []jac[ii];
+		delete []inv[ii];
 	}
 	delete [] q;
 	delete [] dx;
 	delete [] tmp;
 	delete [] jac;
+	delete [] inv;
 }
 
 void Volume::generateC()
@@ -458,7 +489,7 @@ void Volume::updateVolume(double deltaT)
 
 void Volume::collisionBidon()
 {
-	for (int i=0; i<points.size(); i++)
+	for (int i=0; i<(int)points.size(); i++)
 	{
 		if (points[i]->getX()[1] < 0) {
 			forces[3*i+1] = -points[i]->getMass()*points[i]->getX()[1]*100;

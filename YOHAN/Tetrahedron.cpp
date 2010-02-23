@@ -35,17 +35,7 @@ Tetrahedron::Tetrahedron(int id, Volume* volume, vector<Point*> points)
 	a[1][2] = u4[1]-u1[1];
 	a[2][2] = u4[2]-u1[2];
 
-	double det = util::det3(a);
-
-	beta[0][0] = (a[1][1]*a[2][2]-a[1][2]*a[2][1])/det;
-	beta[1][0] = (a[1][2]*a[2][0]-a[1][0]*a[2][2])/det;
-	beta[2][0] = (a[1][0]*a[2][1]-a[1][1]*a[2][0])/det;
-	beta[0][1] = (a[0][2]*a[2][1]-a[0][1]*a[2][2])/det;
-	beta[1][1] = (a[0][0]*a[2][2]-a[0][2]*a[2][0])/det;
-	beta[2][1] = (a[0][1]*a[2][0]-a[0][0]*a[2][1])/det;
-	beta[0][2] = (a[0][1]*a[1][2]-a[0][2]*a[1][1])/det;
-	beta[1][2] = (a[0][2]*a[1][0]-a[0][0]*a[1][2])/det;
-	beta[2][2] = (a[0][0]*a[1][1]-a[0][1]*a[1][0])/det;
+	util::inv(beta, a);
 
 	for(int i=0;i<3;i++){
 		delete []a[i];
