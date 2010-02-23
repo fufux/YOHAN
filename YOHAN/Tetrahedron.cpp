@@ -8,15 +8,27 @@ Tetrahedron::Tetrahedron(int id, Volume* volume, vector<Point*> points)
 	this->id = id;
 	this->volume = volume;
 	this->points = points;
+	Vector3d v1,v2;
 
-	// compute mass
-	mass = abs(util::crossAndDotProd(points[0]->getU(), points[1]->getU(), points[2]->getU(), points[3]->getU()))/6;
-
-	// compute beta
 	double* u1 = points[0]->getU();
 	double* u2 = points[1]->getU();
 	double* u3 = points[2]->getU();
 	double* u4 = points[3]->getU();
+
+	// compute mass
+	v1(0) = u2[0]-u1[0];
+	v1(1) = u2[1]-u1[1];
+	v1(2) = u2[2]-u1[2];
+	v2(0) = u3[0]-u1[0];
+	v2(1) = u3[1]-u1[1];
+	v2(2) = u3[2]-u1[2];
+	v1 = v1.cross(v2);
+	v2(0) = u4[0]-u1[0];
+	v2(1) = u4[1]-u1[1];
+	v2(2) = u4[2]-u1[2];
+	mass = abs( v1.dot(v2) ) / 6;
+
+	// compute beta
 	beta(0,0) = u2[0]-u1[0];
 	beta(1,0) = u2[1]-u1[1];
 	beta(2,0) = u2[2]-u1[2];
@@ -27,11 +39,9 @@ Tetrahedron::Tetrahedron(int id, Volume* volume, vector<Point*> points)
 	beta(1,2) = u4[1]-u1[1];
 	beta(2,2) = u4[2]-u1[2];
 	beta.computeInverse( &beta);
-//cout << "beta:" << endl << beta << endl;
 
 	// compute core jacobian
 	Vector3d n[4];
-	Vector3d v1,v2;
 	double* x0 = points[0]->getX();
 	double* x1 = points[1]->getX();
 	double* x2 = points[2]->getX();
