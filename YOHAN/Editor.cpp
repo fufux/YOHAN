@@ -1018,18 +1018,22 @@ bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSc
 
 	try
 	{
-		//load the scene file
-		/*SceneController* sc = new SceneController( (char*)tetrahedralizedSceneFile.c_str() );
-
-		//start to simulate, and try to record all the process into the given file
-		device->getLogger()->log((stringc("Call simulate(")+simulatedSceneOutDir+stringc(")")).c_str());
-		sc->simulate( (char*)simulatedSceneOutDir.c_str(), (double)deltaT, (int)nbFrame );*/
+		// instanciate scene object
 		Scene* scene = new Scene();
 
+		// load the scene
 		if (scene->load(tsf))
+		{
+			device->getLogger()->log(
+				(stringc("Call simulate(")+simulatedSceneOutDir+", "+stringc(deltaT)+", "+stringc(nbFrame)+")").c_str());
+			// launch the simulation
 			scene->simulate(ssod, deltaT, nbFrame);
+		}
 		else
-			cout << "Scene loading failed" << endl;
+		{
+			device->getLogger()->log("Scene loading for simulation failed !");
+			cout << "Scene loading for simulation failed !" << endl;
+		}
 
 
 	}

@@ -338,13 +338,20 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		currentTime += deltaT;
 
 		// compute
-		for(int i=0; i<(int)volumes.size(); i++){
+		for (int i=0; i < (int)volumes.size(); i++) {
 			volumes[i]->collisionBidon();
 			volumes[i]->evolve(deltaT);
 		}
 
 		// save step
 		saveStep(filename);
+
+		// log
+		if (stepNumber % 50 == 0) {
+			std::stringstream s;
+			s << "Step n°" << stepNumber << " computed.";
+			util::log( s.str() );
+		}
 	}
 
 
@@ -361,6 +368,8 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 	fp.flush();
 	fp.close();
 	fp.clear();
+
+	util::log( "Finished well !" );
 
 	return true;
 }

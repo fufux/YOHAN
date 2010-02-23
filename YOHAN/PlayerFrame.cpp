@@ -19,7 +19,8 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 {
 	// increase total number of loaded frames
 	PlayerFrame::totalLoadedFrames++;
-	device->getLogger()->log((stringw("Loading frame number ")+stringw(info.id)+L". Total of frames loaded : "+stringw(PlayerFrame::totalLoadedFrames)).c_str());
+	if (PLAYER_DEBUG || info.id % 50 == 0)
+		device->getLogger()->log((stringw("Loading frame number ")+stringw(info.id)+L". Total of frames loaded : "+stringw(PlayerFrame::totalLoadedFrames)).c_str());
 
 	core::array<stringc> _lastEleFileNames;
 	core::array<stringc> _lastFaceFileNames;
@@ -70,7 +71,8 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 			buffer->drop();
 			continue;
 		}
-		device->getLogger()->log((stringw("Loading ")+stringw(nb_of_points)+L" points from "+stringw(nodeFileName.c_str())+L"...").c_str());
+		if (PLAYER_DEBUG)
+			device->getLogger()->log((stringw("Loading ")+stringw(nb_of_points)+L" points from "+stringw(nodeFileName.c_str())+L"...").c_str());
 
 		// default color
 		video::SColor clr(255,255,0,0);
@@ -119,7 +121,8 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 				if (PlayerFrame::lastEleFileNames[e] == eleFileName)
 				{
 					eleLoadedIndex = e;
-					device->getLogger()->log("The ele file is already in memory. We do not need to reload it.");
+					if (PLAYER_DEBUG)
+						device->getLogger()->log("The ele file is already in memory. We do not need to reload it.");
 					break;
 				}
 			}
@@ -127,7 +130,7 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 			// if is not in memory, load it from file
 			if (!PlayerFrame::last_was_volumic || eleLoadedIndex == -1 || PlayerFrame::lastBuffers[eleLoadedIndex]->Vertices.size() != buffer->Vertices.size())
 			{
-				if (eleLoadedIndex != -1)
+				if (eleLoadedIndex != -1 && PLAYER_DEBUG)
 					device->getLogger()->log((stringc(PlayerFrame::lastBuffers[eleLoadedIndex]->Vertices.size())+
 					" This is weird: the ele file which is already in memory don't have the same number of vertices than this one.").c_str());
 
@@ -141,7 +144,8 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 
 				// first line data : inele >> nb_of_tetrahedra >> dim >> nb_of_attr;
 				inele.read(reinterpret_cast < char * > (&nb_of_tetrahedra), sizeof(int));
-				device->getLogger()->log((stringw("Loading ")+stringw(nb_of_tetrahedra)+L" tetrahedras from "+stringw(eleFileName.c_str())+L"...").c_str());
+				if (PLAYER_DEBUG)
+					device->getLogger()->log((stringw("Loading ")+stringw(nb_of_tetrahedra)+L" tetrahedras from "+stringw(eleFileName.c_str())+L"...").c_str());
 
 				// we should have at least one tetrahedra and each tetrahedra should have 4 points
 				if (nb_of_tetrahedra < 1)
@@ -244,7 +248,8 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 				if (PlayerFrame::lastFaceFileNames[e] == faceFileName)
 				{
 					faceLoadedIndex = e;
-					device->getLogger()->log("The face file is already in memory. We do not need to reload it.");
+					if (PLAYER_DEBUG)
+						device->getLogger()->log("The face file is already in memory. We do not need to reload it.");
 					break;
 				}
 			}
@@ -261,7 +266,8 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 
 				// first line data : inface >> nb_of_tetrahedra >> dim >> nb_of_attr;
 				inface.read(reinterpret_cast < char * > (&nb_of_faces), sizeof(int));
-				device->getLogger()->log((stringw("Loading ")+stringw(nb_of_faces)+L" faces from "+stringw(faceFileName.c_str())+L"...").c_str());
+				if (PLAYER_DEBUG)
+					device->getLogger()->log((stringw("Loading ")+stringw(nb_of_faces)+L" faces from "+stringw(faceFileName.c_str())+L"...").c_str());
 
 				// we should have at least one face
 				if (nb_of_faces < 1)
@@ -367,7 +373,8 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 
 
 	// that's it !
-	device->getLogger()->log("Loaded.");
+	if (PLAYER_DEBUG)
+		device->getLogger()->log("Loaded.");
 }
 
 

@@ -33,6 +33,7 @@ using namespace io;
 using namespace gui;
 
 #define CAMERA_COUNT 2
+#define PLAYER_DEBUG false
 
 // here define some captions used by the GUI
 #define CAPTION_ERROR L"Error"

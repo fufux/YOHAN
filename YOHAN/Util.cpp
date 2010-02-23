@@ -5,6 +5,18 @@
 USING_PART_OF_NAMESPACE_EIGEN
 using namespace util;
 
+
+void util::log(const char* message)
+{
+	OutputDebugStringA(message);
+	OutputDebugStringA("\n");
+}
+
+void util::log(const std::string message)
+{
+	util::log(message.c_str());
+}
+
 std::string util::ws2s(const std::wstring& s)
 {
 	int len;
