@@ -28,6 +28,7 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 
 	// initialize some variables
 	this->id = info.id;
+	this->timestamp = info.timestamp;
 
 	for (u32 o=0; o < info.nodefiles.size(); o++)
 	{
@@ -405,4 +406,9 @@ core::array<scene::IMeshSceneNode*> PlayerFrame::getNodes()
 s32 PlayerFrame::getId()
 {
 	return id;
+}
+
+double PlayerFrame::getTimestamp()
+{
+	return timestamp;
 }
