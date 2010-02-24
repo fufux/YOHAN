@@ -154,6 +154,14 @@ bool PlayerEventReceiver::OnEvent(const SEvent &event)
 			break;
 
 		case EGET_SCROLL_BAR_CHANGED:
+			// control play speed
+			if (id == GUI_ID_PLAYER_SPEED_SCROLLBAR)
+			{
+				const s32 pos = ((IGUIScrollBar*)event.GUIEvent.Caller)->getPos();
+				player->playSpeed = pos;
+				root->getElementFromId(GUI_ID_PLAYER_SPEED_TEXT, true)->setText(
+					(stringw(L"Speed Control (")+stringw(pos)+L"%):").c_str());
+			}
 			break;
 
 		case EGET_COMBO_BOX_CHANGED:

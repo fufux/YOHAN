@@ -18,6 +18,7 @@ public:
 	// getters
 	core::array<scene::IMeshSceneNode*> getNodes();
 	s32 getId();
+	double getTimestamp();
 
 	// total number of loaded frames
 	static s32 totalLoadedFrames;
@@ -34,4 +35,6 @@ private:
 
 	// this if the files names in which we are getting mesh info for the loading frame
 	s32 id;
+
+	double timestamp;
 };

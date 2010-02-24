@@ -10,6 +10,7 @@ class PlayerFrame;
 struct FrameInfo
 {
 	s32 id;
+	double timestamp;
 	core::array<stringc> nodefiles, facefiles, elefiles;
 };
 
@@ -37,7 +38,7 @@ public:
 	void displayFrameById(s32 id);
 
 	// allows us to change current frame in playing mode
-	void playNextFrame();
+	void playNextFrame(double deltaT);
 
 	// handle playying mode controls
 	void play();
@@ -59,6 +60,8 @@ public:
 	void updateFrameNumber();
 
 	s32 currentFrame; // this allows us to know where we are in playing mode
+	s32 playSpeed; // percentage. 100% = normal speed (1s is displayed in 1s)
+
 private:
 	// name of the scene
 	stringc name;
@@ -93,4 +96,5 @@ private:
 
 	// usefull for playing mode. This is the least time we changed the displayyed frame
 	u32 lastTime;
+	double accumulatedDeltaT;
 };

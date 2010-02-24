@@ -71,6 +71,8 @@ void Player::clear(bool clear_gui)
 	this->sceneFile = "";
 	this->currentFrame = -1;
 	this->is_playing = false;
+	this->playSpeed = 100;
+	this->accumulatedDeltaT = 0;
 
 	// clear GUI
 	if (clear_gui)
@@ -132,7 +134,7 @@ void Player::displayFrameById(s32 id)
 		return;
 	}
 
-	if (currentFrame > 0 && currentFrame < (s32)frames.size())
+	if (currentFrame >= 0 && currentFrame < (s32)frames.size())
 		frames[currentFrame]->hide();
 
 	if (currFrame && currFrame != NULL)
@@ -154,26 +156,43 @@ void Player::displayFrameById(s32 id)
 
 
 
-void Player::playNextFrame()
+void Player::playNextFrame(double deltaT)
 {
-	if (framesFileNames.size() == 0 || frames.size() == 0)
+	if (deltaT == 0 || framesFileNames.size() == 0 || frames.size() == 0)
 		return;
 
-	++currentFrame;
-	if (currentFrame == (s32)frames.size())
-		currentFrame = 0;
-	if (currentFrame >= 0 && currentFrame < (s32)frames.size())
+	// deltaT is in milliseconds
+	accumulatedDeltaT += deltaT / 1000.0;
+
+	s32 old_currentFrame = currentFrame;
+	double min = 100000000;
+
+	if (old_currentFrame >= 0 && old_currentFrame < (s32)frames.size())
 	{
-		if (currentFrame > 0)
-			frames[currentFrame-1]->hide();
-		else
-			frames.getLast()->hide();
-		frames[currentFrame]->display();
+		for (u32 i=0; i < frames.size(); i++)
+		{
+			if (abs(frames[i]->getTimestamp() - accumulatedDeltaT) < min)
+			{
+				min = abs((double)frames[i]->getTimestamp() - accumulatedDeltaT);
+				currentFrame = i;
+			}
+		}
 	}
 	else
 	{
-		--currentFrame;
+		currentFrame = 0;
 	}
+
+	// force looping
+	if (currentFrame == frames.size()-1)
+		accumulatedDeltaT = 0;
+
+	// display the new frame
+	if (old_currentFrame >= 0 && old_currentFrame < (s32)frames.size())
+		frames[old_currentFrame]->hide();
+	if (currentFrame >= 0 && currentFrame < (s32)frames.size())
+		frames[currentFrame]->display();
+
 	setDebugDataVisible( this->debugData );
 	updateFrameNumber();
 }
@@ -262,6 +281,7 @@ bool Player::load(irr::core::stringc filename)
 				{
 					FrameInfo fi;
 					fi.id = xml->getAttributeValueAsInt(L"id");
+					fi.timestamp = xml->getAttributeValueAsFloat(L"timestamp");
 					framesFileNames.push_back( fi );
 				}
 				else if (stringw("object") == xml->getNodeName())
@@ -376,10 +396,20 @@ void Player::createGUI()
 	image = driver->getTexture("help.png");
 	bar->addButton(GUI_ID_PLAYER_HELP_BUTTON, 0, L"Open Help", image, 0, false, true);
 
-	env->addEditBox(stringw( -1 ).c_str(), core::rect<s32>(300,4,400,24), true, bar, GUI_ID_PLAYER_FRAME_NUMBER);
+	env->addEditBox(stringw( -1 ).c_str(), core::rect<s32>(200,4,300,24), true, bar, GUI_ID_PLAYER_FRAME_NUMBER);
 	image = driver->getTexture("goto.png");
 	IGUIButton* b = bar->addButton(GUI_ID_PLAYER_FRAME_NUMBER_BUTTON, 0, L"Go to this frame", image, 0, false, true);
-	b->setRelativePosition( core::rect<s32>(404,4,424,24) );
+	b->setRelativePosition( core::rect<s32>(304,4,324,24) );
+
+	// add speed control %
+	env->addStaticText(L"Speed Control (100%):",
+			core::rect<s32>(350,8,440,24), false, false, bar, GUI_ID_PLAYER_SPEED_TEXT);
+	IGUIScrollBar* scrollbar = env->addScrollBar(true,
+			core::rect<s32>(445,6,775,22), bar, GUI_ID_PLAYER_SPEED_SCROLLBAR);
+	scrollbar->setMax(200);
+	scrollbar->setPos(100);
+	scrollbar->setLargeStep(5);
+	scrollbar->setSmallStep(1);
 }
 
 
@@ -437,10 +467,13 @@ void Player::run()
 
 	if (is_playing)
 	{
-		if (device->getTimer()->getTime() - lastTime > 1000/24)
+		// we always display 30 images per second. The speed will interact with the frames timestamp
+		double fps = 1000.0/30;
+
+		if (device->getTimer()->getTime() - lastTime > fps)
 		{
 			lastTime = device->getTimer()->getTime();
-			this->playNextFrame();
+			this->playNextFrame(fps * ((double)this->playSpeed) / 100);
 		}
 	}
 }
