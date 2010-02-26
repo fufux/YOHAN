@@ -162,7 +162,7 @@ void BoundingBox::findTetrahedra()
 	for (int i=0; i < size; i++)
 	{
 		tmp_tetrahedra = *(points[i]->getTetrahedra());
-		for (int j=0; j < tmp_tetrahedr.size(); j++)
-		tetrahedra.push_back( tmp_tetrahedr[j] );
+		for (int j=0; j < tmp_tetrahedra.size(); j++)
+		tetrahedra.push_back( tmp_tetrahedra[j] );
 	}
 }
