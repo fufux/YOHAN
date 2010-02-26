@@ -988,7 +988,7 @@ void Editor::quickTetAndSimulate()
 		wnd->remove();
 
 		// simulate...
-		if ( simulateScene(outDirTetrahedralize + "/" + tetrahedralizedSceneFile, simulatedSceneOutDir, nbFrame, deltaT) )
+/*		if ( simulateScene(outDirTetrahedralize + "/" + tetrahedralizedSceneFile, simulatedSceneOutDir, nbFrame, deltaT) )
 		{
 			this->lastSimulatedSceneOutDir = simulatedSceneOutDir;
 			this->er->askForSwitch();
@@ -996,7 +996,7 @@ void Editor::quickTetAndSimulate()
 		else
 		{
 			env->addMessageBox(CAPTION_ERROR, L"Simulation failed ! Aborting.", true);
-		}
+		}*/
 	}
 	else
 	{
