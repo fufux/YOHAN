@@ -19,7 +19,7 @@ extern ISceneManager* smgr;
 #pragma comment(linker, "/subsystem:windows /ENTRY:mainCRTStartup")
 #endif
 
-int tetBuf (IMeshBuffer *newBuffer, char *name, char *directory, float volume) {
+int tetBuf (IMeshBuffer *_newBuffer, char *_name, char *directory, float volume) {
 
 	tetgenio in, out; // Input and output data for tetgen //
 	tetgenio::facet *f; // Auxiliary variable for the facets array setting //
@@ -34,21 +34,26 @@ int tetBuf (IMeshBuffer *newBuffer, char *name, char *directory, float volume) {
 	REAL *tempPointList; // Temporary list of points //
 	bool *toWrite;  // toWrite[i] is true if the i-th vertex is to add to the input of tetgen //
 					// false otherwise //
-	char tetgenLoadPath[128] = "";
-	char tetgenSavePath[128] = "";
-	stringc params = "Qpq2.0a";
+	char tetgenLoadPath[128] = "output\litein";
+	char tetgenSavePath[128] = "output\liteout";
+	stringc params = "p"; //"Qpq2.0a";
+	char *name = "09Car-tire-model";
+	char *extension = ".3ds";
+	char loadPath[128] = "irrlicht/media/";
 	params += stringc(volume);
 
 		// Creating the paths used //
-	strcat_s(tetgenLoadPath, directory);
-	strcat_s(tetgenLoadPath, name);
-	strcat_s(tetgenLoadPath, "in");
-	strcat_s(tetgenSavePath, directory);
-	strcat_s(tetgenSavePath, name);
-	strcat_s(tetgenSavePath, "out");
+	//strcat_s(tetgenLoadPath, directory);
+	strcat_s(loadPath, name);
+	strcat_s(loadPath, extension);
+	//strcat_s(tetgenLoadPath, name);
+	//strcat_s(tetgenLoadPath, "in");
+	//strcat_s(tetgenSavePath, directory);
+	//strcat_s(tetgenSavePath, name);
+	//strcat_s(tetgenSavePath, "out");
 
 		// Trying to load the file //
-	//newBuffer = smgr->getMesh(loadPath)->getMesh(0)->getMeshBuffer(0);
+	IMeshBuffer *newBuffer = smgr->getMesh(loadPath)->getMesh(0)->getMeshBuffer(0);
 
 	/************************************************
 	 *         Cube definition using Irrlicht       *
@@ -241,12 +246,12 @@ int tetBuf (IMeshBuffer *newBuffer, char *name, char *directory, float volume) {
 
 	//tetrahedralize("pq1.414a0.1", &in, &out);
 	device->getLogger()->log((stringc("Call tetrahedralize(")+params+stringc(", &in, &out)")).c_str());
-	try {
+	//try {
 		//tetrahedralize("pq1.414a0.1Y", &in, &out);
 		tetrahedralize((char*)params.c_str(), &in, &out);
-	} catch (...) {
-		return -1;
-	}
+	//} catch (...) {
+	//	return -1;
+	//}
 
 	// Output mesh to files '<object's name>out.node', '<object's name>out.ele' and '<object's name>out.face'.
 	out.save_nodes(tetgenSavePath);
