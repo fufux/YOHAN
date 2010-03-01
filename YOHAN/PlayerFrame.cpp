@@ -403,7 +403,7 @@ core::array<scene::IMeshSceneNode*> PlayerFrame::getNodes()
 	return nodes;
 }
 
-s32 PlayerFrame::getId()
+s32 PlayerFrame::getID()
 {
 	return id;
 }

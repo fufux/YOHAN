@@ -17,7 +17,7 @@ public:
 
 	// getters
 	core::array<scene::IMeshSceneNode*> getNodes();
-	s32 getId();
+	s32 getID();
 	double getTimestamp();
 
 	// total number of loaded frames

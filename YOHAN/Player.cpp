@@ -148,7 +148,7 @@ void Player::displayFrameById(s32 id)
 		currFrame = NULL;
 		return;
 	}
-	currentFrame = currFrame->getId();
+	currentFrame = currFrame->getID();
 	currFrame->display();
 	setDebugDataVisible( this->debugData );
 	updateFrameNumber();

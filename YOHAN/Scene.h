@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "Volume.h"
 #include "Util.h"
+#include "Polyhedron.h"
 
 class Scene
 {
@@ -15,12 +16,18 @@ public:
 
 	double* getForceField();
 	double getDeltaT();
+	void planCollisionResponse(vector<Tetrahedron*>* tets);
 
 private:
 	double deltaT;
 	double currentTime; // accumulated time from begining
 	double forceField[3];
+	double kerr;
+	double kdmp;
+	double kfrc;
 	std::string simulatedSceneOutDir;
+
+	Polyhedron* plan;
 
 	// current step number
 	int stepNumber;

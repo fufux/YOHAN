@@ -138,6 +138,11 @@ Tetrahedron::Tetrahedron(int id, Volume* volume, vector<Point*> points)
 	
 }
 
+Tetrahedron::Tetrahedron()
+{
+	this->id = -1;
+}
+
 Tetrahedron::~Tetrahedron(void)
 {
 }
@@ -160,4 +165,14 @@ vector<Matrix3d> Tetrahedron::getCoreJacobian()
 double Tetrahedron::getMass()
 {
 	return mass;
+}
+
+int Tetrahedron::getID()
+{
+	return id;
+}
+
+Volume* Tetrahedron::getVolume()
+{
+	return volume;
 }

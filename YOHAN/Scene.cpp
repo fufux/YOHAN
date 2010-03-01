@@ -12,6 +12,10 @@ using namespace xercesc;
 
 Scene::Scene(void)
 {
+	plan = new Tetrahedron();
+	kerr = 100;
+	kdmp = 1000;
+	kfrc = 1000;
 }
 
 Scene::~Scene(void)
@@ -372,4 +376,164 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 	util::log( "Finished well !" );
 
 	return true;
+}
+
+void Scene::planCollisionResponse(vector<Tetrahedron*>* tets)
+{
+	Tetrahedron* tet;
+	Polyhedron p;
+	Point* pt;
+	vector<Point*> overPts, underPts;
+	vector<Point*>* pts;
+	vector<Vector3d*>* vertices;
+	vector<Face*>* faces = new vector<Face*>();
+	Vector3d* pI;
+	Face* face;
+	double xA,yA,zA,xB,yB,zB;
+	Vector3d* m[4][4];
+	// true for positive, false for negative
+	bool sign;
+	int ind;
+	for(int i=0; i<(int)tets->size(); i++){
+		overPts = vector<Point*>();
+		underPts = vector<Point*>();
+		// Construction of points below and over y=O
+		for(int j=0; j<4; j++){
+			tet = (*tets)[i];
+			pt = (*tets)[i]->getPoints()[j];
+			if(pt->getX()[1]<0)
+				underPts.push_back(pt);
+			else
+				overPts.push_back(pt);
+		}
+		// Construction of intersections points with y=o plan
+		for(int j=0; j<(int)underPts.size(); j++){
+			for(int k=0; k<(int)overPts.size(); k++){
+				pt = (*tets)[i]->getPoints()[j];
+				xA = pt->getX()[0];
+				yA = pt->getX()[1];
+				zA = pt->getX()[2];
+				pt = (*tets)[i]->getPoints()[k];
+				xB = pt->getX()[0];
+				yB = pt->getX()[1];
+				zB = pt->getX()[2];
+				pI = new Vector3d(xA + yA*(xB-xA)/(yA-yB), 0, zA + yA*(zB-zA)/(yA-yB));
+				m[j][k] = pI;
+				m[k][j] = pI;
+			}
+		}
+		// Fake collision
+		if(underPts.size()==0)
+			return;
+
+		// Constructions of overlaping polyhedron faces
+
+		pts = &(*tets)[i]->getPoints();
+		ind = (*tets)[i]->getID();
+		// First face: p2->p3->p1	
+		face = new Face(pts,1,2,0,(Vector3d***)m,ind);
+		if(face->size()>=3)
+			faces->push_back(face);
+		// Second face: p4->p2->p1
+		face = new Face(pts,3,1,0,(Vector3d***)m,ind);
+		if(face->size()>=3)
+			faces->push_back(face);
+		// Third face: p2->p4->p3
+		face = new Face(pts,3,1,0,(Vector3d***)m,ind);
+		if(face->size()>=3)
+			faces->push_back(face);
+		// Fourth face: p3->p4->p1
+		face = new Face(pts,3,1,0,(Vector3d***)m,ind);
+		if(face->size()>=3)
+			faces->push_back(face);
+		// The hidden face
+		if(underPts.size()==1){
+			vertices = new vector<Vector3d*>();
+			if((*pts)[0]->getX()[1]<0){		
+				vertices->push_back(m[0][1]);
+				vertices->push_back(m[0][3]);
+				vertices->push_back(m[0][2]);
+			}else if((*pts)[1]->getX()[1]<0){
+				vertices->push_back(m[1][2]);
+				vertices->push_back(m[1][3]);
+				vertices->push_back(m[1][0]);
+			}else if((*pts)[2]->getX()[1]<0){
+				vertices->push_back(m[2][3]);
+				vertices->push_back(m[2][1]);
+				vertices->push_back(m[2][0]);
+			}else if((*pts)[3]->getX()[1]<0){
+				vertices->push_back(m[3][1]);
+				vertices->push_back(m[3][2]);
+				vertices->push_back(m[3][0]);
+			}
+			face = new Face(vertices, ind);
+			faces->push_back(face);
+		}else if(underPts.size()==2){
+			vertices = new vector<Vector3d*>();
+			if((*pts)[0]->getX()[1]<0 && (*pts)[1]->getX()[1]<0){			
+				vertices->push_back(m[0][3]); 
+				vertices->push_back(m[0][2]); 
+				vertices->push_back(m[1][2]);
+				vertices->push_back(m[1][3]);
+			}else if((*pts)[0]->getX()[1]<0 && (*pts)[2]->getX()[1]<0){			
+				vertices->push_back(m[0][1]); 
+				vertices->push_back(m[0][3]); 
+				vertices->push_back(m[2][3]);
+				vertices->push_back(m[2][1]);
+			}else if((*pts)[0]->getX()[1]<0 && (*pts)[3]->getX()[1]<0){			
+				vertices->push_back(m[0][2]); 
+				vertices->push_back(m[0][1]); 
+				vertices->push_back(m[3][1]);
+				vertices->push_back(m[3][2]);
+			}else if((*pts)[1]->getX()[1]<0 && (*pts)[2]->getX()[1]<0){			
+				vertices->push_back(m[1][3]); 
+				vertices->push_back(m[1][0]); 
+				vertices->push_back(m[2][0]);
+				vertices->push_back(m[2][3]);
+			}else if((*pts)[1]->getX()[1]<0 && (*pts)[3]->getX()[1]<0){			
+				vertices->push_back(m[1][0]); 
+				vertices->push_back(m[1][2]); 
+				vertices->push_back(m[3][2]);
+				vertices->push_back(m[3][0]);
+			}else if((*pts)[2]->getX()[1]<0 && (*pts)[3]->getX()[1]<0){			
+				vertices->push_back(m[2][1]); 
+				vertices->push_back(m[2][0]); 
+				vertices->push_back(m[3][0]);
+				vertices->push_back(m[3][1]);
+			}
+
+		}else if(underPts.size()==3){
+			if((*pts)[0]->getX()[1]<0){
+				vertices = new vector<Vector3d*>();
+				vertices->push_back(m[0][2]);
+				vertices->push_back(m[0][3]);
+				vertices->push_back(m[0][1]);
+				face = new Face(vertices, ind);
+				faces->push_back(face);
+			}else if((*pts)[1]->getX()[1]<0){
+				vertices = new vector<Vector3d*>();
+				vertices->push_back(m[1][0]);
+				vertices->push_back(m[1][3]);
+				vertices->push_back(m[1][2]);
+				face = new Face(vertices, ind);
+				faces->push_back(face);
+			}else if((*pts)[2]->getX()[1]<0){
+				vertices = new vector<Vector3d*>();
+				vertices->push_back(m[2][0]);
+				vertices->push_back(m[2][1]);
+				vertices->push_back(m[2][3]);
+				face = new Face(vertices, ind);
+				faces->push_back(face);
+			}else if((*pts)[3]->getX()[1]<0){
+				vertices = new vector<Vector3d*>();
+				vertices->push_back(m[3][0]);
+				vertices->push_back(m[3][2]);
+				vertices->push_back(m[3][1]);
+				face = new Face(vertices, ind);
+				faces->push_back(face);
+			}
+		}
+		p = Polyhedron(faces, (*tets)[i], plan);
+		p.collisionForces(kerr,kdmp,kfrc);
+	}
 }

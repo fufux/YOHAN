@@ -11,12 +11,16 @@ class Tetrahedron
 {
 public:
 	Tetrahedron(int id, Volume* volume, vector<Point*> points);
+	// To construct a fake tetrahedron representing y=0 plan with id=-1
+	Tetrahedron();
 	~Tetrahedron(void);
 
 	vector<Point*> getPoints();
 	Matrix3d getBeta();
 	vector<Matrix3d> getCoreJacobian();
 	double getMass();
+	int getID();
+	Volume* getVolume();
 
 private:
 	int id;
