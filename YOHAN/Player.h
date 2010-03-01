@@ -11,7 +11,7 @@ struct FrameInfo
 {
 	s32 id;
 	double timestamp;
-	core::array<stringc> nodefiles, facefiles, elefiles;
+	core::array<stringc> nodefiles, facefiles, elefiles, bbfiles;
 };
 
 

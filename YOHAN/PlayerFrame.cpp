@@ -37,11 +37,13 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 		stringc nodeFileName = info.nodefiles[o];
 		stringc faceFileName = info.facefiles[o];
 		stringc eleFileName = info.elefiles[o];
+		stringc bbFileName = info.bbfiles[o];
 
 		// LOADING
 		ifstream innode;
 		ifstream inele;
 		ifstream inface;
+		ifstream inbb;
 
 		int nb_of_points, nb_of_tetrahedra, nb_of_faces;
 		int p1, p2, p3, p4;
@@ -332,6 +334,120 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 
 		if (error)
 			continue;
+
+		// -----------------------------------------------------------------------
+		// - BOUNDINGBOXES -------------------------------------------------------
+		// -----------------------------------------------------------------------
+		if (bbFileName.size() > 0)
+		{
+			inbb.open(bbFileName.c_str(), ios::in | ios::binary); // opens the nodes file
+			if (!inbb || !inbb.good())
+			{
+				device->getLogger()->log(( stringc("ERROR: This bb file could not be opened : ") + bbFileName ).c_str());
+				buffer->drop();
+				continue;
+			}
+
+			// default color
+			video::SColor clr(255,0,255,0);
+
+			// lets add the vertices to the buffer
+			SMeshBuffer* bb_buffer = new SMeshBuffer();
+			double x1, y1, z1, x2, y2, z2;
+			int bb_offset = 0;
+
+			inbb.read(reinterpret_cast < char * > (&x1), sizeof(double));
+			inbb.read(reinterpret_cast < char * > (&y1), sizeof(double));
+			inbb.read(reinterpret_cast < char * > (&z1), sizeof(double));
+			inbb.read(reinterpret_cast < char * > (&x2), sizeof(double));
+			inbb.read(reinterpret_cast < char * > (&y2), sizeof(double));
+			inbb.read(reinterpret_cast < char * > (&z2), sizeof(double));
+			while (!inbb.eof() && inbb.good())
+			{
+				bb_buffer->Vertices.push_back(video::S3DVertex((f32)x1, (f32)y1, (f32)z1, -1,-1,-1, clr, 0,0));//0
+				bb_buffer->Vertices.push_back(video::S3DVertex((f32)x2, (f32)y1, (f32)z1, 1,-1,-1, clr, 0,0));//1
+				bb_buffer->Vertices.push_back(video::S3DVertex((f32)x2, (f32)y1, (f32)z2, 1,-1,1, clr, 0,0));//2
+				bb_buffer->Vertices.push_back(video::S3DVertex((f32)x1, (f32)y1, (f32)z2, -1,-1,1, clr, 0,0));//3
+				bb_buffer->Vertices.push_back(video::S3DVertex((f32)x1, (f32)y2, (f32)z1, -1,1,-1, clr, 0,0));//4
+				bb_buffer->Vertices.push_back(video::S3DVertex((f32)x2, (f32)y2, (f32)z1, 1,1,-1, clr, 0,0));//5
+				bb_buffer->Vertices.push_back(video::S3DVertex((f32)x2, (f32)y2, (f32)z2, 1,1,1, clr, 0,0));//6
+				bb_buffer->Vertices.push_back(video::S3DVertex((f32)x1, (f32)y2, (f32)z2, -1,1,1, clr, 0,0));//7
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+0));
+				bb_buffer->Indices.push_back((u32)(bb_offset+1));
+				bb_buffer->Indices.push_back((u32)(bb_offset+2));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+0));
+				bb_buffer->Indices.push_back((u32)(bb_offset+2));
+				bb_buffer->Indices.push_back((u32)(bb_offset+3));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+3));
+				bb_buffer->Indices.push_back((u32)(bb_offset+2));
+				bb_buffer->Indices.push_back((u32)(bb_offset+6));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+3));
+				bb_buffer->Indices.push_back((u32)(bb_offset+6));
+				bb_buffer->Indices.push_back((u32)(bb_offset+7));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+7));
+				bb_buffer->Indices.push_back((u32)(bb_offset+6));
+				bb_buffer->Indices.push_back((u32)(bb_offset+5));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+7));
+				bb_buffer->Indices.push_back((u32)(bb_offset+5));
+				bb_buffer->Indices.push_back((u32)(bb_offset+4));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+0));
+				bb_buffer->Indices.push_back((u32)(bb_offset+1));
+				bb_buffer->Indices.push_back((u32)(bb_offset+4));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+1));
+				bb_buffer->Indices.push_back((u32)(bb_offset+5));
+				bb_buffer->Indices.push_back((u32)(bb_offset+4));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+1));
+				bb_buffer->Indices.push_back((u32)(bb_offset+2));
+				bb_buffer->Indices.push_back((u32)(bb_offset+6));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+1));
+				bb_buffer->Indices.push_back((u32)(bb_offset+6));
+				bb_buffer->Indices.push_back((u32)(bb_offset+5));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+0));
+				bb_buffer->Indices.push_back((u32)(bb_offset+3));
+				bb_buffer->Indices.push_back((u32)(bb_offset+7));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+0));
+				bb_buffer->Indices.push_back((u32)(bb_offset+7));
+				bb_buffer->Indices.push_back((u32)(bb_offset+4));
+
+				bb_offset += 8;
+
+				inbb.read(reinterpret_cast < char * > (&x1), sizeof(double));
+				inbb.read(reinterpret_cast < char * > (&y1), sizeof(double));
+				inbb.read(reinterpret_cast < char * > (&z1), sizeof(double));
+				inbb.read(reinterpret_cast < char * > (&x2), sizeof(double));
+				inbb.read(reinterpret_cast < char * > (&y2), sizeof(double));
+				inbb.read(reinterpret_cast < char * > (&z2), sizeof(double));
+			}
+
+			inbb.close();
+			inbb.clear();
+
+			SMesh* bb_mesh = new SMesh;
+			bb_mesh->addMeshBuffer(bb_buffer);
+			IMeshSceneNode* bb_node = smgr->addMeshSceneNode( bb_mesh );
+			bb_mesh->drop();
+			if (bb_node)
+			{
+				bb_node->setVisible(false);
+				bb_node->setMaterialFlag(EMF_LIGHTING, false);
+				bb_node->setMaterialFlag(EMF_WIREFRAME, true);
+				this->boundingBoxes.push_back( bb_node );
+			}
+		}
+		// -----------------------------------------------------------------------
+
 
 		// lets recalculate the bounding box and create the mesh
 		for (u32 j=0; j < buffer->Vertices.size(); ++j)

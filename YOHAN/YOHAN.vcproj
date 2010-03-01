@@ -184,6 +184,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BoundingBox.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CollisionPoint.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\EditorEventReceiver.cpp"
 				>
 			</File>
@@ -269,6 +277,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\BoundingBox.h"
+				>
+			</File>
 			<File
 				RelativePath=".\Editor.h"
 				>

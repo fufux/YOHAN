@@ -30,8 +30,11 @@ public:
 	static core::array<scene::SMeshBuffer*> lastBuffers;
 
 private:
-	// this is the main node in which everything is displayed
+	// this is the list of nodes which will be displayed. One node <=> one volume
 	core::array<scene::IMeshSceneNode*> nodes;
+
+	// this is the list of boundingBoxes which will be displayed. One node <=> one boundingBoxes
+	core::array<scene::IMeshSceneNode*> boundingBoxes;
 
 	// this if the files names in which we are getting mesh info for the loading frame
 	s32 id;

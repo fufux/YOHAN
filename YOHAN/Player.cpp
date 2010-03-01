@@ -289,6 +289,7 @@ bool Player::load(irr::core::stringc filename)
 					framesFileNames.getLast().nodefiles.push_back( xml->getAttributeValue(L"nodefile") );
 					framesFileNames.getLast().facefiles.push_back( xml->getAttributeValue(L"facefile") );
 					framesFileNames.getLast().elefiles.push_back( xml->getAttributeValue(L"elefile") );
+					framesFileNames.getLast().bbfiles.push_back( "" );
 				}
 			}
 		default:
