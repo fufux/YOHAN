@@ -180,15 +180,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\Editor.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\BoundingBox.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\CollisionPoint.cpp"
+				RelativePath=".\CollisionTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Editor.cpp"
 				>
 			</File>
 			<File

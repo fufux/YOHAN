@@ -4,6 +4,7 @@
 #include "Matrix.h"
 #include "Point.h"
 #include "Tetrahedron.h"
+#include "BoundingBox.h"
 #include <Eigen/Eigen>
 USING_PART_OF_NAMESPACE_EIGEN
 
@@ -40,6 +41,8 @@ public:
 	matrix::SymmetricMumpsSquareSparseMatrix* getC();
 	double* getForceField();
 	double* getForces();
+	vector<Tetrahedron*>& getTetrahedra();
+	BoundingBox* getMasterBoundingBox();
 
 	void collisionBidon();
 
@@ -47,6 +50,8 @@ private:
 	int id;
 
 	Scene* scene;
+
+	BoundingBox* bb;
 
 	// this is the list of all points in this volume. Note this is redundent data.
 	vector<Point*> points;

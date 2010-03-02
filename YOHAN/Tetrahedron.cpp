@@ -41,7 +41,6 @@ Tetrahedron::Tetrahedron(int id, Volume* volume, vector<Point*> points)
 	beta.computeInverse( &beta);
 
 	// compute core jacobian
-	Vector3d n[4];
 	double* x0 = points[0]->getX();
 	double* x1 = points[1]->getX();
 	double* x2 = points[2]->getX();
@@ -147,17 +146,17 @@ Tetrahedron::~Tetrahedron(void)
 {
 }
 
-vector<Point*> Tetrahedron::getPoints()
+vector<Point*>& Tetrahedron::getPoints()
 {
 	return points;
 }
 
-Matrix3d Tetrahedron::getBeta()
+Matrix3d& Tetrahedron::getBeta()
 {
 	return beta;
 }
 
-vector<Matrix3d> Tetrahedron::getCoreJacobian()
+vector<Matrix3d>& Tetrahedron::getCoreJacobian()
 {
 	return coreJacobian;
 }
@@ -175,4 +174,9 @@ int Tetrahedron::getID()
 Volume* Tetrahedron::getVolume()
 {
 	return volume;
+}
+
+Vector3d& Tetrahedron::getN(int i)
+{
+	return n[i];
 }

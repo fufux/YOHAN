@@ -77,7 +77,10 @@ BoundingBox::BoundingBox(BoundingBox* parent, vector<Tetrahedron*> tetrahedra, b
 				tcenter[1] += x[1];
 				tcenter[2] += x[2];
 			}
-			if (tcenter[xyz] < center[xyz]) 
+			tcenter[0] /= 4;
+			tcenter[1] /= 4;
+			tcenter[2] /= 4;
+			if (tcenter[xyz] < center[xyz])
 				tetrahedra1.push_back( tetrahedra[i] ); // add tetrahedron to first child
 			else
 				tetrahedra2.push_back( tetrahedra[i] ); // add tetrahedron to second child
@@ -86,7 +89,6 @@ BoundingBox::BoundingBox(BoundingBox* parent, vector<Tetrahedron*> tetrahedra, b
 		this->child1 = new BoundingBox(this, tetrahedra1, true);
 		this->child2 = new BoundingBox(this, tetrahedra2, false);
 
-		delete[] x;
 		delete[] center;
 		delete[] tcenter;
 	}
@@ -110,8 +112,6 @@ BoundingBox::BoundingBox(BoundingBox* parent, vector<Tetrahedron*> tetrahedra, b
 			if (x[2] < z1) z1 = x[2];
 			else if (x[2] > z2) z2 = x[2];
 		}
-
-		delete[] x;
 	}
 }
 
@@ -229,8 +229,6 @@ void BoundingBox::recalculateBoundingBoxes()
 			if (x[2] < z1) z1 = x[2];
 			else if (x[2] > z2) z2 = x[2];
 		}
-
-		delete[] x;
 	}
 }
 
@@ -323,20 +321,16 @@ void BoundingBox::saveToFile(ofstream &fp)
 	// write my children
 	if (!this->isLeaf())
 	{
-		child1->saveToFile(fp);
-		child2->saveToFile(fp);
+		//child1->saveToFile(fp);
+		//child2->saveToFile(fp);
 	}
 }
 
 
-void BoundingBox::saveAllToFile(std::string dir, int id)
+void BoundingBox::saveAllToFile(std::string filename)
 {
-	// .bbb
-	std::stringstream sstream;
-	sstream << dir.c_str() << "/" << id << ".bbb";
-
 	// output
-	ofstream fp (sstream.str().c_str(), ios::out | ios::binary);
+	ofstream fp (filename.c_str(), ios::out | ios::binary);
 
 	this->saveToFile(fp);
 

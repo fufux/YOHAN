@@ -1026,8 +1026,17 @@ bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSc
 		{
 			device->getLogger()->log(
 				(stringc("Call simulate(")+simulatedSceneOutDir+", "+stringc(deltaT)+", "+stringc(nbFrame)+")").c_str());
+			long tstart, tend, tdif;
+			tstart = GetTickCount();
+			
 			// launch the simulation
 			scene->simulate(ssod, deltaT, nbFrame);
+
+			// display time
+			tend = GetTickCount();
+			tdif = tend - tstart; //will now have the time elapsed since the start of the call
+			device->getLogger()->log(
+				(stringc("Simulation finished well in ")+stringc(tdif)+"ms").c_str());
 		}
 		else
 		{

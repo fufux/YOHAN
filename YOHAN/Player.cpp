@@ -286,10 +286,10 @@ bool Player::load(irr::core::stringc filename)
 				}
 				else if (stringw("object") == xml->getNodeName())
 				{
-					framesFileNames.getLast().nodefiles.push_back( xml->getAttributeValue(L"nodefile") );
-					framesFileNames.getLast().facefiles.push_back( xml->getAttributeValue(L"facefile") );
-					framesFileNames.getLast().elefiles.push_back( xml->getAttributeValue(L"elefile") );
-					framesFileNames.getLast().bbfiles.push_back( "" );
+					framesFileNames.getLast().nodefiles.push_back( xml->getAttributeValueSafe(L"nodefile") );
+					framesFileNames.getLast().facefiles.push_back( xml->getAttributeValueSafe(L"facefile") );
+					framesFileNames.getLast().elefiles.push_back( xml->getAttributeValueSafe(L"elefile") );
+					framesFileNames.getLast().bbfiles.push_back( xml->getAttributeValueSafe(L"bbfile") );
 				}
 			}
 		default:

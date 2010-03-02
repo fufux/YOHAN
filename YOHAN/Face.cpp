@@ -38,11 +38,11 @@ Face::Face(vector<Point*>* pts, int i1, int i2, int i3, Vector3d*** m, int _owne
 		pI = new Vector3d(p2->getX()[0],p2->getX()[1],p2->getX()[2]);
 		vertices->push_back(pI);
 		sign = false;
-	}else if(p2->getX()[1]>0 && !sign){
+	}else if(p2->getX()[1]>=0 && !sign){
 		// there is a y=0 point, we add the point between p2 and p3
 		vertices->push_back(m[i1][i2]);
 		sign = true;
-	}else if(p2->getX()[1]>0 && sign){
+	}else if(p2->getX()[1]>=0 && sign){
 		// no point to add
 		sign = true;
 	}
@@ -57,16 +57,16 @@ Face::Face(vector<Point*>* pts, int i1, int i2, int i3, Vector3d*** m, int _owne
 		pI = new Vector3d(p3->getX()[0],p3->getX()[1],p3->getX()[2]);
 		vertices->push_back(pI);
 		sign = false;
-	}else if(p3->getX()[1]>0 && !sign){
+	}else if(p3->getX()[1]>=0 && !sign){
 		// there is a y=0 point, we add the point between p3 and p1
 		vertices->push_back(m[i2][i3]);
 		sign = true;
-	}else if(p3->getX()[1]>0 && sign){
+	}else if(p3->getX()[1]>=0 && sign){
 		// no point to add
 		sign = true;
 	}
 	// Finish the loop
-	if((p3->getX()[1]<0 && sign) || (p3->getX()[1]>0 && !sign)){
+	if((p1->getX()[1]<0 && sign) || (p1->getX()[1]>=0 && !sign)){
 		// there is a y=0 point, we add the point between p1 and p2
 		vertices->push_back(m[i3][i1]);
 	}

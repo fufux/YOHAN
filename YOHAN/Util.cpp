@@ -57,9 +57,11 @@ double util::normMinus(double** x, double** y)
 	return norm;
 }
 
-void util::polarDecomposition(Matrix3d* x)
+void util::polarDecomposition(Matrix3d& f,Matrix3d& q)
 {
 	Eigen::SVD<Matrix3d> svd;
-	svd.compute(*x);
-	*x = svd.matrixU() * svd.matrixV().adjoint();
+	svd.compute(f);
+	q = (svd.matrixU() * svd.matrixV().adjoint());
+	//Matrix3d y;
+	//svd.computePositiveUnitary(x,&y);
 }

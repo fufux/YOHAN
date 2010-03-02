@@ -338,7 +338,7 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 		// -----------------------------------------------------------------------
 		// - BOUNDINGBOXES -------------------------------------------------------
 		// -----------------------------------------------------------------------
-		if (bbFileName.size() > 0)
+		if (bbFileName != "")
 		{
 			inbb.open(bbFileName.c_str(), ios::in | ios::binary); // opens the nodes file
 			if (!inbb || !inbb.good())
@@ -421,6 +421,55 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 				bb_buffer->Indices.push_back((u32)(bb_offset+7));
 				bb_buffer->Indices.push_back((u32)(bb_offset+4));
 
+				// back
+				bb_buffer->Indices.push_back((u32)(bb_offset+0));
+				bb_buffer->Indices.push_back((u32)(bb_offset+2));
+				bb_buffer->Indices.push_back((u32)(bb_offset+1));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+0));
+				bb_buffer->Indices.push_back((u32)(bb_offset+3));
+				bb_buffer->Indices.push_back((u32)(bb_offset+2));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+3));
+				bb_buffer->Indices.push_back((u32)(bb_offset+6));
+				bb_buffer->Indices.push_back((u32)(bb_offset+2));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+3));
+				bb_buffer->Indices.push_back((u32)(bb_offset+7));
+				bb_buffer->Indices.push_back((u32)(bb_offset+6));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+7));
+				bb_buffer->Indices.push_back((u32)(bb_offset+5));
+				bb_buffer->Indices.push_back((u32)(bb_offset+6));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+7));
+				bb_buffer->Indices.push_back((u32)(bb_offset+4));
+				bb_buffer->Indices.push_back((u32)(bb_offset+5));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+0));
+				bb_buffer->Indices.push_back((u32)(bb_offset+4));
+				bb_buffer->Indices.push_back((u32)(bb_offset+1));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+1));
+				bb_buffer->Indices.push_back((u32)(bb_offset+4));
+				bb_buffer->Indices.push_back((u32)(bb_offset+5));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+1));
+				bb_buffer->Indices.push_back((u32)(bb_offset+6));
+				bb_buffer->Indices.push_back((u32)(bb_offset+2));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+1));
+				bb_buffer->Indices.push_back((u32)(bb_offset+5));
+				bb_buffer->Indices.push_back((u32)(bb_offset+6));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+0));
+				bb_buffer->Indices.push_back((u32)(bb_offset+7));
+				bb_buffer->Indices.push_back((u32)(bb_offset+3));
+
+				bb_buffer->Indices.push_back((u32)(bb_offset+0));
+				bb_buffer->Indices.push_back((u32)(bb_offset+4));
+				bb_buffer->Indices.push_back((u32)(bb_offset+7));
+
 				bb_offset += 8;
 
 				inbb.read(reinterpret_cast < char * > (&x1), sizeof(double));
@@ -500,18 +549,24 @@ PlayerFrame::~PlayerFrame(void)
 {
 	for (u32 i=0; i < nodes.size(); i++)
 		nodes[i]->remove();
+	for (u32 i=0; i < boundingBoxes.size(); i++)
+		boundingBoxes[i]->remove();
 }
 
 void PlayerFrame::display()
 {
 	for (u32 i=0; i < nodes.size(); i++)
 		nodes[i]->setVisible(true);
+	for (u32 i=0; i < boundingBoxes.size(); i++)
+		boundingBoxes[i]->setVisible(true);
 }
 
 void PlayerFrame::hide()
 {
 	for (u32 i=0; i < nodes.size(); i++)
 		nodes[i]->setVisible(false);
+	for (u32 i=0; i < boundingBoxes.size(); i++)
+		boundingBoxes[i]->setVisible(false);
 }
 
 core::array<scene::IMeshSceneNode*> PlayerFrame::getNodes()

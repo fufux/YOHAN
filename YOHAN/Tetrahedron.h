@@ -15,12 +15,13 @@ public:
 	Tetrahedron();
 	~Tetrahedron(void);
 
-	vector<Point*> getPoints();
-	Matrix3d getBeta();
-	vector<Matrix3d> getCoreJacobian();
+	vector<Point*>& getPoints();
+	Matrix3d& getBeta();
+	vector<Matrix3d>& getCoreJacobian();
 	double getMass();
 	int getID();
 	Volume* getVolume();
+	Vector3d& getN(int i);
 
 private:
 	int id;
@@ -29,6 +30,7 @@ private:
 
 	// list of the four points making this tetrahedron
 	vector<Point*> points; // array of size 4
+	Vector3d n[4]; // ni
 
 	// this is the beta in equation (1) of main article
 	Matrix3d beta; // 3x3

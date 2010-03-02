@@ -44,6 +44,17 @@ double* Volume::getForces()
 	return forces;
 }
 
+vector<Tetrahedron*>& Volume::getTetrahedra()
+{
+	return tetrahedra;
+}
+
+
+BoundingBox* Volume::getMasterBoundingBox()
+{
+	return bb;
+}
+
 
 bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFile, Material material, double* v)
 {
@@ -166,6 +177,9 @@ bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFil
 	for (int i=0; i < order; i++)
 		forces[i] = 0;
 
+	// BoundingBox
+	bb = new BoundingBox(NULL, tetrahedra, false);
+
 	return true;
 }
 
@@ -259,6 +273,15 @@ vector<std::string> Volume::save(std::string dir)
 	}
 	files.push_back(lastOutputFacesFileName);
 
+
+	// .bbb
+	std::stringstream sstream4;
+	sstream4 << dir.c_str() << "/" << id << ".bbb";
+
+	// output
+	bb->saveAllToFile(sstream4.str());
+	files.push_back(sstream4.str());
+
 	return files;
 }
 
@@ -266,7 +289,14 @@ vector<std::string> Volume::save(std::string dir)
 void Volume::generateK()
 {
 	K->clear();
-	Matrix3d dx,q,jac,tmp;
+	Matrix3d dx,jac,tmp;
+	Matrix3d& f = Matrix3d();
+	Matrix3d& q = Matrix3d();
+	Vector3d fi;
+	int ri,ci,ind;
+	for (int i=0; i<(int)(3*points.size()-2); i+=3)
+		cout<<forces[i]<<", "<<forces[i+1]<<", "<<forces[i+2]<<endl;
+	cout<<endl;
 
 	for(int t=0;t<(int)tetrahedra.size();t++){
 		vector<Point*>& pts = tetrahedra[t]->getPoints();
@@ -286,15 +316,23 @@ void Volume::generateK()
 		dx(1,2) = x4[1]-x1[1];
 		dx(2,2) = x4[2]-x1[2];
 
-		q = dx * tetrahedra[t]->getBeta();
-		util::polarDecomposition( &q );
+		f = dx * tetrahedra[t]->getBeta();
+		//cout << q << endl<<endl;
+		util::polarDecomposition( f, q);
+		
+		// F~ = Q'.F
+		f = q.adjoint() * f;
+		// esp~ = 1/2(F+F')-I
+		f = (f+f.adjoint())/2 - Matrix3d::Identity();
+		// sigma = lambda * Tr(eps)I +2.mu.eps
+		f = getMaterial()->lambda * f.trace() * Matrix3d::Identity() + 2 * getMaterial()->mu * f;
 
 		for (int i = 0; i < 4; i++)
 		{
-			int ri = pts[i]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
+			ri = pts[i]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
 			for (int j = 0; j < 4; j++)
 			{
-				int ci = pts[j]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
+				ci = pts[j]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
 				
 				// Compute Jij
 				tmp = q * tetrahedra[t]->getCoreJacobian()[i*4+j];
@@ -312,6 +350,14 @@ void Volume::generateK()
 				K->addAndSetValue(ri + 2, ci + 2, jac(2,2));
 
 			}
+
+			// elastic forces exerted byt the element on the node i
+			ind = pts[i]->getID() * 3;
+			//fi = Q*sigma*ni
+			fi = q * f * tetrahedra[t]->getN(i);
+			forces[ind] += fi[0];
+			forces[ind+1] += fi[1];
+			forces[ind+2] += fi[2];
 		}
 	}
 }

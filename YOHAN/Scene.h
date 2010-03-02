@@ -4,6 +4,7 @@
 #include "Volume.h"
 #include "Util.h"
 #include "Polyhedron.h"
+#include "BoundingBox.h"
 
 class Scene
 {
@@ -27,13 +28,15 @@ private:
 	double kfrc;
 	std::string simulatedSceneOutDir;
 
-	Polyhedron* plan;
+	Tetrahedron* plan;
 
 	// current step number
 	int stepNumber;
 
 	// list of all volumes in the scene
 	vector<Volume*> volumes;
+
+	void handleCollisions();
 
 	void saveStep(std::string filename);
 };

@@ -5,6 +5,7 @@
 #include <xercesc/util/XMLString.hpp>
 #include <xercesc/util/PlatformUtils.hpp>	
 #include "Scene.h"
+#include "BoundingBox.h"
 
 using namespace xercesc;
 
@@ -13,9 +14,9 @@ using namespace xercesc;
 Scene::Scene(void)
 {
 	plan = new Tetrahedron();
-	kerr = 100;
-	kdmp = 1000;
-	kfrc = 1000;
+	kerr = 0.1;
+	kdmp = 500;
+	kfrc = 100;
 }
 
 Scene::~Scene(void)
@@ -300,7 +301,8 @@ void Scene::saveStep(std::string filename)
 	{
 		vector<std::string> files;
 		files = volumes[i]->save(dir.str());
-		fp << "<object nodefile=\"" << files[0] << "\" facefile=\"" << files[2] << "\" elefile=\"" << files[1] << "\" />" << endl;
+		fp << "<object nodefile=\"" << files[0] << "\" facefile=\"" << files[2] << "\" elefile=\"" << files[1] << "\" bbfile=\"" << files[3];
+		fp << "\" />" << endl;
 	}
 
 	fp << "</frame>" << endl;
@@ -342,8 +344,9 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		currentTime += deltaT;
 
 		// compute
+		handleCollisions();
 		for (int i=0; i < (int)volumes.size(); i++) {
-			volumes[i]->collisionBidon();
+			//volumes[i]->collisionBidon();
 			volumes[i]->evolve(deltaT);
 		}
 
@@ -384,47 +387,57 @@ void Scene::planCollisionResponse(vector<Tetrahedron*>* tets)
 	Polyhedron p;
 	Point* pt;
 	vector<Point*> overPts, underPts;
+	vector<int> overPtsInds, underPtsInds;
 	vector<Point*>* pts;
 	vector<Vector3d*>* vertices;
 	vector<Face*>* faces = new vector<Face*>();
 	Vector3d* pI;
 	Face* face;
 	double xA,yA,zA,xB,yB,zB;
-	Vector3d* m[4][4];
+	Vector3d*** m;
+	m = new Vector3d**[4];
+	for (int i=0;i<4; i++)
+		m[i] = new Vector3d*[4];
+
 	// true for positive, false for negative
-	bool sign;
 	int ind;
 	for(int i=0; i<(int)tets->size(); i++){
+		faces->clear();
 		overPts = vector<Point*>();
 		underPts = vector<Point*>();
+		overPtsInds = vector<int>();
+		underPtsInds = vector<int>();
 		// Construction of points below and over y=O
 		for(int j=0; j<4; j++){
 			tet = (*tets)[i];
 			pt = (*tets)[i]->getPoints()[j];
-			if(pt->getX()[1]<0)
+			if(pt->getX()[1]<0){
 				underPts.push_back(pt);
-			else
+				underPtsInds.push_back(j);	
+			}else{
 				overPts.push_back(pt);
+				overPtsInds.push_back(j);
+			}
 		}
 		// Construction of intersections points with y=o plan
 		for(int j=0; j<(int)underPts.size(); j++){
 			for(int k=0; k<(int)overPts.size(); k++){
-				pt = (*tets)[i]->getPoints()[j];
+				pt = underPts[j];
 				xA = pt->getX()[0];
 				yA = pt->getX()[1];
 				zA = pt->getX()[2];
-				pt = (*tets)[i]->getPoints()[k];
+				pt = overPts[k];
 				xB = pt->getX()[0];
 				yB = pt->getX()[1];
 				zB = pt->getX()[2];
 				pI = new Vector3d(xA + yA*(xB-xA)/(yA-yB), 0, zA + yA*(zB-zA)/(yA-yB));
-				m[j][k] = pI;
-				m[k][j] = pI;
+				m[underPtsInds[j]][overPtsInds[k]] = pI;
+				m[overPtsInds[k]][underPtsInds[j]] = pI;
 			}
 		}
 		// Fake collision
 		if(underPts.size()==0)
-			return;
+			continue;
 
 		// Constructions of overlaping polyhedron faces
 
@@ -439,11 +452,11 @@ void Scene::planCollisionResponse(vector<Tetrahedron*>* tets)
 		if(face->size()>=3)
 			faces->push_back(face);
 		// Third face: p2->p4->p3
-		face = new Face(pts,3,1,0,(Vector3d***)m,ind);
+		face = new Face(pts,1,3,2,(Vector3d***)m,ind);
 		if(face->size()>=3)
 			faces->push_back(face);
 		// Fourth face: p3->p4->p1
-		face = new Face(pts,3,1,0,(Vector3d***)m,ind);
+		face = new Face(pts,2,3,0,(Vector3d***)m,ind);
 		if(face->size()>=3)
 			faces->push_back(face);
 		// The hidden face
@@ -501,39 +514,46 @@ void Scene::planCollisionResponse(vector<Tetrahedron*>* tets)
 				vertices->push_back(m[3][0]);
 				vertices->push_back(m[3][1]);
 			}
-
+			face = new Face(vertices, ind);
+			faces->push_back(face);
 		}else if(underPts.size()==3){
-			if((*pts)[0]->getX()[1]<0){
-				vertices = new vector<Vector3d*>();
+			vertices = new vector<Vector3d*>();
+			if((*pts)[0]->getX()[1]>=0){
 				vertices->push_back(m[0][2]);
 				vertices->push_back(m[0][3]);
 				vertices->push_back(m[0][1]);
-				face = new Face(vertices, ind);
-				faces->push_back(face);
-			}else if((*pts)[1]->getX()[1]<0){
-				vertices = new vector<Vector3d*>();
+			}else if((*pts)[1]->getX()[1]>=0){
 				vertices->push_back(m[1][0]);
 				vertices->push_back(m[1][3]);
 				vertices->push_back(m[1][2]);
-				face = new Face(vertices, ind);
-				faces->push_back(face);
-			}else if((*pts)[2]->getX()[1]<0){
-				vertices = new vector<Vector3d*>();
+			}else if((*pts)[2]->getX()[1]>=0){
 				vertices->push_back(m[2][0]);
 				vertices->push_back(m[2][1]);
 				vertices->push_back(m[2][3]);
-				face = new Face(vertices, ind);
-				faces->push_back(face);
-			}else if((*pts)[3]->getX()[1]<0){
-				vertices = new vector<Vector3d*>();
+			}else if((*pts)[3]->getX()[1]>=0){
 				vertices->push_back(m[3][0]);
 				vertices->push_back(m[3][2]);
 				vertices->push_back(m[3][1]);
-				face = new Face(vertices, ind);
-				faces->push_back(face);
 			}
+			face = new Face(vertices, ind);
+			faces->push_back(face);
 		}
 		p = Polyhedron(faces, (*tets)[i], plan);
 		p.collisionForces(kerr,kdmp,kfrc);
 	}
+	delete[] m;
+}
+
+
+void Scene::handleCollisions()
+{
+	std::vector<Tetrahedron*> *found = new std::vector<Tetrahedron*>();
+	for (int i=0; i < (int)volumes.size(); i++) {
+		volumes[i]->getMasterBoundingBox()->recalculateBoundingBoxes();
+	}
+	for (int i=0; i < (int)volumes.size(); i++) {
+		volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(0, found);
+	}
+	planCollisionResponse(found);
+	delete found;
 }

@@ -14,5 +14,5 @@ namespace util
 	double norm(double* x);
 	double norm(double** x);
 	double normMinus(double** x, double** y);
-	void polarDecomposition(Matrix3d* x);
+	void polarDecomposition(Matrix3d& f,Matrix3d& q);
 }

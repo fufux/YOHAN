@@ -10,8 +10,8 @@ Polyhedron::Polyhedron(vector<Face*>* faces, Tetrahedron* t1, Tetrahedron* t2)
 	this->faces = faces;
 	parents.push_back(t1);
 	parents.push_back(t2);
-	calcCenter();
 	volume = this->calcVolume();
+	calcCenter();
 }
 
 Polyhedron::~Polyhedron(void)
@@ -85,12 +85,13 @@ Vector3d* Polyhedron::calcDir(int owner)
 
 void Polyhedron::calcCenter()
 {
+	center = Vector3d(0,0,0);
 	Vector3d q = *(*(*faces)[0])[0];
 	Vector3d tmp1;
 	Vector3d tmp2;
 	Vector3d pt;
 	double vol;
-	for(int i=0; i<(int)(*faces).size(); i++){
+	for(int i=0; i<(int)faces->size(); i++){
 		for(int j=2; j<(*faces)[i]->size(); j++){
 			tmp1 = *(*(*faces)[i])[j]-*(*(*faces)[i])[0];
 			tmp2 = *(*(*faces)[i])[j-1]-*(*(*faces)[i])[0];
@@ -101,7 +102,7 @@ void Polyhedron::calcCenter()
 			center = center + pt;
 		}
 	}
-	vol = this->calcVolume();
+	vol = volume;
 	center = center/(4*vol);
 }
 
@@ -233,13 +234,13 @@ void Polyhedron::collisionForces(double kerr, double kdmp, double kfrc)
 			Vector3d v = Vector3d::Zero();
 			// Only the velocity relative to y axe
 			for(int j=0;j<4;j++){
-				v[2] += (*bB)[j]*(*ptsB)[j]->getV()[2];
+				v[1] += (*bB)[j]*(*ptsB)[j]->getV()[1];
 			}
 			k = v.dot(fB);
 			fdmpB = -kdmp * vol * k * fB;
 
 			// Ffrc calcul
-			v = Vector3d::Zero();
+			ffrcB = Vector3d::Zero();
 			k = -kfrc*(ferrB.norm());
 			for(int j=0;j<4;j++){
 				v[0] = (*ptsB)[j]->getV()[0];
@@ -266,13 +267,13 @@ void Polyhedron::collisionForces(double kerr, double kdmp, double kfrc)
 			Vector3d v = Vector3d::Zero();
 			// Only the velocity relative to y axe
 			for(int j=0;j<4;j++){
-				v[2] += (*bA)[j]*(*ptsA)[j]->getV()[2];
+				v[1] += (*bA)[j]*(*ptsA)[j]->getV()[1];
 			}
 			k = v.dot(fA);
 			fdmpA = -kdmp * vol * k * fA;
 
 			// Ffrc calcul
-			v = Vector3d::Zero();
+			ffrcA = Vector3d::Zero();
 			k = -kfrc*(ferrA.norm());
 			for(int j=0;j<4;j++){
 				v[0] = (*ptsA)[j]->getV()[0];

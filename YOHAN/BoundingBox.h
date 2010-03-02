@@ -30,7 +30,7 @@ public:
 	void getCollidingTetrahedra(double y, std::vector<Tetrahedron*> *found);
 
 	// save this bounding box and his children in a file
-	void saveAllToFile(std::string dir, int id);
+	void saveAllToFile(std::string filename);
 
 	bool is1();
 	bool is2();
