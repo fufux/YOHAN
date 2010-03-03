@@ -15,7 +15,7 @@ Scene::Scene(void)
 {
 	plan = new Tetrahedron();
 	kerr = 1;
-	kdmp = 50000;
+	kdmp = 70000;
 	kfrc = 4000;
 }
 
