@@ -1114,6 +1114,18 @@ bool Editor::tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir,
 		xml->writeElement(L"facefile", true, L"file", facefile.c_str());
 		xml->writeLineBreak();
 
+		xml->writeElement(L"initialposition", true,
+			L"x", stringw( nodes[i]->getPosition().X ).c_str(),
+			L"y", stringw( nodes[i]->getPosition().Y ).c_str(),
+			L"z", stringw( nodes[i]->getPosition().Z ).c_str());
+		xml->writeLineBreak();
+
+		xml->writeElement(L"initialrotation", true,
+			L"x", stringw( degToRad(nodes[i]->getRotation().X) ).c_str(),
+			L"y", stringw( degToRad(nodes[i]->getRotation().Y) ).c_str(),
+			L"z", stringw( degToRad(nodes[i]->getRotation().Z) ).c_str());
+		xml->writeLineBreak();
+
 		xml->writeElement(L"initialspeed", true,
 			L"x", stringw( initialSpeeds[i].X ).c_str(),
 			L"y", stringw( initialSpeeds[i].Y ).c_str(),
@@ -1207,7 +1219,7 @@ IMesh* Editor::getMeshWithAbsoluteCoordinates(IMeshSceneNode* node)
 	{
 		// apply scale
 		newBuf->Vertices[i].Pos *= scale;
-		vector3df p = newBuf->Vertices[i].Pos;
+		/*vector3df p = newBuf->Vertices[i].Pos;
 		
 		// apply rotation
 		p.X = newBuf->Vertices[i].Pos.X * ( cos(rot.Z)*cos(rot.Y) )
@@ -1223,7 +1235,7 @@ IMesh* Editor::getMeshWithAbsoluteCoordinates(IMeshSceneNode* node)
 		newBuf->Vertices[i].Pos = p;
 
 		// apply position
-		newBuf->Vertices[i].Pos += pos;
+		newBuf->Vertices[i].Pos += pos;*/
 	}
 
 	// lets recalculate the bounding box and create the mesh
