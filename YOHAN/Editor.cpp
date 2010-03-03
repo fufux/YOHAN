@@ -27,7 +27,7 @@ enum XmlNodeType
 
 Editor::Editor(void)
 {
-	this->debugData = scene::EDS_OFF;
+	this->debugData = scene::EDS_MESH_WIRE_OVERLAY;
 	this->er = new EditorEventReceiver(this);
 	this->selectedNodeIndex = -1;
 	this->selectedForceField = -1;
@@ -104,7 +104,7 @@ void Editor::clear(bool clear_gui)
 	forceFields.clear();
 	this->selectedNodeIndex = -1;
 	this->selectedForceField = -1;
-	this->debugData = scene::EDS_OFF;
+	this->debugData = scene::EDS_MESH_WIRE_OVERLAY;
 	this->name = "untitled";
 
 	// clear GUI
@@ -160,7 +160,7 @@ void Editor::selectNode()
 			nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
 
 		this->selectedNodeIndex = this->nodes.binary_search( selectedSceneNode );
-		selectedSceneNode->setDebugDataVisible( scene::EDS_MESH_WIRE_OVERLAY );
+		selectedSceneNode->setDebugDataVisible( scene::EDS_BBOX );
 
 		this->createSceneNodeToolBox();
 	}
@@ -306,9 +306,9 @@ void Editor::add3DModel(stringc filename)
 		return;
 	
 	// set default material properties
-	node->setMaterialFlag(video::EMF_LIGHTING, false);
+	node->setMaterialFlag(video::EMF_LIGHTING, true);
 	node->setMaterialFlag(video::EMF_NORMALIZE_NORMALS, true);
-	node->setDebugDataVisible(scene::EDS_OFF);
+	node->setDebugDataVisible(debugData);
 
 	// Now create a triangle selector for it.
 	scene::ITriangleSelector* selector = smgr->createTriangleSelector(node->getMesh(), node);
@@ -338,7 +338,7 @@ void Editor::add3DModel(stringc filename)
 	// select the node we've just loaded
 	selectedNodeIndex = nodes.size() - 1;
 	this->createSceneNodeToolBox();
-	node->setDebugDataVisible( scene::EDS_MESH_WIRE_OVERLAY );
+	node->setDebugDataVisible( scene::EDS_BBOX );
 }
 
 
