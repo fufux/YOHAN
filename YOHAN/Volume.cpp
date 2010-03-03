@@ -56,7 +56,7 @@ BoundingBox* Volume::getMasterBoundingBox()
 }
 
 
-bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFile, Material material, double* v)
+bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFile, Material material, double* pos, double* rot, double* v)
 {
 	this->material = material;
 	int n;		//number of nodes/tetrahedra/faces
@@ -179,6 +179,36 @@ bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFil
 
 	// BoundingBox
 	bb = new BoundingBox(NULL, tetrahedra, false);
+
+	for (int i=0; i < points.size(); i++)
+	{
+		double x[3];
+		
+		// apply rotation
+		x[0] = points[i]->getX()[0] * ( cos(rot[2])*cos(rot[1]) )
+			 + points[i]->getX()[1] * ( cos(rot[2])*sin(rot[1])*sin(rot[0])-sin(rot[2])*cos(rot[0]) )
+			 + points[i]->getX()[2] * ( cos(rot[2])*sin(rot[1])*cos(rot[0])+sin(rot[2])*sin(rot[0]) );
+		x[1] = points[i]->getX()[0] * ( sin(rot[2])*cos(rot[1]) )
+			 + points[i]->getX()[1] * ( sin(rot[2])*sin(rot[1])*sin(rot[0])+cos(rot[2])*cos(rot[0]) )
+			 + points[i]->getX()[2] * ( sin(rot[2])*sin(rot[1])*cos(rot[0])-cos(rot[2])*sin(rot[0]) );
+		x[2] = points[i]->getX()[0] * ( -sin(rot[1]) )
+			 + points[i]->getX()[1] * ( cos(rot[1])*sin(rot[0]) )
+			 + points[i]->getX()[2] * ( cos(rot[1])*cos(rot[0]) );
+		
+		points[i]->getX()[0] = x[0];
+		points[i]->getX()[1] = x[1];
+		points[i]->getX()[2] = x[2];
+
+		// apply position
+		points[i]->getX()[0] += pos[0];
+		points[i]->getX()[1] += pos[1];
+		points[i]->getX()[2] += pos[2];
+
+		// update U
+		/*points[i]->getU()[0] = points[i]->getX()[0];
+		points[i]->getU()[1] = points[i]->getX()[1];
+		points[i]->getU()[2] = points[i]->getX()[2];*/
+	}
 
 	return true;
 }

@@ -86,6 +86,21 @@ BoundingBox::BoundingBox(BoundingBox* parent, vector<Tetrahedron*> tetrahedra, b
 				tetrahedra2.push_back( tetrahedra[i] ); // add tetrahedron to second child
 		}
 
+		if (tetrahedra1.size() == 0 && tetrahedra2.size() == 2)
+		{
+			tetrahedra1.push_back( tetrahedra2[1] );
+			Tetrahedron* t_tmp = tetrahedra2[0];
+			tetrahedra2.clear();
+			tetrahedra2.push_back( t_tmp );
+		}
+		else if (tetrahedra2.size() == 0 && tetrahedra1.size() == 2)
+		{
+			tetrahedra2.push_back( tetrahedra1[1] );
+			Tetrahedron* t_tmp = tetrahedra1[0];
+			tetrahedra1.clear();
+			tetrahedra1.push_back( t_tmp );
+		}
+
 		this->child1 = new BoundingBox(this, tetrahedra1, true);
 		this->child2 = new BoundingBox(this, tetrahedra2, false);
 

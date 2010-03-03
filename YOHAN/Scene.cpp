@@ -15,8 +15,8 @@ Scene::Scene(void)
 {
 	plan = new Tetrahedron();
 	kerr = 1;
-	kdmp = 50000000;
-	kfrc = 40000;
+	kdmp = 50000;
+	kfrc = 4000;
 }
 
 Scene::~Scene(void)
@@ -94,6 +94,8 @@ bool Scene::load(std::string tetrahedralizedSceneFile)
 				std::wstring eleFile;
 				std::wstring faceFile;
 
+				double pos[3];
+				double rot[3];
 				double speed[3];
 				Material material;
 
@@ -122,6 +124,28 @@ bool Scene::load(std::string tetrahedralizedSceneFile)
 					else if (XMLString::equals(vmname, L"facefile"))
 					{
 						faceFile = (wchar_t*)vmnode->getAttributes()->getNamedItem(L"file")->getNodeValue();
+					}
+					else if (XMLString::equals(vmname, L"initialposition"))
+					{
+						char* tmp = new char[128];
+
+						wcstombs(tmp, vmnode->getAttributes()->getNamedItem(L"x")->getNodeValue(), 128);
+						pos[0] = atof(tmp);
+						wcstombs(tmp, vmnode->getAttributes()->getNamedItem(L"y")->getNodeValue(), 128);
+						pos[1] = atof(tmp);
+						wcstombs(tmp, vmnode->getAttributes()->getNamedItem(L"z")->getNodeValue(), 128);
+						pos[2] = atof(tmp);
+					}
+					else if (XMLString::equals(vmname, L"initialrotation"))
+					{
+						char* tmp = new char[128];
+
+						wcstombs(tmp, vmnode->getAttributes()->getNamedItem(L"x")->getNodeValue(), 128);
+						rot[0] = atof(tmp);
+						wcstombs(tmp, vmnode->getAttributes()->getNamedItem(L"y")->getNodeValue(), 128);
+						rot[1] = atof(tmp);
+						wcstombs(tmp, vmnode->getAttributes()->getNamedItem(L"z")->getNodeValue(), 128);
+						rot[2] = atof(tmp);
 					}
 					else if (XMLString::equals(vmname, L"initialspeed"))
 					{
@@ -158,7 +182,7 @@ bool Scene::load(std::string tetrahedralizedSceneFile)
 
 				// add into the list
 				Volume* v = new Volume(id, this);
-				v->load(util::ws2s(nodeFile), util::ws2s(eleFile), util::ws2s(faceFile), material, (double*)speed);
+				v->load(util::ws2s(nodeFile), util::ws2s(eleFile), util::ws2s(faceFile), material, (double*)pos, (double*)rot, (double*)speed);
 				volumes.push_back( v );
 			}
 			else if (XMLString::equals(nodeName, L"force"))

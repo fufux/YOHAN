@@ -22,6 +22,7 @@ public:
 	int getID();
 	Volume* getVolume();
 	Vector3d& getN(int i);
+	double getVol();
 
 	void computeCoreJacobian();
 	void computeBeta();
@@ -30,6 +31,9 @@ private:
 	int id;
 
 	Volume* volume;
+	
+	// The volume of the Tetrahedron
+	double vol;
 
 	// list of the four points making this tetrahedron
 	vector<Point*> points; // array of size 4

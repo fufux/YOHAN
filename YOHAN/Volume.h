@@ -27,7 +27,7 @@ public:
 	Volume(int id, Scene* scene);
 	~Volume(void);
 
-	bool load(std::string nodeFile, std::string eleFile, std::string faceFile, Material material, double* v);
+	bool load(std::string nodeFile, std::string eleFile, std::string faceFile, Material material, double* pos, double* rot, double* v);
 	vector<std::string> save(std::string dir);
 
 	void evolve(double deltaT);
