@@ -23,6 +23,9 @@ public:
 	Volume* getVolume();
 	Vector3d& getN(int i);
 
+	void computeCoreJacobian();
+	void computeBeta();
+
 private:
 	int id;
 
@@ -31,6 +34,7 @@ private:
 	// list of the four points making this tetrahedron
 	vector<Point*> points; // array of size 4
 	Vector3d n[4]; // ni
+	void computeN();
 
 	// this is the beta in equation (1) of main article
 	Matrix3d beta; // 3x3

@@ -121,23 +121,40 @@ vector<Point*>* Polyhedron::getByParent(int parent)
 
 vector<double>* Polyhedron::calcBarCoeff(vector<Point*>* pts)
 {
+	Matrix4d A = Matrix4d::Ones();
+	Vector4d b = Vector4d(center[0], center[1], center[2], 1);
+	double* pt;
+	for(int i=0; i<4;i++){
+		pt = (*pts)[i]->getX();
+		A(0,i) = pt[0];
+		A(1,i) = pt[1];
+		A(2,i) = pt[2];
+	}
+	A = A.inverse();
+	b = A*b;
 	vector<double>* coeffBar = new vector<double>();
-	double sum = 0;
-	double distance;
-	Vector3d pt;
-	for(int i=0;i<(int)pts->size();i++){
-		pt[0] = (*pts)[i]->getX()[0];
-		pt[1] = (*pts)[i]->getX()[1];
-		pt[2] = (*pts)[i]->getX()[2];
-		pt = pt - center;
-		distance = pt.norm();
-		coeffBar->push_back(distance);
-		sum+=distance;
-	}
-	for(int i=0;i<(int)coeffBar->size();i++){
-		(*coeffBar)[i]/=sum;
-	}
+	coeffBar->push_back(b[0]);
+	coeffBar->push_back(b[1]);
+	coeffBar->push_back(b[2]);
+	coeffBar->push_back(b[3]);
 	return coeffBar;
+	//vector<double>* coeffBar = new vector<double>();
+	//double sum = 0;
+	//double distance;
+	//Vector3d pt;
+	//for(int i=0;i<(int)pts->size();i++){
+	//	pt[0] = (*pts)[i]->getX()[0];
+	//	pt[1] = (*pts)[i]->getX()[1];
+	//	pt[2] = (*pts)[i]->getX()[2];
+	//	pt = pt - center;
+	//	distance = pt.norm();
+	//	coeffBar->push_back(distance);
+	//	sum+=distance;
+	//}
+	//for(int i=0;i<(int)coeffBar->size();i++){
+	//	(*coeffBar)[i]/=sum;
+	//}
+	//return coeffBar;
 }
 
 

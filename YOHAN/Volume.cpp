@@ -292,14 +292,14 @@ void Volume::generateK()
 	Matrix3d dx,jac,tmp;
 	Matrix3d& f = Matrix3d();
 	Matrix3d& q = Matrix3d();
-	Vector3d fi;
+	Vector3d fi,f0;
 	int ri,ci,ind;
-	for (int i=0; i<(int)(3*points.size()-2); i+=3)
-		cout<<forces[i]<<", "<<forces[i+1]<<", "<<forces[i+2]<<endl;
-	cout<<endl;
 
 	for(int t=0;t<(int)tetrahedra.size();t++){
-		vector<Point*>& pts = tetrahedra[t]->getPoints();
+		vector<Point*> pts = tetrahedra[t]->getPoints();
+
+		// compute core jacobian
+		//tetrahedra[t]->computeBeta();
 
 		// compute Q
 		double* x1 = pts[0]->getX();
@@ -317,8 +317,15 @@ void Volume::generateK()
 		dx(2,2) = x4[2]-x1[2];
 
 		f = dx * tetrahedra[t]->getBeta();
+		
+		cout << "dx"<<endl<<dx << endl<<endl;
+		cout << "beta"<<endl<<tetrahedra[t]->getBeta() << endl<<endl;
 		//cout << q << endl<<endl;
+		//f = Matrix3d::Random();
+		cout << "f"<<endl<<f << endl<<endl;
 		util::polarDecomposition( f, q);
+		cout << "q"<<endl<<q << endl<<endl<<endl;
+		//q= Matrix3d::Identity();
 		
 		// F~ = Q'.F
 		f = q.adjoint() * f;
@@ -330,6 +337,7 @@ void Volume::generateK()
 		for (int i = 0; i < 4; i++)
 		{
 			ri = pts[i]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
+			ind = pts[i]->getID() * 3;
 			for (int j = 0; j < 4; j++)
 			{
 				ci = pts[j]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
@@ -337,6 +345,7 @@ void Volume::generateK()
 				// Compute Jij
 				tmp = q * tetrahedra[t]->getCoreJacobian()[i*4+j];
 				jac = tmp * q.transpose();
+
 
 				// 9 items for stiffness matrix
 				K->addAndSetValue(ri, ci, jac(0,0));
@@ -349,17 +358,30 @@ void Volume::generateK()
 				K->addAndSetValue(ri + 2, ci + 1, jac(2,1));
 				K->addAndSetValue(ri + 2, ci + 2, jac(2,2));
 
+				//f0[0] = pts[i]->getU()[0];
+				//f0[1] = pts[i]->getU()[1];
+				//f0[2] = pts[i]->getU()[2];
+
+				//f0 = q * tetrahedra[t]->getCoreJacobian()[i*4+j] * f0;
+				//forces[ind] += f0[0];	
+				//forces[ind+1] += f0[1];
+				//forces[ind+2] += f0[2];
 			}
 
 			// elastic forces exerted byt the element on the node i
-			ind = pts[i]->getID() * 3;
+
 			//fi = Q*sigma*ni
-			fi = q * f * tetrahedra[t]->getN(i);
-			forces[ind] += fi[0];
-			forces[ind+1] += fi[1];
-			forces[ind+2] += fi[2];
+			//fi = q * f * tetrahedra[t]->getN(i);
+			//forces[ind] -= fi[0];
+			//forces[ind+1] -= fi[1];
+			//forces[ind+2] -= fi[2];
 		}
 	}
+	//forces[21*3+1] -= 20;
+	//forces[3*3+1] += 20;
+	/*for (int i=0; i<(int)(3*points.size()-2); i+=3)
+	cout<<forces[i]<<", "<<forces[i+1]<<", "<<forces[i+2]<<endl;
+	cout<<endl;*/
 }
 
 void Volume::generateC()
@@ -467,6 +489,9 @@ void Volume::updateVolume(double deltaT)
 		points[i]->getV()[1] = f[3*i+1];
 		points[i]->getV()[2] = f[3*i+2];
 		// update position
+		/*points[i]->getU()[0] = points[i]->getX()[0];
+		points[i]->getU()[1] = points[i]->getX()[1];
+		points[i]->getU()[2] = points[i]->getX()[2];*/
 		points[i]->getX()[0] += f[3*i] * deltaT;
 		points[i]->getX()[1] += f[3*i+1] * deltaT;
 		points[i]->getX()[2] += f[3*i+2] * deltaT;

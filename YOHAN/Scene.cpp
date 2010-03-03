@@ -14,9 +14,9 @@ using namespace xercesc;
 Scene::Scene(void)
 {
 	plan = new Tetrahedron();
-	kerr = 0.1;
-	kdmp = 500;
-	kfrc = 100;
+	kerr = 1;
+	kdmp = 50000000;
+	kfrc = 40000;
 }
 
 Scene::~Scene(void)
@@ -343,6 +343,13 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 	{
 		currentTime += deltaT;
 
+		cout << "#################################################################################################################"<<endl;
+		cout << "#################################################################################################################"<<endl;
+		cout << "#################################################################################################################"<<endl;
+		cout << "#################################################################################################################"<<endl;
+		cout << "#################################################################################################################"<<endl;
+		cout << "step n°" << stepNumber<<endl;
+
 		// compute
 		handleCollisions();
 		for (int i=0; i < (int)volumes.size(); i++) {
@@ -354,7 +361,7 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		saveStep(filename);
 
 		// log
-		if (stepNumber % 50 == 0) {
+		if (stepNumber % 1 == 0) {
 			std::stringstream s;
 			s << "Step n°" << stepNumber << " computed.";
 			util::log( s.str() );
