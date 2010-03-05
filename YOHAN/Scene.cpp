@@ -172,6 +172,10 @@ bool Scene::load(std::string tetrahedralizedSceneFile)
 						material.psy = atof(tmp);
 						wcstombs(tmp, vmnode->getAttributes()->getNamedItem(L"Density")->getNodeValue(), 128);
 						material.rho = atof(tmp);
+
+						/* Added by Ning, for fracture */
+						material.toughness = 24000;
+						/* END -- Added by Ning, for fracture */
 					}
 					else					
 					{
@@ -372,13 +376,21 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		cout << "#################################################################################################################"<<endl;
 		cout << "#################################################################################################################"<<endl;
 		cout << "#################################################################################################################"<<endl;
-		cout << "step n°" << stepNumber<<endl;
+		cout << "step n" << stepNumber<<endl;
+
+		// reset
+		for (int i=0; i < (int)volumes.size(); i++) {
+			//volumes[i]->collisionBidon();
+			volumes[i]->resetAll();
+		}
+
 
 		// compute
 		handleCollisions();
 		for (int i=0; i < (int)volumes.size(); i++) {
 			//volumes[i]->collisionBidon();
 			volumes[i]->evolve(deltaT);
+			volumes[i]->calculFracture();
 		}
 
 		// save step
@@ -387,7 +399,7 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		// log
 		if (stepNumber % 1 == 0) {
 			std::stringstream s;
-			s << "Step n°" << stepNumber << " computed.";
+			s << "Step n" << stepNumber << " computed.";
 			util::log( s.str() );
 		}
 	}

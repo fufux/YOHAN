@@ -27,6 +27,16 @@ public:
 	void computeCoreJacobian();
 	void computeBeta();
 
+	/* Added by Ning, for fracture */
+	void setStress(Matrix3d& stress);
+	void setQ(Matrix3d& q);
+	void retrieveEigenOfStress(Vector3d& eigenValue, Matrix3d& eigenVector);
+	void setTensileForce(int index, Matrix<double, 3, 1>& force);
+	void setCompressiveForce(int index, Matrix<double, 3, 1>& force);
+	Matrix3d& getQ();
+	Matrix<double, 3, 1>& getTensileForce(int index);
+	Matrix<double, 3, 1>& getCompressiveForce(int index);
+
 private:
 	int id;
 
@@ -51,4 +61,20 @@ private:
 
 	// mass of this tetrahedron
 	double mass;
+
+	/* Added by Ning, for fracture */
+
+	//stress
+	Matrix3d stress;
+
+	//Q
+	Matrix3d Q;
+
+	//tensile Force
+	Matrix<double, 3, 1> tensileForce[4];
+
+	//compressive Force
+	Matrix<double, 3, 1> compressiveForce[4];
+
+	//
 };

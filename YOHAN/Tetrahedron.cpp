@@ -195,8 +195,8 @@ void Tetrahedron::computeN()
 
 void Tetrahedron::computeCoreJacobian()
 {
-	/*computeN();
-
+	computeN();
+	/*
 	for(int i=0;i<4;i++){
 		for(int j=0;j<4;j++){
 			// ---------------
@@ -267,4 +267,47 @@ void Tetrahedron::computeCoreJacobian()
 		}
 	}
 
+}
+
+
+/* Add by Ning, for fracture */
+void Tetrahedron::setStress(Matrix3d& stress)
+{
+	this->stress = stress;
+}
+
+void Tetrahedron::setQ(Matrix3d& q)
+{
+	this->Q = q;
+}
+
+Matrix3d& Tetrahedron::getQ()
+{
+	return this->Q;
+}
+
+void Tetrahedron::retrieveEigenOfStress(Matrix<double, 3, 1>& eigenValue, Matrix3d& eigenVector)
+{
+	util::retrieveEigen(this->stress, eigenValue, eigenVector);
+}
+
+void Tetrahedron::setTensileForce(int index, Matrix<double, 3, 1>& force)
+{
+	this->tensileForce[index] = force;
+}
+
+void Tetrahedron::setCompressiveForce(int index, Matrix<double, 3, 1>& force)
+{
+	this->compressiveForce[index] = force;
+}
+
+Matrix<double, 3, 1>& Tetrahedron::getTensileForce(int index)
+{
+	return this->tensileForce[index];
+	
+}
+
+Matrix<double, 3, 1>& Tetrahedron::getCompressiveForce(int index)
+{
+	return this->compressiveForce[index];
 }

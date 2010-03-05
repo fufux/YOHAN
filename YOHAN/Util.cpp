@@ -76,3 +76,59 @@ void util::polarDecomposition(Matrix3d& f,Matrix3d& q)
 	//	//svd.computeUnitaryPositive(&q,&f);
 	//}
 }
+
+/* Added by Ning, for fracture */
+Matrix3d util::calcul_M33_MA(Matrix<double, 3, 1>& vector)
+{
+	double norm = vector.norm();
+
+	if (norm < 1E-40)	// consider as 0
+	{
+		return Matrix3d::Zero();
+	}
+	else
+	{
+		Matrix<double, 1, 3> trans = vector.transpose();
+		return vector * trans / norm;
+	}
+}
+
+void util::retrieveEigen(Matrix3d& mat, Matrix<double, 3, 1>& eigenValue, Matrix3d& eigenVector)
+{
+	/*
+	Eigen::SelfAdjointEigenSolver<Matrix3d> solver;
+	solver.compute(mat, true);
+
+	eigenValue = solver.eigenvalues();
+	eigenVector = solver.eigenvectors();
+	*/
+	
+	// see if zero matrix, because EigenSolver can not solve this matrix
+	if (mat.isZero())
+	{
+		eigenValue = Matrix<double, 3, 1>::Zero();
+		eigenVector = Matrix3d::Zero();
+	}
+	else
+	{	
+		Eigen::EigenSolver<Matrix3d> solver;
+		solver.compute(mat);
+
+		Matrix<std::complex<double>, 3, 1> tmpValue = solver.eigenvalues();
+		Matrix<std::complex<double>, 3, 3> tmpVector = solver.eigenvectors();
+
+		// copy without image ( or its norm )
+		for (int i = 0; i < 3; i++)
+		{
+			eigenValue(i,0) = tmpValue(i,0).real();
+			
+			eigenVector(i,0) = tmpVector(i,0).real();
+			eigenVector(i,1) = tmpVector(i,1).real();
+			eigenVector(i,2) = tmpVector(i,2).real();
+
+		}
+	}
+	
+
+	//could check if the eigen is correct by its image number
+}

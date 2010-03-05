@@ -17,7 +17,18 @@ class Scene;
 struct Material
 {
 	double lambda, mu, phi, psy, rho;
+
+	/* Added by Ning, for fracture */
+	double toughness;
+	/* END -- Added by Ning*/
 };
+
+/* Added by Ning */
+struct Surface
+{
+	int pointIndex[3];
+};
+/* END -- Added by Ning*/
 
 
 //
@@ -46,6 +57,13 @@ public:
 
 	void collisionBidon();
 
+	/* Added by Ning, for fracture */
+	int calculFracture();
+
+	void resetAll();
+
+	/* END -- Added by Ning, for fracture */
+
 private:
 	int id;
 
@@ -60,7 +78,7 @@ private:
 	vector<Tetrahedron*> tetrahedra;
 
 	// this is the list of all facets in this volume
-	vector<int*> facets; // vector of int[3]
+	vector<struct Surface*> surfaces; // vector of int[3]
 
 	// big matrices needed in the equation
 	matrix::SymmetricMumpsSquareSparseMatrix* K;
@@ -95,4 +113,11 @@ private:
 	bool tetrahedraChanged;
 	std::string lastOutputFacesFileName;
 	std::string lastOutputTetrahedraFileName;
+
+	/* Added by Ning, for fracture */
+	Point* replicaPointWithoutRemesh(Point* orginal, Matrix<double, 3, 1>& nvector, int replicaPointIndex);
+
+	int oldOrder;
+
+	/* END -- Added by Ning, for fracture */
 };

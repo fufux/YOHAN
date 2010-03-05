@@ -4,6 +4,23 @@
 
 class Tetrahedron;
 
+/* Added by Ning */
+struct Surface;
+
+struct IndexTetraPoint
+{
+	Tetrahedron* tet;
+	int indexOfPoint;
+};
+
+struct IndexSurfacePoint
+{
+	Surface* surface;
+	int indexOfPoint;
+};
+
+/* END -- Added by Ning */
+
 
 class Point
 {
@@ -18,7 +35,12 @@ public:
 	bool isSurface();
 	void setIsSurface(bool is_surface);
 	double getMass();
-	vector<Tetrahedron*>* getTetrahedra();
+
+	/* Modified by Ning, for fracture */
+	//vector<Tetrahedron*>* getTetrahedra();
+	vector<struct IndexTetraPoint>* getIndexTetra();	
+
+	vector<struct IndexSurfacePoint>* getIndexSurface();
 
 private:
 	// ID of the point
@@ -32,8 +54,16 @@ private:
 	double u[3]; // array of size 3
 
 	// list of tetrahedrons containing this point
-	vector<Tetrahedron*> tetrahedra;
+	vector<struct IndexTetraPoint> indexTetra;
 
 	// true if this point is on the surface of the volume
 	bool is_surface;
+
+	/* Added by Ning, for fracture */
+
+	// the point index correspondant with the surface
+	vector<struct IndexSurfacePoint> indexSurface;
+
+	/* END -- Added by Ning */
+
 };
