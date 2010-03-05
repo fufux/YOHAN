@@ -359,7 +359,7 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		return false;
 	}
 
-	fp << "<video name=\"test\">" << endl;
+	fp << "<video frames=\"" << nbSteps << "\">" << endl;
 
 	fp.flush();
 	fp.close();

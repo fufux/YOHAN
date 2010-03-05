@@ -23,6 +23,7 @@ Player::Player(void)
 	this->editor = NULL;
 	this->name = "untitled";
 	this->baseDir = device->getFileSystem()->getWorkingDirectory();
+	this->frames_size = 0;
 }
 
 Player::~Player(void)
@@ -62,9 +63,9 @@ bool Player::isRunning()
 
 void Player::clear(bool clear_gui)
 {
-	for (u16 i=0; i < frames.size(); i++)
+	/*for (u32 i=0; i < frames_size; i++)
 		delete frames[i];
-	this->frames.clear();
+	this->frames.clear();*/
 	framesFileNames.clear();
 	if (currFrame) delete currFrame;
 	this->currFrame = NULL;
@@ -73,6 +74,7 @@ void Player::clear(bool clear_gui)
 	this->is_playing = false;
 	this->playSpeed = 100;
 	this->accumulatedDeltaT = 0;
+	this->frames_size = 0;
 
 	// clear GUI
 	if (clear_gui)
@@ -134,8 +136,8 @@ void Player::displayFrameById(s32 id)
 		return;
 	}
 
-	if (currentFrame >= 0 && currentFrame < (s32)frames.size())
-		frames[currentFrame]->hide();
+	/*if (currentFrame >= 0 && currentFrame < (s32)frames_size)
+		frames[currentFrame]->hide();*/
 
 	if (currFrame && currFrame != NULL)
 		delete currFrame;
@@ -149,6 +151,7 @@ void Player::displayFrameById(s32 id)
 		return;
 	}
 	currentFrame = currFrame->getID();
+	accumulatedDeltaT = currFrame->getTimestamp();
 	currFrame->display();
 	setDebugDataVisible( this->debugData );
 	updateFrameNumber();
@@ -158,7 +161,8 @@ void Player::displayFrameById(s32 id)
 
 void Player::playNextFrame(double deltaT)
 {
-	if (deltaT == 0 || framesFileNames.size() == 0 || frames.size() == 0)
+	
+	if (deltaT == 0)// || frames_size == 0)
 		return;
 
 	// deltaT is in milliseconds
@@ -167,13 +171,32 @@ void Player::playNextFrame(double deltaT)
 	s32 old_currentFrame = currentFrame;
 	double min = 100000000;
 
-	if (old_currentFrame >= 0 && old_currentFrame < (s32)frames.size())
+	if (old_currentFrame >= 0 && old_currentFrame < (s32)frames_size - 1000)
 	{
-		for (u32 i=0; i < frames.size(); i++)
+		for (u32 i=old_currentFrame; i < frames_size && i < (u32)old_currentFrame + 1000; i++)
 		{
-			if (abs(frames[i]->getTimestamp() - accumulatedDeltaT) < min)
+			if (abs(framesFileNames[i].timestamp - accumulatedDeltaT) < min)
 			{
-				min = abs((double)frames[i]->getTimestamp() - accumulatedDeltaT);
+				min = abs(framesFileNames[i].timestamp - accumulatedDeltaT);
+				currentFrame = i;
+			}
+		}
+	}
+	else if (old_currentFrame >= 0 && old_currentFrame < (s32)frames_size)
+	{
+		for (u32 i=old_currentFrame; i < frames_size; i++)
+		{
+			if (abs(framesFileNames[i].timestamp - accumulatedDeltaT) < min)
+			{
+				min = abs(framesFileNames[i].timestamp - accumulatedDeltaT);
+				currentFrame = i;
+			}
+		}
+		for (u32 i=0; i < frames_size && i < (u32)old_currentFrame-frames_size+1000; i++)
+		{
+			if (abs(framesFileNames[i].timestamp - accumulatedDeltaT) < min)
+			{
+				min = abs(framesFileNames[i].timestamp - accumulatedDeltaT);
 				currentFrame = i;
 			}
 		}
@@ -184,14 +207,16 @@ void Player::playNextFrame(double deltaT)
 	}
 
 	// force looping
-	if (currentFrame == frames.size()-1)
+	if (currentFrame == frames_size-1)
 		accumulatedDeltaT = 0;
 
 	// display the new frame
-	if (old_currentFrame >= 0 && old_currentFrame < (s32)frames.size())
+	/*if (old_currentFrame >= 0 && old_currentFrame < (s32)frames_size)
 		frames[old_currentFrame]->hide();
-	if (currentFrame >= 0 && currentFrame < (s32)frames.size())
-		frames[currentFrame]->display();
+	if (currentFrame >= 0 && currentFrame < (s32)frames_size)
+		frames[currentFrame]->display();*/
+
+	displayFrameById(currentFrame);
 
 	setDebugDataVisible( this->debugData );
 	updateFrameNumber();
@@ -274,6 +299,10 @@ bool Player::load(irr::core::stringc filename)
 						this->clear();
 						this->createGUI();
 						device->setEventReceiver(this->er);
+						// get number of frames and reallocate arrays
+						u32 nbf = xml->getAttributeValueAsInt(L"frames");
+						//frames.reallocate( nbf );
+						framesFileNames.reallocate( nbf );
 					}
 				}
 
@@ -303,15 +332,22 @@ bool Player::load(irr::core::stringc filename)
 	{
 		env->addMessageBox(CAPTION_ERROR, L"This is not a valid video file !");
 	}
+	else
+	{
+		for (u32 i=0; i < framesFileNames.size()-1; i++)
+			framesFileNames[i].bbfiles = framesFileNames[i+1].bbfiles;
+		frames_size = framesFileNames.size();
+	}
 
 	return is_valid_file;
 }
 
 
 // this calls load and then pre-loads all frames, but only with surfacic meshes
-bool Player::loadAll()
+/*bool Player::loadAll()
 {
-	for (u16 i=0; i < framesFileNames.size(); i++)
+	u16 size = framesFileNames.size();
+	for (u16 i=0; i < size; i++)
 	{
 		frames.push_back(new PlayerFrame(framesFileNames[i], false));
 		if (frames.getLast()->getNodes().size() == 0)
@@ -321,8 +357,10 @@ bool Player::loadAll()
 		}
 	}
 
+	frames_size = frames.size();
+
 	return true;
-}
+}*/
 
 
 void Player::createGUI()
@@ -416,11 +454,11 @@ void Player::createGUI()
 
 void Player::setDebugDataVisible(scene::E_DEBUG_SCENE_TYPE state)
 {
-	for (u16 i=0; i < frames.size(); i++)
+	/*if (currentFrame >= 0 && currentFrame < (s32)frames_size)
 	{
-		for (u16 j=0; j < frames[i]->getNodes().size(); j++)
-			frames[i]->getNodes()[j]->setDebugDataVisible(state);
-	}
+		for (u16 j=0; j < frames[currentFrame]->getNodes().size(); j++)
+			frames[currentFrame]->getNodes()[j]->setDebugDataVisible(state);
+	}*/
 	if (currFrame)
 	{
 		for (u16 j=0; j < currFrame->getNodes().size(); j++)
@@ -446,8 +484,8 @@ void Player::play()
 		currFrame = NULL;
 	}
 
-	if (frames.size() == 0)
-		loadAll();
+	/*if (frames_size == 0)
+		loadAll();*/
 
 	is_playing = true;
 	lastTime = device->getTimer()->getTime();
