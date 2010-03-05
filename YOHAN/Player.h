@@ -29,7 +29,7 @@ public:
 	void clear(bool clear_gui=true);
 
 	// loads a video scene file and get ready to play it
-	bool loadAll();
+	//bool loadAll();
 	bool load(stringc filename);
 
 	// allows us to change current frame in step-by-step mode
@@ -77,7 +77,8 @@ private:
 	core::array<FrameInfo> framesFileNames;
 
 	// this is the list of all frames in the video for playing mode
-	core::array<PlayerFrame*> frames;
+	//core::array<PlayerFrame*> frames;
+	u32 frames_size;
 
 	// this is the current frame in step-by-step mode
 	PlayerFrame* currFrame;

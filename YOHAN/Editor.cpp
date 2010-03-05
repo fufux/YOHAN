@@ -385,11 +385,11 @@ void Editor::removeForceField()
 void Editor::askForFileName()
 {
 	// create the toolbox window
-	IGUIWindow* wnd = env->addWindow(core::rect<s32>(300,200,500,350),
+	IGUIWindow* wnd = env->addWindow(core::rect<s32>(driver->getScreenSize().Width/2-150,200,driver->getScreenSize().Width/2+150,280),
 		true, L"File name", 0, GUI_ID_ASK_FILENAME_WINDOW);
 
-	env->addStaticText(L"File name:", core::rect<s32>(20,20,40,40), false, false, wnd);
-	env->addEditBox(L"myscene.xml", core::rect<s32>(42,20,200,36), true, wnd, GUI_ID_ASK_FILENAME_NAME);
+	env->addStaticText(L"File name:", core::rect<s32>(20,20,60,40), false, false, wnd);
+	env->addEditBox(L"myscene.xml", core::rect<s32>(62,20,280,36), true, wnd, GUI_ID_ASK_FILENAME_NAME);
 
 	env->addButton(core::rect<s32>(60,50,100,70), wnd, GUI_ID_ASK_FILENAME_OK_BUTTON, L"Ok");
 	env->addButton(core::rect<s32>(120,50,160,70), wnd, GUI_ID_ASK_FILENAME_CANCEL_BUTTON, L"Cancel");
@@ -479,12 +479,12 @@ void Editor::createSceneNodeToolBox()
 	removeSceneNodeToolBox();
 
 	// create the toolbox window
-	IGUIWindow* wnd = env->addWindow(core::rect<s32>(600,45,800,480),
+	IGUIWindow* wnd = env->addWindow(core::rect<s32>(driver->getScreenSize().Width-200,45,driver->getScreenSize().Width,480),
 		false, L"Toolset", 0, GUI_ID_SCENE_NODE_TOOL_BOX);
 
 	// create tab control and tabs
 	IGUITabControl* tab = env->addTabControl(
-		core::rect<s32>(2,20,800-602,435-37), wnd, true, true);
+		core::rect<s32>(2,20,198,435-37), wnd, true, true);
 
 	env->addButton(core::rect<s32>(20,435-25,100,435-5), wnd, GUI_ID_TOOL_BOX_SET_BUTTON, L"Set");
 	env->addButton(core::rect<s32>(110,435-25,190,435-5), wnd, GUI_ID_TOOL_BOX_DELETE_BUTTON, L"Delete");
@@ -620,12 +620,12 @@ void Editor::createForceFieldToolBox()
 	removeForceFieldToolBox();
 
 	// create the toolbox window
-	IGUIWindow* wnd = env->addWindow(core::rect<s32>(600,45,800,480),
+	IGUIWindow* wnd = env->addWindow(core::rect<s32>(0,45,200,260),
 		false, L"Toolset", 0, GUI_ID_FORCE_FIELD_TOOL_BOX);
 
 	// create tab control and tabs
 	IGUITabControl* tab = env->addTabControl(
-		core::rect<s32>(2,20,800-602,480-7), wnd, true, true);
+		core::rect<s32>(2,20,198,215-2), wnd, true, true);
 
 	IGUITab* t1 = tab->addTab(L"Config");
 
