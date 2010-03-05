@@ -14,9 +14,18 @@ namespace util
 	double norm(double* x);
 	double norm(double** x);
 	double normMinus(double** x, double** y);
-	void polarDecomposition(Matrix3d& f,Matrix3d& q);
+	
+	inline void polarDecomposition(Matrix3d& f, Matrix3d& q)
+	{
+		q.col(0) = f.col(0)/f.col(0).norm();
+		q.col(1) = (f.col(1)-q.col(0).dot(f.col(1))*f.col(1));
+		q.col(1) = q.col(1)/q.col(1).norm();
+		q.col(2) = q.col(0).cross(q.col(1));
+	}
+
 
 	/* Added by Ning, for fracture */
 	Matrix3d calcul_M33_MA(Matrix<double, 3, 1>& vector);
 	void retrieveEigen(Matrix3d& mat, Matrix<double, 3, 1>& eigenValue, Matrix3d& eigenVector);
+
 }

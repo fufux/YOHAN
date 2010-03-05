@@ -16,8 +16,10 @@ BoundingBox::BoundingBox(BoundingBox* parent, vector<Tetrahedron*> tetrahedra, b
 	if (size > 1)
 	{
 		double* center = new double[3];
+		//double* moment = new double[3];
 		double* tcenter = new double[3];
 		center[0] = center[1] = center[2] = 0;
+		//moment[0] = moment[1] = moment[2] = 0;
 		
 		double* x = tetrahedra[0]->getPoints()[0]->getX();
 		x1 = x2 = x[0];
@@ -50,8 +52,23 @@ BoundingBox::BoundingBox(BoundingBox* parent, vector<Tetrahedron*> tetrahedra, b
 		center[1] /= size * 4;
 		center[2] /= size * 4;
 
+		//// compute moment
+		//for (int i=0; i < size; i++) // each internal tetrahedron
+		//{
+		//	for (int j=0; j < 4; j++) // each point of the tetrahedron
+		//	{
+		//		x = tetrahedra[i]->getPoints()[j]->getX();
+
+		//		// center of mass
+		//		moment[0] += center[0] - x[0];
+		//		moment[1] += center[1] - x[1];
+		//		moment[2] += center[2] - x[2];
+		//		
+		//	}
+		//}
+
 		// prepare new lists
-		vector<Tetrahedron*> tetrahedra1, tetrahedra2;
+		vector<Tetrahedron*> tetrahedra1, tetrahedra2, tetrahedra_tmp;
 		double sx = abs(x2-x1);
 		double sy = abs(y2-y1);
 		double sz = abs(z2-z1);
@@ -66,6 +83,8 @@ BoundingBox::BoundingBox(BoundingBox* parent, vector<Tetrahedron*> tetrahedra, b
 			xyz = 2;
 
 		// compute new lists
+		double dmin = 10000000;
+		Tetrahedron* nearest = NULL;
 		for (int i=0; i < size; i++) // each internal tetrahedron
 		{
 			tcenter[0] = tcenter[1] = tcenter[2] = 0;
@@ -80,25 +99,40 @@ BoundingBox::BoundingBox(BoundingBox* parent, vector<Tetrahedron*> tetrahedra, b
 			tcenter[0] /= 4;
 			tcenter[1] /= 4;
 			tcenter[2] /= 4;
+
+			if (abs(tcenter[xyz] - center[xyz]) < dmin)
+			{
+				dmin = abs(tcenter[xyz] - center[xyz]);
+				nearest = tetrahedra[i];
+			}
+
 			if (tcenter[xyz] < center[xyz])
 				tetrahedra1.push_back( tetrahedra[i] ); // add tetrahedron to first child
 			else
 				tetrahedra2.push_back( tetrahedra[i] ); // add tetrahedron to second child
 		}
 
-		if (tetrahedra1.size() == 0 && tetrahedra2.size() == 2)
+		if (tetrahedra1.size() == 0)
 		{
-			tetrahedra1.push_back( tetrahedra2[1] );
-			Tetrahedron* t_tmp = tetrahedra2[0];
+			tetrahedra1.push_back( nearest );
+			tetrahedra_tmp = tetrahedra2;
 			tetrahedra2.clear();
-			tetrahedra2.push_back( t_tmp );
+			for (int i=0; i < (int)tetrahedra_tmp.size(); i++)
+			{
+				if (tetrahedra_tmp[i] != nearest)
+					tetrahedra2.push_back( tetrahedra_tmp[i] );
+			}
 		}
-		else if (tetrahedra2.size() == 0 && tetrahedra1.size() == 2)
+		else if (tetrahedra2.size() == 0)
 		{
-			tetrahedra2.push_back( tetrahedra1[1] );
-			Tetrahedron* t_tmp = tetrahedra1[0];
+			tetrahedra2.push_back( nearest );
+			tetrahedra_tmp = tetrahedra1;
 			tetrahedra1.clear();
-			tetrahedra1.push_back( t_tmp );
+			for (int i=0; i < (int)tetrahedra_tmp.size(); i++)
+			{
+				if (tetrahedra_tmp[i] != nearest)
+					tetrahedra1.push_back( tetrahedra_tmp[i] );
+			}
 		}
 
 		this->child1 = new BoundingBox(this, tetrahedra1, true);

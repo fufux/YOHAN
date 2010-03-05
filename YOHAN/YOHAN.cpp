@@ -49,7 +49,7 @@ int main(int argc, _TCHAR* argv[])
 	// initialize random number generator
 	srand((unsigned int)time(NULL)); 
 
-	device = createDevice( video::EDT_DIRECT3D9, dimension2d<u32>(800, 600), 32,
+	device = createDevice( video::EDT_OPENGL, dimension2d<u32>(800, 600), 32,
 			false, false, false, 0);
 
 	if (!device)
