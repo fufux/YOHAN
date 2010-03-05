@@ -56,23 +56,3 @@ double util::normMinus(double** x, double** y)
 	}
 	return norm;
 }
-
-void util::polarDecomposition(Matrix3d& f,Matrix3d& q)
-{
-	q.col(0) = f.col(0)/f.col(0).norm();
-	q.col(1) = (f.col(1)-q.col(0).dot(f.col(1))*q.col(0));
-	q.col(1) = q.col(1)/q.col(1).norm();
-	q.col(2) = q.col(0).cross(q.col(1));
-
-
-	//if (f.isApprox(Matrix3d::Identity(), 1e-08)) {
-	//	q = f;
-	//} else {
-	//	Eigen::SVD<Matrix3d> svd;
-	//	svd.compute(f);
-	//	q = (svd.matrixU() * svd.matrixV().adjoint());
-	//	//f = svd.matrixU() * svd.singularValues().asDiagonal() * svd.matrixU().adjoint();
-	//	//Matrix3d y;
-	//	//svd.computeUnitaryPositive(&q,&f);
-	//}
-}

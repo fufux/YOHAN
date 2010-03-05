@@ -14,9 +14,9 @@ using namespace xercesc;
 Scene::Scene(void)
 {
 	plan = new Tetrahedron();
-	kerr = 1;
-	kdmp = 70000;
-	kfrc = 4000;
+	kerr = 100*deltaT;
+	kdmp = 7000000*deltaT;
+	kfrc = 400000*deltaT;
 }
 
 Scene::~Scene(void)
