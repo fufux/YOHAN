@@ -19,7 +19,7 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 {
 	// increase total number of loaded frames
 	PlayerFrame::totalLoadedFrames++;
-	if (PLAYER_DEBUG || info.id % 50 == 0)
+	if (PLAYER_DEBUG && info.id % 50 == 0)
 		device->getLogger()->log((stringw("Loading frame number ")+stringw(info.id)+L". Total of frames loaded : "+stringw(PlayerFrame::totalLoadedFrames)).c_str());
 
 	core::array<stringc> _lastEleFileNames;

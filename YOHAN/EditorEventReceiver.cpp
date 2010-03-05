@@ -399,7 +399,7 @@ void EditorEventReceiver::showHelp()
 void EditorEventReceiver::showConfirmDeleteNode()
 {
 	// create the window
-	IGUIWindow* wnd = env->addWindow(core::rect<s32>(300,200,500,350),
+	IGUIWindow* wnd = env->addWindow(core::rect<s32>(driver->getScreenSize().Width/2-100,200,driver->getScreenSize().Width/2+100,350),
 		true, L"Warning", 0, GUI_ID_CONFIRM_DELETE_WINDOW);
 
 	env->addStaticText(L"Are you sure you want to delete this object ?", core::rect<s32>(20,20,180,80), false, true, wnd);
@@ -418,7 +418,7 @@ void EditorEventReceiver::askForParameters(bool previous_was_bad)
 	else
 	{
 		// create the window
-		IGUIWindow* wnd = env->addWindow(core::rect<s32>(200,100,600,380),
+		IGUIWindow* wnd = env->addWindow(core::rect<s32>(driver->getScreenSize().Width/2-200,100,driver->getScreenSize().Width/2+200,380),
 			true, L"Parameters", 0, GUI_ID_ASK_PARAMETERS_WINDOW);
 
 		s32 y=20;
@@ -455,7 +455,7 @@ void EditorEventReceiver::askForParameters(bool previous_was_bad)
 void EditorEventReceiver::askForSwitch()
 {
 	// create the window
-	IGUIWindow* wnd = env->addWindow(core::rect<s32>(300,200,500,350),
+	IGUIWindow* wnd = env->addWindow(core::rect<s32>(driver->getScreenSize().Width/2-100,200,driver->getScreenSize().Width/2+100,350),
 		true, L"Success", 0, GUI_ID_ASK_SWITCH_WINDOW);
 
 	env->addStaticText(L"Simulation finished well.\r\nDo you want to switch to the player and open the video now ?", core::rect<s32>(20,20,180,80), false, true, wnd);
