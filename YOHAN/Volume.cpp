@@ -421,8 +421,15 @@ void Volume::generateK()
 
 		/* Added by Ning, for fracture */
 
+		// F~ = Q' * F
+		Matrix3d fp = q.transpose() * f;
+		// e~ = 0.5 * (F~ + F~') - I
+		Matrix3d epsilon = 0.5 * (fp + fp.transpose()) - Matrix3d::Identity();
+		// sigma~ = lambda * trace(e~) * I + 2 * mu * e~
+		Matrix3d sigma = material.lambda * epsilon.trace() * Matrix3d::Identity() + 2 * material.mu * epsilon;
+
 		// copy sigma as stress
-		tetrahedra[t]->setStress(f);
+		tetrahedra[t]->setStress(sigma);
 
 		// copy Q
 		tetrahedra[t]->setQ(q);

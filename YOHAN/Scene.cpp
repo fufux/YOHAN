@@ -174,7 +174,7 @@ bool Scene::load(std::string tetrahedralizedSceneFile)
 						material.rho = atof(tmp);
 
 						/* Added by Ning, for fracture */
-						material.toughness = 24000;
+						material.toughness = 200000;
 						/* END -- Added by Ning, for fracture */
 					}
 					else					
@@ -384,7 +384,14 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 
 		// compute
 		handleCollisions();
-		for (int i=0; i < (int)volumes.size(); i++) {
+		for (int i=0; i < (int)volumes.size(); i++) 
+		{
+			if (stepNumber < 2)
+			{
+				double* test = volumes[i]->getForceField();
+				test[0] += 10000000000;
+				test[3] += 10000000000;
+			}
 			volumes[i]->evolve(deltaT);
 			volumes[i]->calculFracture();
 		}
