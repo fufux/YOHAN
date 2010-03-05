@@ -22,7 +22,7 @@ Tetrahedron::Tetrahedron(int id, Volume* volume, vector<Point*> points)
 	v2(0) = u3[0]-u1[0];
 	v2(1) = u3[1]-u1[1];
 	v2(2) = u3[2]-u1[2];
-	v1 = v1.cross(v2);
+	v1 = v1.cross(v2).eval();
 	v2(0) = u4[0]-u1[0];
 	v2(1) = u4[1]-u1[1];
 	v2(2) = u4[2]-u1[2];
@@ -106,9 +106,7 @@ void Tetrahedron::computeBeta()
 	beta(0,2) = u4[0]-u1[0];
 	beta(1,2) = u4[1]-u1[1];
 	beta(2,2) = u4[2]-u1[2];
-	beta = beta.inverse();
-	//Eigen::LU<Matrix3d> lu(beta);
-	//lu.computeInverse(&beta);
+	beta = beta.inverse().eval();
 }
 
 void Tetrahedron::computeN()
