@@ -49,7 +49,7 @@ public:
 	void askForFileName();
 
 	// load a 3D model from a mesh file (3ds, X, etc.) and add it to the scene
-	void add3DModel(core::stringc filename);
+	bool add3DModel(core::stringc filename);
 
 	// add a force field to the scene
 	void addForceField();
