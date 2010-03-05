@@ -289,8 +289,15 @@ vector3df Editor::getForceField()
 }
 
 
-void Editor::add3DModel(stringc filename)
+bool Editor::add3DModel(stringc filename)
 {
+	if (!device->getFileSystem()->existFile( filename.c_str() ))
+	{
+		// model doesn't exist
+		env->addMessageBox(
+			CAPTION_ERROR, (stringw("The model could not be loaded. The file ")+stringw(filename.c_str())+L" doesn't exist.").c_str());
+		return false;
+	}
 	IMesh* m = smgr->getMesh( filename.c_str() );
 	if (!m)
 	{
@@ -298,12 +305,12 @@ void Editor::add3DModel(stringc filename)
 		env->addMessageBox(
 			CAPTION_ERROR, L"The model could not be loaded. " \
 			L"Maybe it is not a supported file format.");
-		return;
+		return false;
 	}
 
 	IMeshSceneNode* node = smgr->addMeshSceneNode( m );
 	if (!node)
-		return;
+		return false;
 	
 	// set default material properties
 	node->setMaterialFlag(video::EMF_LIGHTING, true);
@@ -339,6 +346,8 @@ void Editor::add3DModel(stringc filename)
 	selectedNodeIndex = nodes.size() - 1;
 	this->createSceneNodeToolBox();
 	node->setDebugDataVisible( scene::EDS_BBOX );
+
+	return true;
 }
 
 
@@ -697,6 +706,7 @@ bool Editor::load(irr::core::stringc filename)
 	XmlNodeType currentType = UNDEFINED;
 	bool firstLoop = true;
 	bool is_valid_file = false;
+	bool add3DModel_success = false;
 
 	while(xml->read())
 	{
@@ -727,7 +737,7 @@ bool Editor::load(irr::core::stringc filename)
 				if (stringw("scenenode") == xml->getNodeName())
 				{
 					currentType = SCENENODE;
-					add3DModel(xml->getAttributeValue(L"filename"));
+					add3DModel_success = add3DModel(xml->getAttributeValue(L"filename"));
 				}
 				else if (stringw("forcefield") == xml->getNodeName())
 				{
@@ -735,7 +745,7 @@ bool Editor::load(irr::core::stringc filename)
 				}
 				else if (stringw("position") == xml->getNodeName())
 				{
-					if (currentType == SCENENODE)
+					if (currentType == SCENENODE && add3DModel_success)
 					{
 						nodes.getLast()->setPosition(vector3df(
 							xml->getAttributeValueAsFloat(L"x"),
@@ -746,7 +756,7 @@ bool Editor::load(irr::core::stringc filename)
 				}
 				else if (stringw("rotation") == xml->getNodeName())
 				{
-					if (currentType == SCENENODE)
+					if (currentType == SCENENODE && add3DModel_success)
 					{
 						nodes.getLast()->setRotation(vector3df(
 							xml->getAttributeValueAsFloat(L"x"),
@@ -757,7 +767,7 @@ bool Editor::load(irr::core::stringc filename)
 				}
 				else if (stringw("scale") == xml->getNodeName())
 				{
-					if (currentType == SCENENODE)
+					if (currentType == SCENENODE && add3DModel_success)
 					{
 						nodes.getLast()->setScale(vector3df(
 							xml->getAttributeValueAsFloat(L"x"),
@@ -768,7 +778,7 @@ bool Editor::load(irr::core::stringc filename)
 				}
 				else if (stringw("initialspeed") == xml->getNodeName())
 				{
-					if (currentType == SCENENODE)
+					if (currentType == SCENENODE && add3DModel_success)
 					{
 						initialSpeeds[nodes.size() - 1] = vector3df(
 							xml->getAttributeValueAsFloat(L"x"),
@@ -779,7 +789,7 @@ bool Editor::load(irr::core::stringc filename)
 				}
 				else if (stringw("materialproperties") == xml->getNodeName())
 				{
-					if (currentType == SCENENODE)
+					if (currentType == SCENENODE && add3DModel_success)
 					{
 						meshMaterials[nodes.size() - 1].lambda = xml->getAttributeValueAsFloat(L"lambda");
 						meshMaterials[nodes.size() - 1].mu = xml->getAttributeValueAsFloat(L"mu");
@@ -1026,6 +1036,7 @@ bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSc
 		{
 			device->getLogger()->log(
 				(stringc("Call simulate(")+simulatedSceneOutDir+", "+stringc(deltaT)+", "+stringc(nbFrame)+")").c_str());
+			
 			long tstart, tend, tdif;
 			tstart = GetTickCount();
 			

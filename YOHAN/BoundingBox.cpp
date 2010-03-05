@@ -117,7 +117,7 @@ BoundingBox::BoundingBox(BoundingBox* parent, vector<Tetrahedron*> tetrahedra, b
 			tetrahedra1.push_back( nearest );
 			tetrahedra_tmp = tetrahedra2;
 			tetrahedra2.clear();
-			for (int i=0; i < tetrahedra_tmp.size(); i++)
+			for (int i=0; i < (int)tetrahedra_tmp.size(); i++)
 			{
 				if (tetrahedra_tmp[i] != nearest)
 					tetrahedra2.push_back( tetrahedra_tmp[i] );
@@ -128,7 +128,7 @@ BoundingBox::BoundingBox(BoundingBox* parent, vector<Tetrahedron*> tetrahedra, b
 			tetrahedra2.push_back( nearest );
 			tetrahedra_tmp = tetrahedra1;
 			tetrahedra1.clear();
-			for (int i=0; i < tetrahedra_tmp.size(); i++)
+			for (int i=0; i < (int)tetrahedra_tmp.size(); i++)
 			{
 				if (tetrahedra_tmp[i] != nearest)
 					tetrahedra1.push_back( tetrahedra_tmp[i] );

@@ -363,31 +363,29 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 
 
 	// SIMULATE
+	long tstart, tend, tdif, tdif2;
+			
 	for (stepNumber=0; stepNumber < nbSteps; stepNumber++)
 	{
 		currentTime += deltaT;
-
-		cout << "#################################################################################################################"<<endl;
-		cout << "#################################################################################################################"<<endl;
-		cout << "#################################################################################################################"<<endl;
-		cout << "#################################################################################################################"<<endl;
-		cout << "#################################################################################################################"<<endl;
-		cout << "step n°" << stepNumber<<endl;
+		tstart = GetTickCount();
 
 		// compute
 		handleCollisions();
 		for (int i=0; i < (int)volumes.size(); i++) {
-			//volumes[i]->collisionBidon();
 			volumes[i]->evolve(deltaT);
 		}
+		tend = GetTickCount();
+		tdif = tend - tstart;
 
 		// save step
 		saveStep(filename);
+		tdif2 = GetTickCount() - tend;
 
 		// log
-		if (stepNumber % 1 == 0) {
+		if (stepNumber % 10 == 0) {
 			std::stringstream s;
-			s << "Step n°" << stepNumber << " computed.";
+			s << "Step n°" << stepNumber << " computed in " << tdif << "ms and saved in " << tdif2 << "ms.";
 			util::log( s.str() );
 		}
 	}

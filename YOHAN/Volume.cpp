@@ -180,7 +180,7 @@ bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFil
 	// BoundingBox
 	bb = new BoundingBox(NULL, tetrahedra, false);
 
-	for (int i=0; i < points.size(); i++)
+	for (int i=0; i < (int)points.size(); i++)
 	{
 		double x[3];
 		
@@ -203,11 +203,6 @@ bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFil
 		points[i]->getX()[0] += pos[0];
 		points[i]->getX()[1] += pos[1];
 		points[i]->getX()[2] += pos[2];
-
-		// update U
-		/*points[i]->getU()[0] = points[i]->getX()[0];
-		points[i]->getU()[1] = points[i]->getX()[1];
-		points[i]->getU()[2] = points[i]->getX()[2];*/
 	}
 
 	return true;
@@ -319,23 +314,30 @@ vector<std::string> Volume::save(std::string dir)
 void Volume::generateK()
 {
 	K->clear();
-	Matrix3d dx,jac,tmp;
+	Matrix3d dx,jac;
 	Matrix3d& f = Matrix3d();
 	Matrix3d& q = Matrix3d();
-	Vector3d fi,f0;
+	Matrix3d& qt = Matrix3d();
+	Matrix3d& core = Matrix3d();
 	int ri,ci,ind;
+	vector<Point*> pts;
+	double *x1,*x2,*x3,*x4;
+	double q00,q01,q02,q10,q11,q12,q20,q21,q22;
+	double core00,core01,core02,core10,core11,core12,core20,core21,core22;
+	double jac00,jac01,jac02,jac10,jac11,jac12,jac20,jac21,jac22;
+	double q_core00,q_core01,q_core02,q_core10,q_core11,q_core12,q_core20,q_core21,q_core22;
 
-	for(int t=0;t<(int)tetrahedra.size();t++){
-		vector<Point*> pts = tetrahedra[t]->getPoints();
+	// indices
+	int t,i,j;
 
-		// compute core jacobian
-		//tetrahedra[t]->computeBeta();
+	for(t=0;t<(int)tetrahedra.size();t++){
+		pts = tetrahedra[t]->getPoints();
 
 		// compute Q
-		double* x1 = pts[0]->getX();
-		double* x2 = pts[1]->getX();
-		double* x3 = pts[2]->getX();
-		double* x4 = pts[3]->getX();
+		x1 = pts[0]->getX();
+		x2 = pts[1]->getX();
+		x3 = pts[2]->getX();
+		x4 = pts[3]->getX();
 		dx(0,0) = x2[0]-x1[0];
 		dx(1,0) = x2[1]-x1[1];
 		dx(2,0) = x2[2]-x1[2];
@@ -347,71 +349,67 @@ void Volume::generateK()
 		dx(2,2) = x4[2]-x1[2];
 
 		f = dx * tetrahedra[t]->getBeta();
-		
-		cout << "dx"<<endl<<dx << endl<<endl;
-		cout << "beta"<<endl<<tetrahedra[t]->getBeta() << endl<<endl;
-		//cout << q << endl<<endl;
-		//f = Matrix3d::Random();
-		cout << "f"<<endl<<f << endl<<endl;
-		util::polarDecomposition( f, q);
-		cout << "q"<<endl<<q << endl<<endl<<endl;
-		//q= Matrix3d::Identity();
-		
-		// F~ = Q'.F
-		f = q.adjoint() * f;
-		// esp~ = 1/2(F+F')-I
-		f = (f+f.adjoint())/2 - Matrix3d::Identity();
-		// sigma = lambda * Tr(eps)I +2.mu.eps
-		f = getMaterial()->lambda * f.trace() * Matrix3d::Identity() + 2 * getMaterial()->mu * f;
+		util::polarDecomposition(f, q);
+		q00 = q(0,0); q01 = q(0,1); q02 = q(0,2);
+		q10 = q(1,0); q11 = q(1,1); q12 = q(1,2);
+		q20 = q(2,0); q21 = q(2,1); q22 = q(2,2);
 
-		for (int i = 0; i < 4; i++)
+		for (i = 0; i < 4; i++)
 		{
 			ri = pts[i]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
 			ind = pts[i]->getID() * 3;
-			for (int j = 0; j < 4; j++)
+			for (j = 0; j < 4; j++)
 			{
 				ci = pts[j]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
 				
 				// Compute Jij
-				tmp = q * tetrahedra[t]->getCoreJacobian()[i*4+j];
-				jac = tmp * q.transpose();
+				core = tetrahedra[t]->getCoreJacobian()[i*4+j];
+				core00 = core(0,0); core01 = core(0,1); core02 = core(0,2);
+				core10 = core(1,0); core11 = core(1,1); core12 = core(1,2);
+				core20 = core(2,0); core21 = core(2,1); core22 = core(2,2);
+
+				//jac = q * core * q.transpose();
+				q_core00 = q00*core00+q01*core10+q02*core20;
+				q_core01 = q00*core01+q01*core11+q02*core21;
+				q_core02 = q00*core02+q01*core12+q02*core22;
+
+				q_core10 = q10*core00+q11*core10+q12*core20;
+				q_core11 = q10*core01+q11*core11+q12*core21;
+				q_core12 = q10*core02+q11*core12+q12*core22;
+
+				q_core20 = q20*core00+q21*core10+q22*core20;
+				q_core21 = q20*core01+q21*core11+q22*core21;
+				q_core22 = q20*core02+q21*core12+q22*core22;
+
+				jac00 = q_core00*q00+q_core01*q01+q_core02*q02;
+				jac01 = q_core00*q10+q_core01*q11+q_core02*q12;
+				jac02 = q_core00*q20+q_core01*q21+q_core02*q22;
+
+				jac10 = q_core10*q00+q_core11*q01+q_core12*q02;
+				jac11 = q_core10*q10+q_core11*q11+q_core12*q12;
+				jac12 = q_core10*q20+q_core11*q21+q_core12*q22;
+
+				jac20 = q_core20*q00+q_core21*q01+q_core22*q02;
+				jac21 = q_core20*q10+q_core21*q11+q_core22*q12;
+				jac22 = q_core20*q20+q_core21*q21+q_core22*q22;
 
 
 				// 9 items for stiffness matrix
-				K->addAndSetValue(ri, ci, jac(0,0));
-				K->addAndSetValue(ri, ci + 1, jac(0,1));
-				K->addAndSetValue(ri, ci + 2, jac(0,2));
-				K->addAndSetValue(ri + 1, ci, jac(1,0));
-				K->addAndSetValue(ri + 1, ci + 1, jac(1,1));
-				K->addAndSetValue(ri + 1, ci + 2, jac(1,2));
-				K->addAndSetValue(ri + 2, ci, jac(2,0));
-				K->addAndSetValue(ri + 2, ci + 1, jac(2,1));
-				K->addAndSetValue(ri + 2, ci + 2, jac(2,2));
+				K->addAndSetValue(ri, ci, jac00);
+				K->addAndSetValue(ri, ci + 1, jac01);
+				K->addAndSetValue(ri, ci + 2, jac02);
+				K->addAndSetValue(ri + 1, ci, jac10);
+				K->addAndSetValue(ri + 1, ci + 1, jac11);
+				K->addAndSetValue(ri + 1, ci + 2, jac12);
+				K->addAndSetValue(ri + 2, ci, jac20);
+				K->addAndSetValue(ri + 2, ci + 1, jac21);
+				K->addAndSetValue(ri + 2, ci + 2, jac22);
 
-				//f0[0] = pts[i]->getU()[0];
-				//f0[1] = pts[i]->getU()[1];
-				//f0[2] = pts[i]->getU()[2];
-
-				//f0 = q * tetrahedra[t]->getCoreJacobian()[i*4+j] * f0;
-				//forces[ind] += f0[0];	
-				//forces[ind+1] += f0[1];
-				//forces[ind+2] += f0[2];
 			}
-
-			// elastic forces exerted byt the element on the node i
-
-			//fi = Q*sigma*ni
-			//fi = q * f * tetrahedra[t]->getN(i);
-			//forces[ind] -= fi[0];
-			//forces[ind+1] -= fi[1];
-			//forces[ind+2] -= fi[2];
 		}
+
 	}
-	//forces[21*3+1] -= 20;
-	//forces[3*3+1] += 20;
-	/*for (int i=0; i<(int)(3*points.size()-2); i+=3)
-	cout<<forces[i]<<", "<<forces[i+1]<<", "<<forces[i+2]<<endl;
-	cout<<endl;*/
+
 }
 
 void Volume::generateC()
