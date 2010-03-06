@@ -14,9 +14,6 @@ using namespace xercesc;
 Scene::Scene(void)
 {
 	plan = new Tetrahedron();
-	kerr = 100*deltaT;
-	kdmp = 7000000*deltaT;
-	kfrc = 400000*deltaT;
 }
 
 Scene::~Scene(void)
@@ -343,6 +340,13 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 	this->currentTime = 0;
 	this->deltaT = deltaT;
 	this->simulatedSceneOutDir = simulatedSceneOutDir;
+
+
+	// Initialize collision response constants
+	kerr = 100*deltaT;
+	kdmp = 7000000*deltaT;
+	kfrc = 400000*deltaT;
+
 
 	std::string filename = simulatedSceneOutDir;
 	filename += "/scene.xml";

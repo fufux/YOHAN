@@ -171,9 +171,9 @@ void Player::playNextFrame(double deltaT)
 	s32 old_currentFrame = currentFrame;
 	double min = 100000000;
 
-	if (old_currentFrame >= 0 && old_currentFrame < (s32)frames_size - 1000)
+	if (old_currentFrame >= 0 && old_currentFrame < (s32)frames_size)
 	{
-		for (u32 i=old_currentFrame; i < frames_size && i < (u32)old_currentFrame + 1000; i++)
+		for (u32 i=old_currentFrame; i < frames_size && i < old_currentFrame + 1000; i++)
 		{
 			if (abs(framesFileNames[i].timestamp - accumulatedDeltaT) < min)
 			{
@@ -181,18 +181,7 @@ void Player::playNextFrame(double deltaT)
 				currentFrame = i;
 			}
 		}
-	}
-	else if (old_currentFrame >= 0 && old_currentFrame < (s32)frames_size)
-	{
-		for (u32 i=old_currentFrame; i < frames_size; i++)
-		{
-			if (abs(framesFileNames[i].timestamp - accumulatedDeltaT) < min)
-			{
-				min = abs(framesFileNames[i].timestamp - accumulatedDeltaT);
-				currentFrame = i;
-			}
-		}
-		for (u32 i=0; i < frames_size && i < (u32)old_currentFrame-frames_size+1000; i++)
+		for (u32 i=0; i < frames_size && i < 1000; i++)
 		{
 			if (abs(framesFileNames[i].timestamp - accumulatedDeltaT) < min)
 			{
@@ -206,10 +195,6 @@ void Player::playNextFrame(double deltaT)
 		currentFrame = 0;
 	}
 
-	// force looping
-	if (currentFrame == frames_size-1)
-		accumulatedDeltaT = 0;
-
 	// display the new frame
 	/*if (old_currentFrame >= 0 && old_currentFrame < (s32)frames_size)
 		frames[old_currentFrame]->hide();
@@ -217,6 +202,10 @@ void Player::playNextFrame(double deltaT)
 		frames[currentFrame]->display();*/
 
 	displayFrameById(currentFrame);
+
+	// force looping
+	if (currentFrame == frames_size-1)
+		accumulatedDeltaT = 0;
 
 	setDebugDataVisible( this->debugData );
 	updateFrameNumber();
