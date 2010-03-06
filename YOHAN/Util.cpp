@@ -56,5 +56,3 @@ double util::normMinus(double** x, double** y)
 	}
 	return norm;
 }
-
-

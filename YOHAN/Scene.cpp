@@ -14,9 +14,6 @@ using namespace xercesc;
 Scene::Scene(void)
 {
 	plan = new Tetrahedron();
-	kerr = 1;
-	kdmp = 70000;
-	kfrc = 4000;
 }
 
 Scene::~Scene(void)
@@ -344,6 +341,13 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 	this->deltaT = deltaT;
 	this->simulatedSceneOutDir = simulatedSceneOutDir;
 
+
+	// Initialize collision response constants
+	kerr = 100*deltaT;
+	kdmp = 7000000*deltaT;
+	kfrc = 400000*deltaT;
+
+
 	std::string filename = simulatedSceneOutDir;
 	filename += "/scene.xml";
 
@@ -355,7 +359,7 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		return false;
 	}
 
-	fp << "<video name=\"test\">" << endl;
+	fp << "<video frames=\"" << nbSteps << "\">" << endl;
 
 	fp.flush();
 	fp.close();
