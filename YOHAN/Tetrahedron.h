@@ -37,6 +37,9 @@ public:
 	Matrix<double, 3, 1>& getTensileForce(int index);
 	Matrix<double, 3, 1>& getCompressiveForce(int index);
 
+	void remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& nvector, vector<Point*>& pointList);
+	/* END -- Added by Ning, for fracture */
+
 private:
 	int id;
 
@@ -76,5 +79,17 @@ private:
 	//compressive Force
 	Matrix<double, 3, 1> compressiveForce[4];
 
-	//
+	
+	void remeshByFaceWithTwoNewPoints(Point* p1, Point* p2, Point* p3, Point* p4, Point* p5);
+	void selfRemeshByFaceWithTwoNewPoints(Point* p1, Point* p2, Point* p3, Point* p4, Point* p5, Point* replica);
+	void remeshByFaceWithOneNewPoint(Point* p1, Point* p2, Point* p3, Point* p4);
+	void selfRemeshByFaceWithOneNewPoint(Point* p1, Point* p2, Point* p3, Point* p4, Point* replica);
+	void remeshByEdgeWithOneNewPoint(Point* p2, Point* p3, Point* p4);
+	Tetrahedron* faceNeighour(Point* a, Point* b, Point* c);
+	void edgeNeighour(Point* a, Point* b, Tetrahedron* faceNeighbourA, Tetrahedron* faceNeighbourB, std::vector<Tetrahedron*>& commonAB);
+	
+	Point* getFacePoint(Point* a, Point* b, Point* c);
+
+
+	/* END -- Added by Ning, for fracture */
 };

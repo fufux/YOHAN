@@ -200,6 +200,13 @@ bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFil
 	fp.close();
 	fp.clear();
 
+	/* Added by Ning, for fracture*/
+
+	/* pre-calculate the face neighbour and the edge neighbour for each tetrahedron */
+
+
+	/* END -- Added by Ning, for fracture*/
+
 	// the matrix
 	int order = points.size() * 3;
 	this->K = new matrix::SymmetricMumpsSquareSparseMatrix(order);
@@ -720,6 +727,7 @@ int Volume::calculFracture()
 			nvector(2,0) = eigenVector(2, vindex);
 			nvector.normalize();
 
+			
 			// replica without re-mesh
 						
 			int pointIndex = points.size();	//int pointIndex = pointPool->size() + newPointList.size();
@@ -740,11 +748,122 @@ int Volume::calculFracture()
 				// the replica is not useful
 				delete replica;
 			}
+			
+
+			/*
+			// replica with remesh
+			int pointIndex = points.size();
+			Point* replica = replicaPointWithRemesh(point, nvector, pointIndex);
+			if (replica->getIndexTetra()->size() > 0)
+			{
+				points.push_back(replica);
+
+				tetrahedraChanged = true;
+				facesChanged = true;
+
+				fractureCount++;
+			}
+			else
+			{
+				// must not reach here
+				util::log("FETAL ERROR: Volume::replica with remesh");
+			}
+			*/
 		}
 
 	}
 
 	return fractureCount;
+}
+
+Point* Volume::replicaPointWithRemesh(Point* orginal, Matrix<double, 3, 1>& nvector, int replicaPointIndex)
+{
+	// copy material position, current position , velority;
+	Point* replica = new Point(replicaPointIndex, orginal->getX(), orginal->getV(), orginal->getU(), true);
+
+	// reassign
+	std::vector<IndexTetraPoint> *myTetraIndex = orginal->getIndexTetra();
+
+	// remesh buf
+	std::vector<IndexTetraPoint> remeshBuf;
+
+	double* thisPosition = orginal->getX();
+
+	for (std::vector<IndexTetraPoint>::iterator iter = orginal->getIndexTetra()->begin(); iter != orginal->getIndexTetra()->end();)
+	{
+		int pointIndex = iter->indexOfPoint;
+		Tetrahedron* tet = iter->tet;
+
+		/* for those poi																													nts which is not this point (fracture), could calculate its cos() to determine whether the 
+			tetraedre is (on + side, on - side, intersect)
+		*/
+		int state = 0;
+		
+		for (int i = 0; i < 4; i++)
+		{
+			if (i == pointIndex)		// skip "this point"
+				continue;
+
+			double* thatPosition = tet->getPoints().at(i)->getX();
+
+			// calcul the vector directs from this point (end) to that point (head)
+			Matrix<double, 3, 1> vec;
+			vec(0,0) = thatPosition[0] - thisPosition[0];
+			vec(1,0) = thatPosition[1] - thisPosition[1];
+			vec(2,0) = thatPosition[2] - thisPosition[2];
+
+			// calcul the cos of two vector
+			vec.normalize();
+			double cosValue = vec.dot(nvector);
+
+			// accumulate the number of point on the same side
+			if (cosValue > 0)
+				state += 1;
+			else
+				state -= 1;
+		}
+
+		if (state == 3)
+		{
+			// belongs to q+
+			// do not remove from the current list
+			++iter;
+		}
+		else if (state == -3)	// && orginal->getIndexTetra()->size() > 1
+		{
+			// belongs to q-
+
+			// visability
+			orginal->setIsSurface(true);			
+
+			/* re-assign volumic */
+			struct IndexTetraPoint newTetPointIndex;
+			newTetPointIndex.tet = tet;
+			newTetPointIndex.indexOfPoint = pointIndex;
+
+			replica->getIndexTetra()->push_back(newTetPointIndex);
+			tet->getPoints()[pointIndex] = replica;
+
+			// remove from the current tet list
+			iter = orginal->getIndexTetra()->erase(iter);
+		}
+		else
+		{
+			// intersect, should remesh
+			IndexTetraPoint index = *iter;
+			remeshBuf.push_back(index);
+			
+			++iter;
+		}
+	}
+
+	//remesh
+	for (std::vector<IndexTetraPoint>::iterator iter = remeshBuf.begin(); iter != remeshBuf.end(); ++iter)
+	{
+		iter->tet->remesh(orginal, replica, nvector, this->points);
+	}
+
+	return replica;
 }
 
 Point* Volume::replicaPointWithoutRemesh(Point* orginal, Matrix<double, 3, 1>& nvector, int replicaPointIndex)

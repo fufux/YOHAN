@@ -27,5 +27,6 @@ namespace util
 	/* Added by Ning, for fracture */
 	Matrix3d calcul_M33_MA(Matrix<double, 3, 1>& vector);
 	void retrieveEigen(Matrix3d& mat, Matrix<double, 3, 1>& eigenValue, Matrix3d& eigenVector);
+	int intersect_line_plane(double* p1, double* p2, Matrix<double, 3, 1>& normalOfPlane, double* pOnPlane, double& ratio);
 
 }

@@ -42,6 +42,12 @@ public:
 
 	vector<struct IndexSurfacePoint>* getIndexSurface();
 
+	void addReverseIndex(Tetrahedron* tetra, int iop);
+
+	void modifyReverseIndex(Tetrahedron* tetra, int iop, int tetID);
+
+	void removeReverseIndex(int tetID);
+
 private:
 	// ID of the point
 	int id;
