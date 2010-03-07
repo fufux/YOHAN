@@ -343,9 +343,9 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 
 
 	// Initialize collision response constants
-	kerr = 100*deltaT;
-	kdmp = 7000000*deltaT;
-	kfrc = 400000*deltaT;
+	kerr = 1000;
+	kdmp = 7500;
+	kfrc = 0.5;
 
 
 	std::string filename = simulatedSceneOutDir;
