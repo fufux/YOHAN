@@ -370,24 +370,22 @@ void Tetrahedron::remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& n
 		state = 0;
 
 		// swap the p1 p2 p3 to keep the assertion
-		if (resP1P2 == 0)	//1->3,2->1,3->2
+		if (resP1P2 == 0)	//1<->3
 		{
 			Point* tmp = p1;
 			p1 = p3;
-			p3 = p2;
-			p2 = tmp;
+			p3 = tmp;
 
 			// update ratio
 			util::intersect_line_plane(p1->getX(), p2->getX(), nvector, orginal->getX(), ratioP1P2);
 			util::intersect_line_plane(p1->getX(), p3->getX(), nvector, orginal->getX(), ratioP1P3);
 			util::intersect_line_plane(p2->getX(), p3->getX(), nvector, orginal->getX(), ratioP2P3);
 		}
-		else if (resP1P3 == 0)	// 1->2,2->3,3->1
+		else if (resP1P3 == 0)	// 1<->2
 		{			
 			Point* tmp = p1;
 			p1 = p2;
-			p2 = p3;
-			p3 = tmp;
+			p2 = tmp;
 
 			// update ratio
 			util::intersect_line_plane(p1->getX(), p2->getX(), nvector, orginal->getX(), ratioP1P2);
@@ -400,18 +398,36 @@ void Tetrahedron::remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& n
 		}
 	}
 	/* 1 New Points, assert that p4:p2-p3 */
-	else if (resP1P2 == 3 && resP1P3 == 3 && resP2P3 == 1)
+	else if ((resP1P2 == 3 && resP1P3 == 3 && resP2P3 == 1) ||
+			 (resP1P2 == 3 && resP1P3 == 0 && resP2P3 == 1) ||
+			 (resP1P2 == 0 && resP1P3 == 3 && resP2P3 == 1))		// 3,3,1 == 3,0,1 == 0,3,1
 	{
 		state = 1;
 		// order is correct
 	}
-	else if (resP1P2 == 1 && resP1P3 == 10 && resP2P3 == 10)
+	else if ((resP1P2 == 1 && resP1P3 == 10 && resP2P3 == 10) ||
+			 (resP1P2 == 1 && resP1P3 == 10 && resP2P3 == 0) ||
+			 (resP1P2 == 1 && resP1P3 == 0 && resP2P3 == 10))		// 1,10,10 == 1,0,10 == 1,10,0
 	{
 		state = 1;
-		//1->3,2->1,3->2
+		//1<->3
 		Point* tmp = p1;
 		p1 = p3;
-		p3 = p2;
+		p3 = tmp;
+
+		// update ratio
+		util::intersect_line_plane(p1->getX(), p2->getX(), nvector, orginal->getX(), ratioP1P2);
+		util::intersect_line_plane(p1->getX(), p3->getX(), nvector, orginal->getX(), ratioP1P3);
+		util::intersect_line_plane(p2->getX(), p3->getX(), nvector, orginal->getX(), ratioP2P3);
+	}
+	else if ((resP1P2 == 10 && resP1P3 == 1 && resP2P3 == 3) ||
+			 (resP1P2 == 10 && resP1P3 == 1 && resP2P3 == 0) ||
+			 (resP1P2 == 0 && resP1P3 == 1 && resP2P3 == 3))		// 10,1,3 == 10,1,0 == 0,1,3
+	{
+		state = 1;
+		// 1<->2
+		Point* tmp = p1;
+		p1 = p2;
 		p2 = tmp;
 
 		// update ratio
@@ -419,19 +435,22 @@ void Tetrahedron::remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& n
 		util::intersect_line_plane(p1->getX(), p3->getX(), nvector, orginal->getX(), ratioP1P3);
 		util::intersect_line_plane(p2->getX(), p3->getX(), nvector, orginal->getX(), ratioP2P3);
 	}
-	else if (resP1P2 == 10 && resP1P3 == 1 && resP2P3 == 3)
+	else if ((resP1P2 == 3 && resP1P3 == 3 && resP2P3 == 0) ||
+			 (resP1P2 == 10 && resP1P3 == 0 && resP2P3 == 3) ||
+			 (resP1P2 == 1 && resP1P3 == 0 && resP2P3 == 3) ||
+			 (resP1P2 == 3 && resP1P3 == 0 && resP2P3 == 10) ||
+			 (resP1P2 == 0 && resP1P3 == 10 && resP2P3 == 1) ||
+			 (resP1P2 == 0 && resP1P3 == 10 && resP2P3 == 10) ||
+			 (resP1P2 == 10 && resP1P3 == 0 && resP2P3 == 1) ||
+			 (resP1P2 == 3 && resP1P3 == 1 && resP2P3 == 0) ||
+			 (resP1P2 == 10 && resP1P3 == 10 && resP2P3 == 0) ||
+			 (resP1P2 == 0 && resP1P3 == 3 && resP2P3 == 3) ||
+			 (resP1P2 == 0 && resP1P3 == 1 && resP2P3 == 10) ||
+			 (resP1P2 == 1 && resP1P3 == 3 && resP2P3 == 0) ||
+			 (resP1P2 == 0 && resP1P3 == 10 && resP2P3 == 3) ||
+			 (resP1P2 == 0 && resP1P3 == 3 && resP2P3 == 10))
 	{
-		state = 1;
-		// 1->2,2->3,3->1
-		Point* tmp = p1;
-		p1 = p2;
-		p2 = p3;
-		p3 = tmp;
-
-		// update ratio
-		util::intersect_line_plane(p1->getX(), p2->getX(), nvector, orginal->getX(), ratioP1P2);
-		util::intersect_line_plane(p1->getX(), p3->getX(), nvector, orginal->getX(), ratioP1P3);
-		util::intersect_line_plane(p2->getX(), p3->getX(), nvector, orginal->getX(), ratioP2P3);
+		// ignore
 	}
 	else
 	{
@@ -440,6 +459,11 @@ void Tetrahedron::remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& n
 
 	if (state == 0)	/* 2 New Points, assert that p4:p1-p2, p5:p1-p3 */
 	{
+		/*DEBUG ONLY
+		ratioP1P2 = 0.5;
+		ratioP1P3 = 0.5;
+		END DEBUG*/
+
 		/* create the 2 new points */
 		double *x1 = p1->getX(), *v1 = p1->getV(), *u1 = p1->getU();
 		double *x2 = p2->getX(), *v2 = p2->getV(), *u2 = p2->getU();
@@ -485,11 +509,18 @@ void Tetrahedron::remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& n
 			(*iter)->remeshByEdgeWithOneNewPoint(p1, p3, p5);
 
 		/* remesh self */
-		this->selfRemeshByFaceWithTwoNewPoints(p1, p2, p3, p4, p5, replica);
+		if (isPositiveRemesh(p1, p2, nvector))
+			this->selfRemeshByFaceWithTwoNewPoints_Positive(p1, p2, p3, p4, p5, replica);
+		else
+			this->selfRemeshByFaceWithTwoNewPoints_Negative(p1, p2, p3, p4, p5, replica);
 	}
 
 	else if (state == 1)	// 1 new point between P2 and P3
 	{
+		/*DEBUG ONLY
+		ratioP2P3 = 0.5;
+		END DEBUG*/
+
 		/* create the 1 new point */
 		double *x2 = p2->getX(), *v2 = p2->getV(), *u2 = p2->getU();
 		double *x3 = p3->getX(), *v3 = p3->getV(), *u3 = p3->getU();
@@ -520,7 +551,10 @@ void Tetrahedron::remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& n
 			(*iter)->remeshByEdgeWithOneNewPoint(p2, p3, p4);
 
 		/* remesh self */
-		this->selfRemeshByFaceWithOneNewPoint(p1, p2, p3, p4, replica);
+		if (isPositiveRemesh(p2, p3, nvector))
+			this->selfRemeshByFaceWithOneNewPoint_Positive(p1, p2, p3, p4, replica);
+		else
+			this->selfRemeshByFaceWithOneNewPoint_Negative(p1, p2, p3, p4, replica);
 	}
 	else
 	{
@@ -532,7 +566,7 @@ void Tetrahedron::remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& n
 
 void Tetrahedron::remeshByFaceWithTwoNewPoints(Point* p1, Point* p2, Point* p3, Point* p4, Point* p5)
 {
-	std::vector<Tetrahedron*> tetList = volume->getTetrahedra();
+	std::vector<Tetrahedron*>* tetList = volume->getTetrahedra();
 	Point* p0 = getFacePoint(p1, p2, p3);
 
 	/* create new 3 tetrahedrons for current tetrahedron */
@@ -571,14 +605,14 @@ void Tetrahedron::remeshByFaceWithTwoNewPoints(Point* p1, Point* p2, Point* p3, 
 	vpC.push_back(p2);
 	vpC.push_back(p3);
 
-	Tetrahedron* tetA = new Tetrahedron(tetList.size(), volume, vpA);
-	tetList.push_back(tetA);
-	Tetrahedron* tetB = new Tetrahedron(tetList.size(), volume, vpB);
-	tetList.push_back(tetB);
+	Tetrahedron* tetA = new Tetrahedron(tetList->size(), volume, vpA);
+	tetList->push_back(tetA);
+	Tetrahedron* tetB = new Tetrahedron(tetList->size(), volume, vpB);
+	tetList->push_back(tetB);
 
-	Tetrahedron* toFree = tetList[id];
+	Tetrahedron* toFree = tetList->at(id);
 	Tetrahedron* tetC = new Tetrahedron(id, volume, vpC);
-	tetList[id] = tetC;
+	tetList->at(id) = tetC;
 
 	/* Inverse Index */
 		/*
@@ -621,10 +655,10 @@ void Tetrahedron::remeshByFaceWithTwoNewPoints(Point* p1, Point* p2, Point* p3, 
 	p5->addReverseIndex(tetC, 0);
 	
 	/* Delete old tetrahedron */
-	delete toFree;
+	//delete toFree;
 }
 
-void Tetrahedron::selfRemeshByFaceWithTwoNewPoints(Point* p1, Point* p2, Point* p3, Point* p4, Point* p5, Point* pR)
+void Tetrahedron::selfRemeshByFaceWithTwoNewPoints_Positive(Point* p1, Point* p2, Point* p3, Point* p4, Point* p5, Point* pR)
 {
 	Point* p0 = getFacePoint(p1, p2, p3);
 
@@ -665,16 +699,16 @@ void Tetrahedron::selfRemeshByFaceWithTwoNewPoints(Point* p1, Point* p2, Point* 
 	vpC.push_back(p2);
 	vpC.push_back(p3);
 
-	vector<Tetrahedron*> tetList = volume->getTetrahedra();
+	vector<Tetrahedron*>* tetList = volume->getTetrahedra();
 
-	Tetrahedron* tetA = new Tetrahedron(tetList.size(), volume, vpA);
-	tetList.push_back(tetA);
-	Tetrahedron* tetB = new Tetrahedron(tetList.size(), volume, vpB);
-	tetList.push_back(tetB);
+	Tetrahedron* tetA = new Tetrahedron(tetList->size(), volume, vpA);
+	tetList->push_back(tetA);
+	Tetrahedron* tetB = new Tetrahedron(tetList->size(), volume, vpB);
+	tetList->push_back(tetB);
 
-	Tetrahedron* toFree = tetList[id];
+	Tetrahedron* toFree = tetList->at(id);
 	Tetrahedron* tetC = new Tetrahedron(id, volume, vpC);
-	tetList[id] = tetC;
+	tetList->at(id) = tetC;
 
 	/* Inverse Index */
 		/*
@@ -721,12 +755,111 @@ void Tetrahedron::selfRemeshByFaceWithTwoNewPoints(Point* p1, Point* p2, Point* 
 	pR->addReverseIndex(tetC, 1);
 	
 	/* Delete old tetrahedron */
-	delete toFree;
+	//delete toFree;
+}
+
+void Tetrahedron::selfRemeshByFaceWithTwoNewPoints_Negative(Point* p1, Point* p2, Point* p3, Point* p4, Point* p5, Point* pR)
+{
+	Point* p0 = getFacePoint(p1, p2, p3);
+
+	/* create new 3 tetrahedrons for current tetrahedron */
+		/*
+			For orginal Point 0 1 2 3 R and new point 4 5
+			A - 1 R 4 5
+			B - 4 0 2 5
+			C - 5 0 2 3 (Keep the ID)
+
+			0: C +B
+			1: -C +A
+			2: C +B
+			3: C
+			4: +A +B
+			5: +A +B +C
+			R: +A
+		*/
+
+	// A
+	std::vector<Point*> vpA;
+	vpA.push_back(p1);
+	vpA.push_back(pR);
+	vpA.push_back(p4);
+	vpA.push_back(p5);
+
+	// B
+	std::vector<Point*> vpB;
+	vpB.push_back(p4);
+	vpB.push_back(p0);
+	vpB.push_back(p2);
+	vpB.push_back(p5);
+
+	// C
+	std::vector<Point*> vpC;
+	vpC.push_back(p5);
+	vpC.push_back(p0);
+	vpC.push_back(p2);
+	vpC.push_back(p3);
+
+	vector<Tetrahedron*>* tetList = volume->getTetrahedra();
+
+	Tetrahedron* tetA = new Tetrahedron(tetList->size(), volume, vpA);
+	tetList->push_back(tetA);
+	Tetrahedron* tetB = new Tetrahedron(tetList->size(), volume, vpB);
+	tetList->push_back(tetB);
+
+	Tetrahedron* toFree = tetList->at(id);
+	Tetrahedron* tetC = new Tetrahedron(id, volume, vpC);
+	tetList->at(id) = tetC;
+
+	/* Inverse Index */
+		/*
+			For orginal Point 0 1 2 3 R and new point 4 5
+			A - 1 R 4 5
+			B - 4 0 2 5
+			C - 5 0 2 3 (Keep the ID)
+
+			0: C +B
+			1: -C +A
+			2: C +B
+			3: C
+			4: +A +B
+			5: +A +B +C
+			R: +A
+		*/
+
+	//PO
+	p0->modifyReverseIndex(tetC, 1, id);
+	p0->addReverseIndex(tetB, 1);
+
+	//P1
+	p1->removeReverseIndex(id);
+	p1->addReverseIndex(tetA, 0);
+
+	//P2
+	p2->modifyReverseIndex(tetC, 2, id);
+	p2->addReverseIndex(tetB, 2);
+
+	//P3
+	p3->modifyReverseIndex(tetC, 3, id);
+
+	//P4
+	p4->addReverseIndex(tetA, 2);
+	p4->addReverseIndex(tetB, 0);
+
+	//P5
+	p5->addReverseIndex(tetA, 3);
+	p5->addReverseIndex(tetB, 3);
+	p5->addReverseIndex(tetC, 0);
+
+	//PR
+	pR->addReverseIndex(tetA, 1);
+	
+	/* Delete old tetrahedron */
+	//delete toFree;
 }
 
 void Tetrahedron::remeshByFaceWithOneNewPoint(Point* p1, Point* p2, Point* p3, Point* p4)
 {
-	std::vector<Tetrahedron*> tetList = volume->getTetrahedra();
+	std::vector<Tetrahedron*>* tetList = volume->getTetrahedra();
 	Point* p0 = getFacePoint(p1, p2, p3);
 
 	/* create new 2 tetrahedrons for current tetrahedron */
@@ -758,12 +891,12 @@ void Tetrahedron::remeshByFaceWithOneNewPoint(Point* p1, Point* p2, Point* p3, P
 	vpB.push_back(p4);
 	vpB.push_back(p1);
 
-	Tetrahedron* tetA = new Tetrahedron(tetList.size(), volume, vpA);
-	tetList.push_back(tetA);
+	Tetrahedron* tetA = new Tetrahedron(tetList->size(), volume, vpA);
+	tetList->push_back(tetA);
 
-	Tetrahedron* toFree = tetList[id];
+	Tetrahedron* toFree = tetList->at(id);
 	Tetrahedron* tetB = new Tetrahedron(id, volume, vpB);
-	tetList[id] = tetB;
+	tetList->at(id) = tetB;
 
 	/* Reverse Index */
 		/*
@@ -800,12 +933,12 @@ void Tetrahedron::remeshByFaceWithOneNewPoint(Point* p1, Point* p2, Point* p3, P
 	p4->addReverseIndex(tetB, 2);
 
 	/* Delete old tetrahedron */
-	delete toFree;
+	//delete toFree;
 }
 
-void Tetrahedron::selfRemeshByFaceWithOneNewPoint(Point* p1, Point* p2, Point* p3, Point* p4, Point* pR)
+void Tetrahedron::selfRemeshByFaceWithOneNewPoint_Positive(Point* p1, Point* p2, Point* p3, Point* p4, Point* pR)
 {
-	std::vector<Tetrahedron*> tetList = volume->getTetrahedra();
+	std::vector<Tetrahedron*>* tetList = volume->getTetrahedra();
 	Point* p0 = getFacePoint(p1, p2, p3);
 
 	/* create new 2 tetrahedrons for current tetrahedron */
@@ -838,12 +971,12 @@ void Tetrahedron::selfRemeshByFaceWithOneNewPoint(Point* p1, Point* p2, Point* p
 	vpB.push_back(p4);
 	vpB.push_back(p1);
 
-	Tetrahedron* tetA = new Tetrahedron(tetList.size(), volume, vpA);
-	tetList.push_back(tetA);
+	Tetrahedron* tetA = new Tetrahedron(tetList->size(), volume, vpA);
+	tetList->push_back(tetA);
 
-	Tetrahedron* toFree = tetList[id];
+	Tetrahedron* toFree = tetList->at(id);
 	Tetrahedron* tetB = new Tetrahedron(id, volume, vpB);
-	tetList[id] = tetB;
+	tetList->at(id) = tetB;
 
 	/* Reverse Index */
 		/*
@@ -883,12 +1016,96 @@ void Tetrahedron::selfRemeshByFaceWithOneNewPoint(Point* p1, Point* p2, Point* p
 	pR->addReverseIndex(tetA, 1);
 
 	/* Delete old tetrahedron */
-	delete toFree;
+	//delete toFree;
+}
+
+void Tetrahedron::selfRemeshByFaceWithOneNewPoint_Negative(Point* p1, Point* p2, Point* p3, Point* p4, Point* pR)
+{
+	std::vector<Tetrahedron*>* tetList = volume->getTetrahedra();
+	Point* p0 = getFacePoint(p1, p2, p3);
+
+	/* create new 2 tetrahedrons for current tetrahedron */
+		/*
+			For orginal Point 0 1 2 3 and new point 4
+
+			p4 is between p1 and p2
+			A - 1 0 4 3
+			B - R 2 4 1 (Keep the ID)
+
+			0 - -B +A
+			1 - B +A
+			2 - B
+			3 - -B +A
+			4 - +A +B
+			R - +B
+		*/
+
+	// A
+	std::vector<Point*> vpA;
+	vpA.push_back(p1);
+	vpA.push_back(p0);
+	vpA.push_back(p4);
+	vpA.push_back(p3);
+
+	// B
+	std::vector<Point*> vpB;
+	vpB.push_back(pR);
+	vpB.push_back(p2);
+	vpB.push_back(p4);
+	vpB.push_back(p1);
+
+	Tetrahedron* tetA = new Tetrahedron(tetList->size(), volume, vpA);
+	tetList->push_back(tetA);
+
+	Tetrahedron* toFree = tetList->at(id);
+	Tetrahedron* tetB = new Tetrahedron(id, volume, vpB);
+	tetList->at(id) = tetB;
+
+	/* Reverse Index */
+		/*
+			For orginal Point 0 1 2 3 and new point 4
+
+			p4 is between p1 and p2
+			A - 1 0 4 3
+			B - R 2 4 1 (Keep the ID)
+
+			0 - -B +A
+			1 - B +A
+			2 - B
+			3 - -B +A
+			4 - +A +B
+			R - +B
+		*/
+
+	//P0
+	p0->removeReverseIndex(id);
+	p0->addReverseIndex(tetA, 1);
+
+	//P1
+	p1->modifyReverseIndex(tetB, 3, id);
+	p1->addReverseIndex(tetA, 0);
+
+	//P2
+	p2->modifyReverseIndex(tetB, 1, id);
+
+	//P3
+	p3->removeReverseIndex(id);
+	p3->addReverseIndex(tetA, 3);
+
+	//P4
+	p4->addReverseIndex(tetA, 2);
+	p4->addReverseIndex(tetB, 2);
+
+	//PR
+	pR->addReverseIndex(tetB, 0);
+
+	/* Delete old tetrahedron */
+	//delete toFree;
 }
 
 void Tetrahedron::remeshByEdgeWithOneNewPoint(Point* p2, Point* p3, Point* p4)
 {
-	std::vector<Tetrahedron*> tetList = volume->getTetrahedra();
+	std::vector<Tetrahedron*>* tetList = volume->getTetrahedra();
 	// find p0 and p1
 	Point* p1 = getFacePoint(p2, p3, p3);
 	Point* p0 = getFacePoint(p1, p2, p3);
@@ -922,12 +1139,12 @@ void Tetrahedron::remeshByEdgeWithOneNewPoint(Point* p2, Point* p3, Point* p4)
 	vpB.push_back(p2);
 	vpB.push_back(p4);
 
-	Tetrahedron* tetA = new Tetrahedron(tetList.size(), volume, vpA);
-	tetList.push_back(tetA);
+	Tetrahedron* tetA = new Tetrahedron(tetList->size(), volume, vpA);
+	tetList->push_back(tetA);
 
-	Tetrahedron* toFree = tetList[id];
+	Tetrahedron* toFree = tetList->at(id);
 	Tetrahedron* tetB = new Tetrahedron(id, volume, vpB);
-	tetList[id] = tetB;
+	tetList->at(id) = tetB;
 
 	/* Reverse Index */
 		/*
@@ -964,7 +1181,7 @@ void Tetrahedron::remeshByEdgeWithOneNewPoint(Point* p2, Point* p3, Point* p4)
 	p4->addReverseIndex(tetB, 3);
 
 	/* Delete old tetrahedron */
-	delete toFree;
+	//delete toFree;
 }
 
 Tetrahedron* Tetrahedron::faceNeighour(Point* a, Point* b, Point* c)
@@ -1062,4 +1279,17 @@ Point* Tetrahedron::getFacePoint(Point* a, Point* b, Point* c)
 
 	util::log("FETAL ERROR: Could not reach here: Tetrahedron::getFacePoint");
 	return NULL;
+}
+
+bool Tetrahedron::isPositiveRemesh(Point* p1, Point* p2, Matrix<double, 3, 1>& nvector)
+{
+	double* x1 = p1->getX();
+	double* x2 = p2->getX();
+	double ret = (x1[0] - x2[0]) * nvector(0,0) +
+				(x1[1] - x2[1]) * nvector(1,0) +
+				(x1[2] - x2[2]) * nvector(2,0);
+	
+	if (ret > 0)
+		return true;
+	return false;
 }

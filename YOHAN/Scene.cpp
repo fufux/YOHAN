@@ -171,7 +171,7 @@ bool Scene::load(std::string tetrahedralizedSceneFile)
 						material.rho = atof(tmp);
 
 						/* Added by Ning, for fracture */
-						material.toughness = 2000;
+						material.toughness = 1400;
 						/* END -- Added by Ning, for fracture */
 					}
 					else					

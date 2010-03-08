@@ -81,14 +81,17 @@ private:
 
 	
 	void remeshByFaceWithTwoNewPoints(Point* p1, Point* p2, Point* p3, Point* p4, Point* p5);
-	void selfRemeshByFaceWithTwoNewPoints(Point* p1, Point* p2, Point* p3, Point* p4, Point* p5, Point* replica);
+	void selfRemeshByFaceWithTwoNewPoints_Positive(Point* p1, Point* p2, Point* p3, Point* p4, Point* p5, Point* replica);
+	void selfRemeshByFaceWithTwoNewPoints_Negative(Point* p1, Point* p2, Point* p3, Point* p4, Point* p5, Point* replica);
 	void remeshByFaceWithOneNewPoint(Point* p1, Point* p2, Point* p3, Point* p4);
-	void selfRemeshByFaceWithOneNewPoint(Point* p1, Point* p2, Point* p3, Point* p4, Point* replica);
+	void selfRemeshByFaceWithOneNewPoint_Positive(Point* p1, Point* p2, Point* p3, Point* p4, Point* replica);
+	void selfRemeshByFaceWithOneNewPoint_Negative(Point* p1, Point* p2, Point* p3, Point* p4, Point* replica);
 	void remeshByEdgeWithOneNewPoint(Point* p2, Point* p3, Point* p4);
 	Tetrahedron* faceNeighour(Point* a, Point* b, Point* c);
 	void edgeNeighour(Point* a, Point* b, Tetrahedron* faceNeighbourA, Tetrahedron* faceNeighbourB, std::vector<Tetrahedron*>& commonAB);
 	
 	Point* getFacePoint(Point* a, Point* b, Point* c);
+	bool isPositiveRemesh(Point* p1, Point* p2, Matrix<double, 3, 1>& nvector);
 
 
 	/* END -- Added by Ning, for fracture */

@@ -178,40 +178,19 @@ int util::intersect_line_plane(double* p1, double* p2, Matrix<double, 3, 1>& nor
 
 	double w[3] = {p1[0] - pOnPlane[0], p1[1] - pOnPlane[1], p1[2] - pOnPlane[2]};	// w = p1 - pOnPlane
 
-	// normalize
-	double normU = sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
-	double normW = sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
-	if (normU > 1E-40)
-	{
-		u[0] /= normU;u[1] /= normU;u[2] /= normU;
-	}
-	else
-	{
-		u[0] = 0;u[1] = 0;u[2] = 0;
-	}
-
-	if (normW > 1E-40)
-	{
-		w[0] /= normW;w[1] /= normW;w[2] /= normW;
-	}
-	else
-	{
-		w[0] = 0;w[1] = 0;w[2] = 0;
-	}
-
 	double D = normalOfPlane(0,0) * u[0] + normalOfPlane(1,0) * u[1] + normalOfPlane(2,0) * u[2];		// D = Dot(pNormalofPlane, u)
 
 	double N = -(normalOfPlane(0,0) * w[0] + normalOfPlane(1,0) * w[1] + normalOfPlane(2,0) * w[2]);	// N = -Dot(pNormalofPlane, w)
 
 	if (fabs(D) < 1E-20)	// epsilonP : the parallel
 	{
-		if (fabs(N) < 1E-40)	// epsilonN : P1 is on the plane
+		if (fabs(N) < 1E-3)	// epsilonN : P1 is on the plane
 		{
 			//test if P2 is also on the plane
 			double wEx[3] = {pOnPlane[0] - p2[0], pOnPlane[1] - p2[1], pOnPlane[2] - p2[2]};
 			double NEx = -(normalOfPlane(0,0) * wEx[0] + normalOfPlane(1,0) * wEx[1] + normalOfPlane(2,0) * wEx[2]);
 
-			if (fabs(NEx) < 1E-40)	// epsilonNEx : P2 is on the plane
+			if (fabs(NEx) < 1E-3)	// epsilonNEx : P2 is on the plane
 				return 100;	// the line is on the plane
 			else
 			{
@@ -228,9 +207,10 @@ int util::intersect_line_plane(double* p1, double* p2, Matrix<double, 3, 1>& nor
 
 	ratio = N / D;
 
+	/*
 	// test if this point is different from P2
 	double eps = fabs(ratio - 1);
-	if (eps < 1E-40)	// epsilonNEx : P2 is the intersect point
+	if (eps < 1E-3)	// epsilonNEx : P2 is the intersect point
 		return 10;	// pIntersect = p2
 	else
 	{
@@ -239,4 +219,22 @@ int util::intersect_line_plane(double* p1, double* p2, Matrix<double, 3, 1>& nor
 		else
 			return 0;	// no intersect point (of the section)
 	}
+	*/
+	const double eps = 0.078;
+	if (ratio > 1)
+		return 0;	// no intersect point (of the section)
+	else if (ratio <= 1 && ratio > 1 - eps)
+	{
+		ratio = 1;
+		return 10;	//P2 is the intersect point
+	}
+	else if (ratio > eps && ratio <= 1 - eps)
+		return 1;	// Only one point, different from P1 P2
+	else if (ratio <= eps && ratio >= 0)
+	{
+		ratio = 0;
+		return 3;	//P1 is the intersect point
+	}
+	else
+		return 0;
 }

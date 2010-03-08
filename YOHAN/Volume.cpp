@@ -44,9 +44,9 @@ double* Volume::getForces()
 	return forces;
 }
 
-vector<Tetrahedron*>& Volume::getTetrahedra()
+vector<Tetrahedron*>* Volume::getTetrahedra()
 {
-	return tetrahedra;
+	return &tetrahedra;
 }
 
 
@@ -673,6 +673,7 @@ int Volume::calculFracture()
 	/* Each point */
 	int fractureCount = 0;
 	int oldPointSize = (int)points.size();
+	int oldTetSize = (int)tetrahedra.size();
 
 	for (int k = 0; k < oldPointSize; k++)
 	{
@@ -768,6 +769,10 @@ int Volume::calculFracture()
 				// must not reach here
 				util::log("FETAL ERROR: Volume::replica with remesh");
 			}
+
+			// end the remesh process to avoid some crush increasing tets
+			if (tetrahedra.size() - oldTetSize > 100)
+				return fractureCount;
 			*/
 		}
 
@@ -829,23 +834,29 @@ Point* Volume::replicaPointWithRemesh(Point* orginal, Matrix<double, 3, 1>& nvec
 			// do not remove from the current list
 			++iter;
 		}
-		else if (state == -3)	// && orginal->getIndexTetra()->size() > 1
+		else if (state == -3)	// 
 		{
 			// belongs to q-
+			if (orginal->getIndexTetra()->size() > 1)
+			{
+				// visability
+				orginal->setIsSurface(true);			
 
-			// visability
-			orginal->setIsSurface(true);			
+				/* re-assign volumic */
+				struct IndexTetraPoint newTetPointIndex;
+				newTetPointIndex.tet = tet;
+				newTetPointIndex.indexOfPoint = pointIndex;
 
-			/* re-assign volumic */
-			struct IndexTetraPoint newTetPointIndex;
-			newTetPointIndex.tet = tet;
-			newTetPointIndex.indexOfPoint = pointIndex;
+				replica->getIndexTetra()->push_back(newTetPointIndex);
+				tet->getPoints()[pointIndex] = replica;
 
-			replica->getIndexTetra()->push_back(newTetPointIndex);
-			tet->getPoints()[pointIndex] = replica;
-
-			// remove from the current tet list
-			iter = orginal->getIndexTetra()->erase(iter);
+				// remove from the current tet list
+				iter = orginal->getIndexTetra()->erase(iter);
+			}
+			else
+			{
+				++iter;
+			}
 		}
 		else
 		{
@@ -858,9 +869,13 @@ Point* Volume::replicaPointWithRemesh(Point* orginal, Matrix<double, 3, 1>& nvec
 	}
 
 	//remesh
+	int oldTetSize = tetrahedra.size();
 	for (std::vector<IndexTetraPoint>::iterator iter = remeshBuf.begin(); iter != remeshBuf.end(); ++iter)
 	{
 		iter->tet->remesh(orginal, replica, nvector, this->points);
+
+		if (tetrahedra.size() - oldTetSize > 100)
+			break;
 	}
 
 	return replica;

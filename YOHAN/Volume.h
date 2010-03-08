@@ -52,7 +52,7 @@ public:
 	matrix::SymmetricMumpsSquareSparseMatrix* getC();
 	double* getForceField();
 	double* getForces();
-	vector<Tetrahedron*>& getTetrahedra();
+	vector<Tetrahedron*>* getTetrahedra();
 	BoundingBox* getMasterBoundingBox();
 
 	void collisionBidon();
