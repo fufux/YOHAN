@@ -6,7 +6,7 @@
 class PlayerFrame
 {
 public:
-	PlayerFrame(FrameInfo info, bool load_volumic=true);
+	PlayerFrame(Player* player, FrameInfo info, bool load_volumic=true);
 	~PlayerFrame(void);
 
 	// display this frame in the scene
@@ -16,7 +16,7 @@ public:
 	void hide();
 
 	// getters
-	core::array<scene::IMeshSceneNode*> getNodes();
+	core::array<scene::IAnimatedMeshSceneNode*> getNodes();
 	s32 getID();
 	double getTimestamp();
 
@@ -31,7 +31,7 @@ public:
 
 private:
 	// this is the list of nodes which will be displayed. One node <=> one volume
-	core::array<scene::IMeshSceneNode*> nodes;
+	core::array<scene::IAnimatedMeshSceneNode*> nodes;
 
 	// this is the list of boundingBoxes which will be displayed. One node <=> one boundingBoxes
 	core::array<scene::IMeshSceneNode*> boundingBoxes;
@@ -40,4 +40,8 @@ private:
 	s32 id;
 
 	double timestamp;
+
+	bool is_volumic;
+
+	Player* player;
 };

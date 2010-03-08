@@ -18,7 +18,7 @@ struct FrameInfo
 class Player
 {
 public:
-	Player(void);
+	Player(scene::ITerrainSceneNode* terrain, core::array<scene::ISceneNode*> skydomes);
 	~Player(void);
 
 	// call this to launch/stop all the player
@@ -35,7 +35,7 @@ public:
 	// allows us to change current frame in step-by-step mode
 	void displayNextFrame();
 	void displayPreviousFrame();
-	void displayFrameById(s32 id);
+	void displayFrameById(s32 id, bool volumic=true);
 
 	// allows us to change current frame in playing mode
 	void playNextFrame(double deltaT);
@@ -48,8 +48,12 @@ public:
 	void setEditor(Editor* editor);
 
 	// allow to change visibility of debug data
-	void setDebugDataVisible(scene::E_DEBUG_SCENE_TYPE state);
+	void setDebugDataVisible(scene::E_DEBUG_SCENE_TYPE state, bool f=false);
 	s32 isDebugDataVisible();
+
+	// improved rendering
+	void improveRendering(bool enable, s32 type=-1);
+	bool isImproveRendering();
 
 	// are we playing now ?
 	bool is_playing;
@@ -61,6 +65,9 @@ public:
 
 	s32 currentFrame; // this allows us to know where we are in playing mode
 	s32 playSpeed; // percentage. 100% = normal speed (1s is displayed in 1s)
+
+	video::ITexture* getDefaultObjectTexture();
+	video::ITexture* getNoneObjectTexture();
 
 private:
 	// name of the scene
@@ -98,4 +105,11 @@ private:
 	// usefull for playing mode. This is the least time we changed the displayyed frame
 	u32 lastTime;
 	double accumulatedDeltaT;
+
+	// needed for improved rendering
+	bool improve_rendering;
+	video::ITexture* defaultObjectTexture;
+	video::ITexture* noneObjectTexture;
+	scene::ITerrainSceneNode* terrain;
+	core::array<scene::ISceneNode*> skydomes;
 };
