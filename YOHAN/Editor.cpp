@@ -302,7 +302,7 @@ bool Editor::add3DModel(stringc filename)
 	{
 		// model doesn't exist
 		env->addMessageBox(
-			CAPTION_ERROR, (stringw("The model could not be loaded. The file ")+stringw(filename.c_str())+L" doesn't exist.").c_str());
+			CAPTION_ERROR, (stringw("The surface mesh could not be loaded. The file ")+stringw(filename.c_str())+L" does not exist.").c_str());
 		return false;
 	}
 	IMesh* m = smgr->getMesh( filename.c_str() );
@@ -310,7 +310,7 @@ bool Editor::add3DModel(stringc filename)
 	{
 		// model could not be loaded
 		env->addMessageBox(
-			CAPTION_ERROR, L"The model could not be loaded. " \
+			CAPTION_ERROR, L"The surface mesh could not be loaded. " \
 			L"Maybe it is not a supported file format.");
 		return false;
 	}
@@ -466,16 +466,16 @@ void Editor::createGUI()
 	submenu = menu->getSubMenu(0);
 	submenu->addItem(L"New", GUI_ID_NEW_SCENE);
 	submenu->addItem(L"Open scene...", GUI_ID_OPEN_SCENE);
-	submenu->addItem(L"Save scene...", GUI_ID_SAVE_SCENE);
-	submenu->addItem(L"Tetrahedralize & simulate scene...", GUI_ID_TETRAHEDRALIZE_AND_SIMULATE_SCENE);
+	submenu->addItem(L"Save scene", GUI_ID_SAVE_SCENE);
+	submenu->addItem(L"Tetrahedralize & simulate scene", GUI_ID_TETRAHEDRALIZE_AND_SIMULATE_SCENE);
 	submenu->addSeparator();
-	submenu->addItem(L"Open Model File...", GUI_ID_OPEN_MODEL);
+	submenu->addItem(L"Open Surface Mesh File...", GUI_ID_OPEN_MODEL);
 	submenu->addSeparator();
 	submenu->addItem(L"Switch to player", GUI_ID_SWITCH_TO_PLAYER);
 	submenu->addItem(L"Quit", GUI_ID_QUIT);
 
 	submenu = menu->getSubMenu(1);
-	submenu->addItem(L"toggle model debug information", GUI_ID_TOGGLE_DEBUG_INFO, true, true);
+	submenu->addItem(L"Views", GUI_ID_TOGGLE_DEBUG_INFO, true, true);
 
 	submenu = submenu->getSubMenu(0);
 	submenu->addItem(L"Off", GUI_ID_DEBUG_OFF, true, false, (isDebugDataVisible() == scene::EDS_OFF));
@@ -769,7 +769,7 @@ bool Editor::load(irr::core::stringc filename)
 					if (stringw("scene") != xml->getNodeName())
 					{
 						env->addMessageBox(
-							CAPTION_ERROR, L"This is not a valid scene file !");
+							CAPTION_ERROR, L"This is not a valid scene file!");
 						return false;
 					}
 					else
@@ -1039,7 +1039,7 @@ void Editor::quickTetAndSimulate()
 	if ( tetrahedralizeScene(tetrahedralizedSceneFile, outDirTetrahedralize, tetrahedraDensity) )
 	{
 		// display message
-		wnd = env->addMessageBox(L"Processing...", L"Tetrahedralizing succeed. Simulating... Please wait.", true, 0);
+		wnd = env->addMessageBox(L"Processing...", L"Tetrahedralization successful. Simulating... Please wait.", true, 0);
 		driver->beginScene(true, true, SColor(255,100,101,140));
 		env->drawAll();
 		driver->endScene();
@@ -1053,12 +1053,12 @@ void Editor::quickTetAndSimulate()
 		}
 		else
 		{
-			env->addMessageBox(CAPTION_ERROR, L"Simulation failed ! Aborting.", true);
+			env->addMessageBox(CAPTION_ERROR, L"Simulation failed! Aborting.", true);
 		}
 	}
 	else
 	{
-		env->addMessageBox(CAPTION_ERROR, L"Tetrahedralizing failed ! Aborting.", true);
+		env->addMessageBox(CAPTION_ERROR, L"Tetrahedralization failed! Aborting.", true);
 	}
 
 	// clear system messages to prevent users input of being handled
@@ -1095,12 +1095,12 @@ bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSc
 			tend = GetTickCount();
 			tdif = tend - tstart; //will now have the time elapsed since the start of the call
 			device->getLogger()->log(
-				(stringc("Simulation finished well in ")+stringc(tdif)+"ms").c_str());
+				(stringc("Simulation computed in ")+stringc(tdif)+"ms").c_str());
 		}
 		else
 		{
-			device->getLogger()->log("Scene loading for simulation failed !");
-			cout << "Scene loading for simulation failed !" << endl;
+			device->getLogger()->log("Scene loading for simulation failed!");
+			cout << "Scene loading for simulation failed!" << endl;
 		}
 
 

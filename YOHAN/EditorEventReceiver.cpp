@@ -385,7 +385,7 @@ void EditorEventReceiver::showHelp()
 {
 	stringw message = L"";
 	message += L"This scene editor allows you to load meshes, place them in the scene, add forces, initial speed values, etc.\n\r";
-	message += L"Once you have setted up the scene, you can start the simulation. You can save/load a scene whenever you want.";
+	message += L"Once you have set the scene up, you can start the simulation. You can save/load a scene whenever you want.";
 
 	env->addMessageBox(
 		CAPTION_HELP, message.c_str());
@@ -398,7 +398,7 @@ void EditorEventReceiver::showConfirmDeleteNode()
 	IGUIWindow* wnd = env->addWindow(core::rect<s32>(driver->getScreenSize().Width/2-100,200,driver->getScreenSize().Width/2+100,350),
 		true, L"Warning", 0, GUI_ID_CONFIRM_DELETE_WINDOW);
 
-	env->addStaticText(L"Are you sure you want to delete this object ?", core::rect<s32>(20,20,180,80), false, true, wnd);
+	env->addStaticText(L"Are you sure you want to delete this object?", core::rect<s32>(20,20,180,80), false, true, wnd);
 
 	env->addButton(core::rect<s32>(60,90,100,110), wnd, GUI_ID_CONFIRM_DELETE_BUTTON, L"Delete");
 	env->addButton(core::rect<s32>(120,90,160,110), wnd, GUI_ID_CANCEL_DELETE_BUTTON, L"Cancel");
@@ -433,13 +433,13 @@ void EditorEventReceiver::askForParameters(bool previous_was_bad)
 			env->addStaticText(L"Please, choose the parameters for tetrahedrization and simulation.", core::rect<s32>(20,y,380,y+30), false, true, wnd);
 
 		y += 30;
-		env->addStaticText(L"How many maximum tetrahedras do you want in each object of the scene ? (min: 10, max: 1,000,000)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
+		env->addStaticText(L"Approximate number of tetrahedra to be generated for each object (min: 10, max: 1,000,000)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
 		env->addEditBox(L"5000", core::rect<s32>(40,y+20,80,y+36), true, wnd, GUI_ID_ASK_PARAMETERS_NBTET);
 		y += 40;
-		env->addStaticText(L"How many frames do you want to simulate ? (min: 1)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
+		env->addStaticText(L"Number of frames to compute (min: 1)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
 		env->addEditBox(L"200", core::rect<s32>(40,y+20,80,y+36), true, wnd, GUI_ID_ASK_PARAMETERS_NBFRAME);
 		y += 40;
-		env->addStaticText(L"What do you want as Delta t ? (strict-min: 0)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
+		env->addStaticText(L"Frame step (strict-min: 0)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
 		env->addEditBox(L"0.01", core::rect<s32>(40,y+20,80,y+36), true, wnd, GUI_ID_ASK_PARAMETERS_DELTAT);
 		y += 50;
 		env->addButton(core::rect<s32>(60,y,100,y+16), wnd, GUI_ID_ASK_PARAMETERS_GO_BUTTON, L"GO!");
@@ -454,7 +454,7 @@ void EditorEventReceiver::askForSwitch()
 	IGUIWindow* wnd = env->addWindow(core::rect<s32>(driver->getScreenSize().Width/2-100,200,driver->getScreenSize().Width/2+100,350),
 		true, L"Success", 0, GUI_ID_ASK_SWITCH_WINDOW);
 
-	env->addStaticText(L"Simulation finished well.\r\nDo you want to switch to the player and open the video now ?", core::rect<s32>(20,20,180,80), false, true, wnd);
+	env->addStaticText(L"Simulation comlete!\r\nDo you want to switch to the player and open the animation now ?", core::rect<s32>(20,20,180,80), false, true, wnd);
 
 	env->addButton(core::rect<s32>(60,90,100,110), wnd, GUI_ID_ASK_SWITCH_YES_BUTTON, L"Yes");
 	env->addButton(core::rect<s32>(120,90,160,110), wnd, GUI_ID_ASK_SWITCH_NO_BUTTON, L"No");
