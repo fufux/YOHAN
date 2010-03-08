@@ -138,11 +138,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="pord_c.lib MetisLib.lib libseq_c.lib dmumps_c.lib mumps_common_c.lib libseq_fortran.lib TetGenLib.lib xerces-c_3D.lib dmumps_fortran.lib"
+				AdditionalDependencies="pord_c.lib MetisLib.lib libseq_c.lib dmumps_c.lib mumps_common_c.lib libseq_fortran.lib TetGenLib.lib xerces-c_3D.lib dmumps_fortran.lib blas.lib libgw32c.a"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;H:\Program Files\Intel\Compiler\11.1\054\mkl\ia32\lib&quot;;&quot;h:\Program Files\Intel\Compiler\11.1\054\lib\ia32&quot;;xercesc\libr;mumps\libr;&quot;irrlicht\lib\Win32-visualstudio&quot;;tetgen"
 				IgnoreDefaultLibraryNames=""
-				GenerateDebugInformation="true"
+				GenerateDebugInformation="false"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

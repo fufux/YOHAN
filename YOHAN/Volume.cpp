@@ -767,15 +767,21 @@ int Volume::calculFracture()
 			else
 			{
 				// must not reach here
-				//util::log("FETAL ERROR: Volume::replica with remesh");
+				util::log("WARING: Volume::replica with remesh:: an ill-conditioned example");
 			}
 
 			// end the remesh process to avoid some crush increasing tets
-			if (tetrahedra.size() - oldTetSize > 10)
+			
+			if (tetrahedra.size() - oldTetSize > 20)
 				return fractureCount;
 		}
 
 	}
+
+	//log
+	char msg[128];
+	itoa(fractureCount, msg, 10);
+	util::log(msg);
 
 	return fractureCount;
 }
@@ -885,13 +891,9 @@ Point* Volume::replicaPointWithRemesh(Point* orginal, Matrix<double, 3, 1>& nvec
 	}
 
 	//remesh
-	int oldTetSize = tetrahedra.size();
 	for (std::vector<IndexTetraPoint>::iterator iter = remeshBuf.begin(); iter != remeshBuf.end(); ++iter)
 	{
 		iter->tet->remesh(orginal, replica, nvector, this->points);
-
-		if (tetrahedra.size() - oldTetSize > 100)
-			break;
 	}
 
 	return replica;
@@ -901,8 +903,6 @@ Point* Volume::replicaPointWithoutRemesh(Point* orginal, Matrix<double, 3, 1>& n
 {
 	// copy material position, current position , velority;
 	Point* replica = new Point(replicaPointIndex, orginal->getX(), orginal->getV(), orginal->getU(), true);
-
-	bool shouldCreateSurface = false;
 
 	// reassign
 	std::vector<IndexTetraPoint> *myTetraIndex = orginal->getIndexTetra();
@@ -917,7 +917,8 @@ Point* Volume::replicaPointWithoutRemesh(Point* orginal, Matrix<double, 3, 1>& n
 		/* for those points which is not this point (fracture), could calculate its cos() to determine whether the 
 			tetraedre is (on + side, on - side, intersect)
 		*/
-		int state = 0;
+		int stateP = 0, stateN = 0, stateZ = 0;
+		double sumP = 0, sumN = 0;
 		
 		for (int i = 0; i < 4; i++)
 		{
@@ -937,22 +938,60 @@ Point* Volume::replicaPointWithoutRemesh(Point* orginal, Matrix<double, 3, 1>& n
 			double cosValue = vec.dot(nvector);
 
 			// accumulate the number of point on the same side
-			if (cosValue > 0)
-				state += 1;
+			if (cosValue > 1E-15)
+			{
+				stateP += 1;
+				sumP += cosValue;
+			}
+			else if (cosValue < -1E-15)
+			{
+				stateN += 1;
+				sumN += -cosValue;
+			}
 			else
-				state -= 1;
+				stateZ += 1;
 		}
 
-		if (state == 3)
+		bool isAssignPositive = false;
+
+		switch (stateZ)
 		{
-			// belongs to q+
-			// do not remove from the current list
+		case 0:
+			if (stateP > stateN)	// belongs to q+				
+				isAssignPositive = true;			
+			else
+			{
+				// belongs to q-, under the condition that orginal->getIndexTetra()->size() > 1
+				if (orginal->getIndexTetra()->size() > 1)				
+					isAssignPositive = false;				
+				else
+					isAssignPositive = true;
+			}
+			break;
+		case 1:
+			if (stateP > stateN)	// belongs to q+
+				isAssignPositive = true;
+			else if (stateP < stateN)	//belongs to q-
+				isAssignPositive = false;
+			else
+				isAssignPositive = (sumP < sumN);
+			break;
+		case 2:
+			if (stateP > stateN)
+				isAssignPositive = true;
+			else
+				isAssignPositive = false;
+			break;
+		default:
+			util::log("FETAL ERROR: Volume::replicaWithoutRemesh");
+			break;
+
+		}
+
+		if (isAssignPositive)
 			++iter;
-		}
-		else if ((state == -3 && orginal->getIndexTetra()->size() > 1) || (state > -3 && replica->getIndexTetra()->size() == 0 && orginal->getIndexTetra()->size() > 1))
+		else
 		{
-			// belongs to q-
-
 			// visability
 			orginal->setIsSurface(true);			
 
@@ -966,46 +1005,27 @@ Point* Volume::replicaPointWithoutRemesh(Point* orginal, Matrix<double, 3, 1>& n
 
 			// remove from the current tet list
 			iter = orginal->getIndexTetra()->erase(iter);
-
-			shouldCreateSurface = true;
-		}
-		else
-		{
-			// intersect, should remesh
-			++iter;
 		}
 	}
 
-	/*
-	if (shouldCreateSurface)
+	//solve ill-conditioned replica
+	if (replica->getIndexTetra()->size() == 0 && orginal->getIndexTetra()->size() > 1)
 	{
-		// create new surface
-		vector<struct IndexSurfacePoint>* mySurfIndexVec = orginal->getIndexSurface();
-		for (int k = 0; k < (int)mySurfIndexVec->size(); k++)
-		{
-			struct Surface* newSurf = new struct Surface[1];
-			struct Surface* oldSurf = mySurfIndexVec->at(k).surface;
-			int oldPointIndex = mySurfIndexVec->at(k).indexOfPoint;
+		std::vector<IndexTetraPoint>::iterator iter = orginal->getIndexTetra()->begin();
+		int pointIndex = iter->indexOfPoint;
+		Tetrahedron* tet = iter->tet;
 
-			// copy and change index				
-			newSurf->pointIndex[0] = oldSurf->pointIndex[0];
-			newSurf->pointIndex[1] = oldSurf->pointIndex[1];
-			newSurf->pointIndex[2] = oldSurf->pointIndex[2];
+		/* re-assign volumic */
+		struct IndexTetraPoint newTetPointIndex;
+		newTetPointIndex.tet = tet;
+		newTetPointIndex.indexOfPoint = pointIndex;
 
-			newSurf->pointIndex[oldPointIndex] = replicaPointIndex;
+		replica->getIndexTetra()->push_back(newTetPointIndex);
+		tet->getPoints()[pointIndex] = replica;
 
-			// add new surface
-			surfaces.push_back(newSurf);
-
-			// update index of surface
-			struct IndexSurfacePoint newSurfPointIndex;
-			newSurfPointIndex.surface = newSurf;
-			newSurfPointIndex.indexOfPoint = oldPointIndex;
-
-			replica->getIndexSurface()->push_back(newSurfPointIndex);
-		}
+		// remove from the current tet list
+		orginal->getIndexTetra()->erase(iter);
 	}
-	*/
 	
 	return replica;
 }
