@@ -728,7 +728,7 @@ int Volume::calculFracture()
 			nvector(2,0) = eigenVector(2, vindex);
 			nvector.normalize();
 
-			
+			/*
 			// replica without re-mesh
 						
 			int pointIndex = points.size();	//int pointIndex = pointPool->size() + newPointList.size();
@@ -749,12 +749,12 @@ int Volume::calculFracture()
 				// the replica is not useful
 				delete replica;
 			}
+			*/
 			
-
-			/*
 			// replica with remesh
 			int pointIndex = points.size();
-			Point* replica = replicaPointWithRemesh(point, nvector, pointIndex);
+			//Point* replica = replicaPointWithRemesh(point, nvector, pointIndex);
+			Point* replica = replicaPointWithRemesh2(point, nvector);
 			if (replica->getIndexTetra()->size() > 0)
 			{
 				points.push_back(replica);
@@ -773,13 +773,26 @@ int Volume::calculFracture()
 			// end the remesh process to avoid some crush increasing tets
 			if (tetrahedra.size() - oldTetSize > 100)
 				return fractureCount;
-			*/
 		}
 
 	}
 
 	return fractureCount;
 }
+
+Point* Volume::replicaPointWithRemesh2(Point* orginal, Matrix<double, 3, 1>& nvector)
+{
+	// remesh buf
+	std::vector<IndexTetraPoint> remeshBuf = *orginal->getIndexTetra();
+
+	for (std::vector<IndexTetraPoint>::iterator iter = remeshBuf.begin(); iter != remeshBuf.end(); ++iter)
+	{
+		iter->tet->remesh2(orginal, nvector, this->points);
+	}
+
+	// reassign
+	return replicaPointWithoutRemesh(orginal, nvector, points.size());
+}	
 
 Point* Volume::replicaPointWithRemesh(Point* orginal, Matrix<double, 3, 1>& nvector, int replicaPointIndex)
 {

@@ -117,6 +117,7 @@ private:
 	/* Added by Ning, for fracture */
 	Point* replicaPointWithoutRemesh(Point* orginal, Matrix<double, 3, 1>& nvector, int replicaPointIndex);
 	Point* replicaPointWithRemesh(Point* orginal, Matrix<double, 3, 1>& nvector, int replicaPointIndex);
+	Point* replicaPointWithRemesh2(Point* orginal, Matrix<double, 3, 1>& nvector);
 
 	int oldOrder;
 

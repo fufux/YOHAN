@@ -175,8 +175,8 @@ int main(int argc, _TCHAR* argv[])
 
 			player->run(); // this will return imediately if player is not currently runing
 
-			//smgr->drawAll();
-			effect->update();
+			smgr->drawAll();
+			//effect->update();
 			
 			driver->setMaterial(m2d);
 			env->drawAll();

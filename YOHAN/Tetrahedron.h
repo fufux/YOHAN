@@ -38,6 +38,7 @@ public:
 	Matrix<double, 3, 1>& getCompressiveForce(int index);
 
 	void remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& nvector, vector<Point*>& pointList);
+	void remesh2(Point* orginal, Matrix<double, 3, 1>& nvector, vector<Point*>& pointList);
 	/* END -- Added by Ning, for fracture */
 
 private:
