@@ -36,7 +36,7 @@ int tetBuf (IMeshBuffer *newBuffer, char *name, char *directory, float volume) {
 					// false otherwise //
 	char tetgenLoadPath[128] = "";
 	char tetgenSavePath[128] = "";
-	stringc params = "Qpq2.0a";
+	stringc params = "pa"; //"Qpq2.0a";
 	params += stringc(volume);
 
 		// Creating the paths used //
