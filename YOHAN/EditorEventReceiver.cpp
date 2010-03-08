@@ -147,10 +147,6 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 					menu->setItemChecked(menu->getSelectedItem(), !menu->isItemChecked(menu->getSelectedItem()));
 					editor->setDebugDataVisible((scene::E_DEBUG_SCENE_TYPE)(editor->isDebugDataVisible()^scene::EDS_NORMALS));
 					break;
-				case GUI_ID_DEBUG_SKELETON: // View -> Debug Information
-					menu->setItemChecked(menu->getSelectedItem(), !menu->isItemChecked(menu->getSelectedItem()));
-					editor->setDebugDataVisible((scene::E_DEBUG_SCENE_TYPE)(editor->isDebugDataVisible()^scene::EDS_SKELETON));
-					break;
 				case GUI_ID_DEBUG_WIRE_OVERLAY: // View -> Debug Information
 					menu->setItemChecked(menu->getSelectedItem(), !menu->isItemChecked(menu->getSelectedItem()));
 					editor->setDebugDataVisible((scene::E_DEBUG_SCENE_TYPE)(editor->isDebugDataVisible()^scene::EDS_MESH_WIRE_OVERLAY));
