@@ -1,3 +1,4 @@
+#include "irrlicht/XEffects/Source/XEffects.h"
 #include "Editor.h"
 #include "Scene.h"
 
@@ -6,6 +7,7 @@ extern IrrlichtDevice* device;
 extern IVideoDriver* driver;
 extern ISceneManager* smgr;
 extern IGUIEnvironment* env;
+extern EffectHandler* effect;
 extern scene::ICameraSceneNode* camera[CAMERA_COUNT];
 
 
@@ -36,6 +38,8 @@ Editor::Editor(void)
 	this->name = "untitled";
 	this->baseDir = device->getFileSystem()->getWorkingDirectory();
 	this->lastSimulatedSceneOutDir = "";
+	this->defaultObjectTexture = driver->getTexture("irrlicht/media/black.bmp");
+	this->selectedObjectTexture = driver->getTexture("irrlicht/media/red.bmp");
 }
 
 Editor::~Editor(void)
@@ -49,6 +53,7 @@ void Editor::start()
 	device->setEventReceiver(this->er);
 	this->is_running = true;
 	this->lastSimulatedSceneOutDir = "";
+	effect->setAmbientColor(SColor(255, 200, 200, 200));
 }
 
 
@@ -158,13 +163,15 @@ void Editor::selectNode()
 	{
 		if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
 		{
-			nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
+			//nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
+			nodes[selectedNodeIndex]->setMaterialTexture(0, this->defaultObjectTexture);
 			nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
 		}
 
 		this->selectedNodeIndex = this->nodes.binary_search( selectedSceneNode );
 		
-		selectedSceneNode->setMaterialFlag(EMF_WIREFRAME, true);
+		//selectedSceneNode->setMaterialFlag(EMF_WIREFRAME, true);
+		selectedSceneNode->setMaterialTexture(0, this->selectedObjectTexture);
 
 		this->createSceneNodeToolBox();
 	}
@@ -172,7 +179,8 @@ void Editor::selectNode()
 	{
 		if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
 		{
-			nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
+			//nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
+			nodes[selectedNodeIndex]->setMaterialTexture(0, this->defaultObjectTexture);
 			nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
 		}
 		this->selectedNodeIndex = -1;
@@ -342,11 +350,11 @@ bool Editor::add3DModel(stringc filename)
 
 	// set default values for material and initial speed
 	EditorMaterial material;
-	material.lambda = 0.419f;
-	material.mu = 0.578f;
-	material.alpha = 1.04f;
-	material.beta = 1.44f;
-	material.density = 2595.0f;
+	material.lambda = 1.04e8f;
+	material.mu = 1.04e8f;
+	material.alpha = 0;
+	material.beta = 6760.0f;
+	material.density = 2588.0f;
 	meshMaterials.push_back( material );
 	vector3df initialSpeed = vector3df(0,0,0);
 	initialSpeeds.push_back( initialSpeed );
@@ -354,14 +362,16 @@ bool Editor::add3DModel(stringc filename)
 	// unselect current selected node if exists
 	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
 	{
-		nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
+		//nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
+		nodes[selectedNodeIndex]->setMaterialTexture(0, this->defaultObjectTexture);
 		nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
 	}
 
 	// select the node we've just loaded
 	selectedNodeIndex = nodes.size() - 1;
 	this->createSceneNodeToolBox();
-	node->setMaterialFlag(EMF_WIREFRAME, true);
+	//node->setMaterialFlag(EMF_WIREFRAME, true);
+	node->setMaterialTexture(0, this->selectedObjectTexture);
 	node->setDebugDataVisible( debugData );
 
 	return true;

@@ -120,6 +120,8 @@ private:
 	// store (current) selected node/forcefield (if defined)
 	s32 selectedNodeIndex;
 	s32 selectedForceField;
+	video::ITexture* selectedObjectTexture;
+	video::ITexture* defaultObjectTexture;
 
 	// what kind of debug are we displaying currently ?
 	scene::E_DEBUG_SCENE_TYPE debugData;

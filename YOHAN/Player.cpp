@@ -43,6 +43,7 @@ void Player::start()
 	this->createGUI();
 	device->setEventReceiver(this->er);
 	this->is_running = true;
+	effect->setAmbientColor(SColor(255, 32, 32, 32));
 }
 
 void Player::stop()
