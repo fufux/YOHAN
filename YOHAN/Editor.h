@@ -110,7 +110,7 @@ private:
 	IMesh* getMeshWithAbsoluteCoordinates(IMeshSceneNode* node);
 
 	// and this is the list of meshe files name that correspond to the nodes (index must correspond with previous list)
-	core::array<stringw> meshFiles;
+	core::array<stringc> meshFiles;
 	core::array<EditorMaterial> meshMaterials; // and here are the materials of each object
 	core::array<vector3df> initialSpeeds;
 

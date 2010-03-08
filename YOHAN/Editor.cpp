@@ -157,17 +157,24 @@ void Editor::selectNode()
 	if (selectedSceneNode)
 	{
 		if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
+		{
+			nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
 			nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
+		}
 
 		this->selectedNodeIndex = this->nodes.binary_search( selectedSceneNode );
-		selectedSceneNode->setDebugDataVisible( scene::EDS_BBOX );
+		
+		selectedSceneNode->setMaterialFlag(EMF_WIREFRAME, true);
 
 		this->createSceneNodeToolBox();
 	}
 	else
 	{
 		if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
+		{
+			nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
 			nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
+		}
 		this->selectedNodeIndex = -1;
 
 		this->removeSceneNodeToolBox();
@@ -295,7 +302,7 @@ bool Editor::add3DModel(stringc filename)
 	{
 		// model doesn't exist
 		env->addMessageBox(
-			CAPTION_ERROR, (stringw("The model could not be loaded. The file ")+stringw(filename.c_str())+L" doesn't exist.").c_str());
+			CAPTION_ERROR, (stringw("The surface mesh could not be loaded. The file ")+stringw(filename.c_str())+L" does not exist.").c_str());
 		return false;
 	}
 	IMesh* m = smgr->getMesh( filename.c_str() );
@@ -303,7 +310,7 @@ bool Editor::add3DModel(stringc filename)
 	{
 		// model could not be loaded
 		env->addMessageBox(
-			CAPTION_ERROR, L"The model could not be loaded. " \
+			CAPTION_ERROR, L"The surface mesh could not be loaded. " \
 			L"Maybe it is not a supported file format.");
 		return false;
 	}
@@ -323,8 +330,14 @@ bool Editor::add3DModel(stringc filename)
 	selector->drop(); // We're done with this selector, so drop it now.
 
 
+	for (int i=0; i < nodes.size(); i++)
+		cout << nodes[i] << endl;
+	cout <<endl;
 	// select the newly loaded scene node
 	nodes.push_back( node );
+	for (int i=0; i < nodes.size(); i++)
+			cout << nodes[i] << endl;
+	cout <<endl<<endl;
 	meshFiles.push_back( filename.c_str() );
 
 	// set default values for material and initial speed
@@ -340,12 +353,16 @@ bool Editor::add3DModel(stringc filename)
 
 	// unselect current selected node if exists
 	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
-			nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
+	{
+		nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
+		nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
+	}
 
 	// select the node we've just loaded
 	selectedNodeIndex = nodes.size() - 1;
 	this->createSceneNodeToolBox();
-	node->setDebugDataVisible( scene::EDS_BBOX );
+	node->setMaterialFlag(EMF_WIREFRAME, true);
+	node->setDebugDataVisible( debugData );
 
 	return true;
 }
@@ -361,11 +378,43 @@ void Editor::remove3DModel()
 {
 	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
 	{
+		core::array<IMeshSceneNode*> _nodes;
+		core::array<stringc> _meshFiles;
+		core::array<EditorMaterial> _meshMaterials;
+		core::array<vector3df> _initialSpeeds;
+
+		for (int i=0; i < nodes.size(); i++) {
+			if (i != selectedNodeIndex)
+				_nodes.push_back(nodes[i]);
+		}
+		for (int i=0; i < meshFiles.size(); i++) {
+			if (i != selectedNodeIndex)
+				_meshFiles.push_back(meshFiles[i]);
+		}
+		for (int i=0; i < meshMaterials.size(); i++) {
+			if (i != selectedNodeIndex)
+				_meshMaterials.push_back(meshMaterials[i]);
+		}
+		for (int i=0; i < initialSpeeds.size(); i++) {
+			if (i != selectedNodeIndex)
+				_initialSpeeds.push_back(initialSpeeds[i]);
+		}
+
 		nodes[selectedNodeIndex]->remove();
-		nodes.erase(selectedNodeIndex);
-		meshFiles.erase(selectedNodeIndex);
-		meshMaterials.erase(selectedNodeIndex);
-		initialSpeeds.erase(selectedNodeIndex);
+		/*for (int i=0; i < nodes.size(); i++)
+			cout << nodes[i] << endl;
+		cout <<endl<<endl;*/
+		nodes = _nodes;
+		/*for (int i=0; i < nodes.size(); i++)
+			cout << nodes[i] << endl;
+		for (int i=0; i < meshFiles.size(); i++)
+			cout << meshFiles[i].c_str() << endl;
+		cout <<endl<<endl;*/
+		meshFiles = _meshFiles;
+		/*for (int i=0; i < meshFiles.size(); i++)
+			cout << meshFiles[i].c_str() << endl;*/
+		meshMaterials = _meshMaterials;
+		initialSpeeds = _initialSpeeds;
 		selectedNodeIndex = -1;
 		removeSceneNodeToolBox();
 	}
@@ -417,22 +466,21 @@ void Editor::createGUI()
 	submenu = menu->getSubMenu(0);
 	submenu->addItem(L"New", GUI_ID_NEW_SCENE);
 	submenu->addItem(L"Open scene...", GUI_ID_OPEN_SCENE);
-	submenu->addItem(L"Save scene...", GUI_ID_SAVE_SCENE);
-	submenu->addItem(L"Tetrahedralize & simulate scene...", GUI_ID_TETRAHEDRALIZE_AND_SIMULATE_SCENE);
+	submenu->addItem(L"Save scene", GUI_ID_SAVE_SCENE);
+	submenu->addItem(L"Tetrahedralize & simulate scene", GUI_ID_TETRAHEDRALIZE_AND_SIMULATE_SCENE);
 	submenu->addSeparator();
-	submenu->addItem(L"Open Model File...", GUI_ID_OPEN_MODEL);
+	submenu->addItem(L"Open Surface Mesh File...", GUI_ID_OPEN_MODEL);
 	submenu->addSeparator();
 	submenu->addItem(L"Switch to player", GUI_ID_SWITCH_TO_PLAYER);
 	submenu->addItem(L"Quit", GUI_ID_QUIT);
 
 	submenu = menu->getSubMenu(1);
-	submenu->addItem(L"toggle model debug information", GUI_ID_TOGGLE_DEBUG_INFO, true, true);
+	submenu->addItem(L"Views", GUI_ID_TOGGLE_DEBUG_INFO, true, true);
 
 	submenu = submenu->getSubMenu(0);
 	submenu->addItem(L"Off", GUI_ID_DEBUG_OFF, true, false, (isDebugDataVisible() == scene::EDS_OFF));
 	submenu->addItem(L"Bounding Box", GUI_ID_DEBUG_BOUNDING_BOX, true, false, (isDebugDataVisible() == scene::EDS_BBOX));
 	submenu->addItem(L"Normals", GUI_ID_DEBUG_NORMALS, true, false, (isDebugDataVisible() == scene::EDS_NORMALS));
-	submenu->addItem(L"Skeleton", GUI_ID_DEBUG_SKELETON, true, false, (isDebugDataVisible() == scene::EDS_SKELETON));
 	submenu->addItem(L"Wire overlay", GUI_ID_DEBUG_WIRE_OVERLAY, true, false, (isDebugDataVisible() == scene::EDS_MESH_WIRE_OVERLAY));
 	submenu->addItem(L"Half-Transparent", GUI_ID_DEBUG_HALF_TRANSPARENT, true, false, (isDebugDataVisible() == scene::EDS_HALF_TRANSPARENCY));
 	submenu->addItem(L"Buffers bounding boxes", GUI_ID_DEBUG_BUFFERS_BOUNDING_BOXES, true, false, (isDebugDataVisible() == scene::EDS_BBOX_BUFFERS));
@@ -721,7 +769,7 @@ bool Editor::load(irr::core::stringc filename)
 					if (stringw("scene") != xml->getNodeName())
 					{
 						env->addMessageBox(
-							CAPTION_ERROR, L"This is not a valid scene file !");
+							CAPTION_ERROR, L"This is not a valid scene file!");
 						return false;
 					}
 					else
@@ -853,7 +901,7 @@ bool Editor::save(irr::core::stringc filename)
 	*/
 	for (u16 i=0; i < nodes.size(); i++)
 	{
-		xml->writeElement(L"scenenode", false, L"filename", meshFiles[i].c_str());
+		xml->writeElement(L"scenenode", false, L"filename", stringw(meshFiles[i].c_str()).c_str());
 		xml->writeLineBreak();
 
 		xml->writeElement(L"position", true,
@@ -991,7 +1039,7 @@ void Editor::quickTetAndSimulate()
 	if ( tetrahedralizeScene(tetrahedralizedSceneFile, outDirTetrahedralize, tetrahedraDensity) )
 	{
 		// display message
-		wnd = env->addMessageBox(L"Processing...", L"Tetrahedralizing succeed. Simulating... Please wait.", true, 0);
+		wnd = env->addMessageBox(L"Processing...", L"Tetrahedralization successful. Simulating... Please wait.", true, 0);
 		driver->beginScene(true, true, SColor(255,100,101,140));
 		env->drawAll();
 		driver->endScene();
@@ -1005,12 +1053,12 @@ void Editor::quickTetAndSimulate()
 		}
 		else
 		{
-			env->addMessageBox(CAPTION_ERROR, L"Simulation failed ! Aborting.", true);
+			env->addMessageBox(CAPTION_ERROR, L"Simulation failed! Aborting.", true);
 		}
 	}
 	else
 	{
-		env->addMessageBox(CAPTION_ERROR, L"Tetrahedralizing failed ! Aborting.", true);
+		env->addMessageBox(CAPTION_ERROR, L"Tetrahedralization failed! Aborting.", true);
 	}
 
 	// clear system messages to prevent users input of being handled
@@ -1047,12 +1095,12 @@ bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSc
 			tend = GetTickCount();
 			tdif = tend - tstart; //will now have the time elapsed since the start of the call
 			device->getLogger()->log(
-				(stringc("Simulation finished well in ")+stringc(tdif)+"ms").c_str());
+				(stringc("Simulation computed in ")+stringc(tdif)+"ms").c_str());
 		}
 		else
 		{
-			device->getLogger()->log("Scene loading for simulation failed !");
-			cout << "Scene loading for simulation failed !" << endl;
+			device->getLogger()->log("Scene loading for simulation failed!");
+			cout << "Scene loading for simulation failed!" << endl;
 		}
 
 
