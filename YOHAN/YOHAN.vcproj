@@ -352,6 +352,42 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="XEffects"
+			>
+			<File
+				RelativePath=".\irrlicht\XEffects\Source\CScreenQuad.h"
+				>
+			</File>
+			<File
+				RelativePath=".\irrlicht\XEffects\Source\CShaderPre.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\irrlicht\XEffects\Source\CShaderPre.h"
+				>
+			</File>
+			<File
+				RelativePath=".\irrlicht\XEffects\Source\EffectCB.h"
+				>
+			</File>
+			<File
+				RelativePath=".\irrlicht\XEffects\Source\EffectHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\irrlicht\XEffects\Source\EffectHandler.h"
+				>
+			</File>
+			<File
+				RelativePath=".\irrlicht\XEffects\Source\EffectShaders.h"
+				>
+			</File>
+			<File
+				RelativePath=".\irrlicht\XEffects\Source\XEffects.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"
 			>

@@ -1,9 +1,11 @@
+#include "irrlicht/XEffects/Source/XEffects.h"
 #include "PlayerFrame.h"
 
 extern IrrlichtDevice* device;
 extern IVideoDriver* driver;
 extern ISceneManager* smgr;
 extern IGUIEnvironment* env;
+extern EffectHandler* effect;
 extern scene::ICameraSceneNode* camera[CAMERA_COUNT];
 
 
@@ -15,7 +17,7 @@ core::array<stringc> PlayerFrame::lastFaceFileNames;
 core::array<scene::SMeshBuffer*> PlayerFrame::lastBuffers;
 
 
-PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
+PlayerFrame::PlayerFrame(Player* player, FrameInfo info, bool load_volumic)
 {
 	// increase total number of loaded frames
 	PlayerFrame::totalLoadedFrames++;
@@ -27,13 +29,16 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 	core::array<scene::SMeshBuffer*> _lastBuffers;
 
 	// initialize some variables
+	this->player = player;
 	this->id = info.id;
 	this->timestamp = info.timestamp;
+	this->is_volumic = load_volumic;
 
 	for (u32 o=0; o < info.nodefiles.size(); o++)
 	{
 		SMeshBuffer* buffer = new SMeshBuffer();
-		IMeshSceneNode* node = NULL;
+		core::array<int> faces_per_vertex;
+		IAnimatedMeshSceneNode* node = NULL;
 		stringc nodeFileName = info.nodefiles[o];
 		stringc faceFileName = info.facefiles[o];
 		stringc eleFileName = info.elefiles[o];
@@ -90,6 +95,7 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 		while (!innode.eof() && innode.good())// && (int)buffer->Vertices.size() < nb_of_points)
 		{
 			buffer->Vertices.push_back(video::S3DVertex((f32)x, (f32)y, (f32)z, 1,0,0, clr, 0,0));
+			faces_per_vertex.push_back(0);
 			// this is one line : innode >> index >> x >> y >> z;
 			innode.read(reinterpret_cast < char * > (&x), sizeof(double));
 			innode.read(reinterpret_cast < char * > (&y), sizeof(double));
@@ -309,9 +315,35 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 						buffer->Vertices[(u32)(p2 + ajust_index)].Pos);
 					i += 3;
 
-					buffer->Vertices[(u32)(p1 + ajust_index)].Normal = t.getNormal();
-					buffer->Vertices[(u32)(p2 + ajust_index)].Normal = t.getNormal();
-					buffer->Vertices[(u32)(p3 + ajust_index)].Normal = t.getNormal();
+					if (faces_per_vertex[(u32)(p1 + ajust_index)] == 0)
+						buffer->Vertices[(u32)(p1 + ajust_index)].Normal = t.getNormal();
+					else
+					{
+						buffer->Vertices[(u32)(p1 + ajust_index)].Normal 
+							= (buffer->Vertices[(u32)(p1 + ajust_index)].Normal * (f32)faces_per_vertex[(u32)(p1 + ajust_index)] + t.getNormal())
+							/ ((f32)faces_per_vertex[(u32)(p1 + ajust_index)]+1);
+					}
+					++faces_per_vertex[(u32)(p1 + ajust_index)];
+
+					if (faces_per_vertex[(u32)(p2 + ajust_index)] == 0)
+						buffer->Vertices[(u32)(p2 + ajust_index)].Normal = t.getNormal();
+					else
+					{
+						buffer->Vertices[(u32)(p2 + ajust_index)].Normal 
+							= (buffer->Vertices[(u32)(p2 + ajust_index)].Normal * (f32)faces_per_vertex[(u32)(p2 + ajust_index)] + t.getNormal())
+							/ ((f32)faces_per_vertex[(u32)(p2 + ajust_index)]+1);
+					}
+					++faces_per_vertex[(u32)(p2 + ajust_index)];
+
+					if (faces_per_vertex[(u32)(p3 + ajust_index)] == 0)
+						buffer->Vertices[(u32)(p3 + ajust_index)].Normal = t.getNormal();
+					else
+					{
+						buffer->Vertices[(u32)(p3 + ajust_index)].Normal 
+							= (buffer->Vertices[(u32)(p3 + ajust_index)].Normal * (f32)faces_per_vertex[(u32)(p3 + ajust_index)] + t.getNormal())
+							/ ((f32)faces_per_vertex[(u32)(p3 + ajust_index)]+1);
+					}
+					++faces_per_vertex[(u32)(p3 + ajust_index)];
 
 					// this is one line : inface >> index >> p1 >> p2 >> p3;
 					inface.read(reinterpret_cast < char * > (&p1), sizeof(int));
@@ -490,8 +522,6 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 			if (bb_node)
 			{
 				bb_node->setVisible(false);
-				bb_node->setMaterialFlag(EMF_LIGHTING, false);
-				bb_node->setMaterialFlag(EMF_WIREFRAME, true);
 				this->boundingBoxes.push_back( bb_node );
 			}
 		}
@@ -502,12 +532,15 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 		for (u32 j=0; j < buffer->Vertices.size(); ++j)
 			buffer->BoundingBox.addInternalPoint(buffer->Vertices[j].Pos);
 
-		SMesh* mesh = new SMesh;
-		mesh->addMeshBuffer(buffer);
-		mesh->recalculateBoundingBox();
+		SMesh* mesh_ = new SMesh;
+		SAnimatedMesh* mesh = new SAnimatedMesh();
+		mesh_->addMeshBuffer(buffer);
+		mesh_->recalculateBoundingBox();
+		mesh->addMesh(mesh_);
+		mesh_->drop();
 
 		// here we go, lets create the node that will owns the mesh data
-		node = smgr->addMeshSceneNode( mesh );
+		node = smgr->addAnimatedMeshSceneNode( mesh );
 		mesh->drop();
 		if (!node)
 		{
@@ -515,6 +548,8 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 			continue;
 		}
 		node->setVisible(false);
+		node->setMaterialFlag(video::EMF_NORMALIZE_NORMALS, true);
+		//node->setMaterialFlag(EMF_LIGHTING, false);
 
 		this->nodes.push_back( node );
 
@@ -548,18 +583,44 @@ PlayerFrame::PlayerFrame(FrameInfo info, bool load_volumic)
 PlayerFrame::~PlayerFrame(void)
 {
 	for (u32 i=0; i < nodes.size(); i++)
+	{
+		effect->removeShadowFromNode(nodes[i]);
 		nodes[i]->remove();
+	}
 	for (u32 i=0; i < boundingBoxes.size(); i++)
 		boundingBoxes[i]->remove();
 }
 
+
 void PlayerFrame::display()
 {
+	if (player->isImproveRendering() && !is_volumic)
+	{
+		for (u32 i=0; i < nodes.size(); i++)
+		{
+			nodes[i]->setMaterialTexture(0, player->getDefaultObjectTexture());
+			effect->addShadowToNode(nodes[i], EFT_16PCF);
+		}
+	}
+	else
+	{
+		for (u32 i=0; i < nodes.size(); i++)
+		{
+			nodes[i]->setMaterialTexture(0, player->getNoneObjectTexture());
+			effect->removeShadowFromNode(nodes[i]);
+		}
+		for (u32 i=0; i < boundingBoxes.size(); i++)
+		{
+			boundingBoxes[i]->setMaterialFlag(EMF_LIGHTING, false);
+			boundingBoxes[i]->setMaterialFlag(EMF_WIREFRAME, true);
+			boundingBoxes[i]->setVisible(true);
+		}
+	}
+
 	for (u32 i=0; i < nodes.size(); i++)
 		nodes[i]->setVisible(true);
-	for (u32 i=0; i < boundingBoxes.size(); i++)
-		boundingBoxes[i]->setVisible(true);
 }
+
 
 void PlayerFrame::hide()
 {
@@ -569,7 +630,8 @@ void PlayerFrame::hide()
 		boundingBoxes[i]->setVisible(false);
 }
 
-core::array<scene::IMeshSceneNode*> PlayerFrame::getNodes()
+
+core::array<scene::IAnimatedMeshSceneNode*> PlayerFrame::getNodes()
 {
 	return nodes;
 }

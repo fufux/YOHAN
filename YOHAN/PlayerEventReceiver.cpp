@@ -84,6 +84,15 @@ bool PlayerEventReceiver::OnEvent(const SEvent &event)
 				case GUI_ID_PLAYER_QUIT: // File -> Quit
 					device->closeDevice();
 					break;
+				case GUI_ID_PLAYER_IMPROVE_RENDERING_NONE: // View -> Improve Rendering none
+					player->improveRendering(false);
+					break;
+				case GUI_ID_PLAYER_IMPROVE_RENDERING_1: // View -> Improve Rendering 1
+					player->improveRendering(true, 0);
+					break;
+				case GUI_ID_PLAYER_IMPROVE_RENDERING_2: // View -> Improve Rendering 2
+					player->improveRendering(true, 1);
+					break;
 				case GUI_ID_PLAYER_DEBUG_OFF: // View -> Debug Information
 					menu->setItemChecked(menu->getSelectedItem()+1, false);
 					menu->setItemChecked(menu->getSelectedItem()+2, false);

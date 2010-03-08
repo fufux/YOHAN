@@ -1,3 +1,4 @@
+#include "irrlicht/XEffects/Source/XEffects.h"
 #include "Player.h"
 #include "PlayerFrame.h"
 #include "Editor.h"
@@ -7,11 +8,12 @@ extern IrrlichtDevice* device;
 extern IVideoDriver* driver;
 extern ISceneManager* smgr;
 extern IGUIEnvironment* env;
+extern EffectHandler* effect;
 extern scene::ICameraSceneNode* camera[CAMERA_COUNT];
 
 
 
-Player::Player(void)
+Player::Player(scene::ITerrainSceneNode* terrain, core::array<scene::ISceneNode*> skydomes)
 {
 	this->debugData = scene::EDS_MESH_WIRE_OVERLAY;
 	this->er = new PlayerEventReceiver(this);
@@ -24,6 +26,11 @@ Player::Player(void)
 	this->name = "untitled";
 	this->baseDir = device->getFileSystem()->getWorkingDirectory();
 	this->frames_size = 0;
+	this->improve_rendering = false;
+	this->defaultObjectTexture = driver->getTexture("irrlicht/media/wall.bmp");
+	this->noneObjectTexture = driver->getTexture("irrlicht/media/red.bmp");
+	this->terrain = terrain;
+	this->skydomes = skydomes;
 }
 
 Player::~Player(void)
@@ -66,6 +73,7 @@ void Player::clear(bool clear_gui)
 	/*for (u32 i=0; i < frames_size; i++)
 		delete frames[i];
 	this->frames.clear();*/
+	improveRendering(false);
 	framesFileNames.clear();
 	if (currFrame) delete currFrame;
 	this->currFrame = NULL;
@@ -75,6 +83,7 @@ void Player::clear(bool clear_gui)
 	this->playSpeed = 100;
 	this->accumulatedDeltaT = 0;
 	this->frames_size = 0;
+	this->improve_rendering = false;
 
 	// clear GUI
 	if (clear_gui)
@@ -128,7 +137,7 @@ void Player::displayPreviousFrame()
 }
 
 
-void Player::displayFrameById(s32 id)
+void Player::displayFrameById(s32 id, bool volumic)
 {
 	if (framesFileNames.size() == 0 || id < 0 || id >= (s32)framesFileNames.size())
 	{
@@ -136,13 +145,10 @@ void Player::displayFrameById(s32 id)
 		return;
 	}
 
-	/*if (currentFrame >= 0 && currentFrame < (s32)frames_size)
-		frames[currentFrame]->hide();*/
-
 	if (currFrame && currFrame != NULL)
 		delete currFrame;
-	
-	currFrame = new PlayerFrame(framesFileNames[id]);
+
+	currFrame = new PlayerFrame(this, framesFileNames[id], volumic);
 	if (currFrame->getNodes().size() == 0)
 	{
 		delete currFrame;
@@ -151,9 +157,10 @@ void Player::displayFrameById(s32 id)
 		return;
 	}
 	currentFrame = currFrame->getID();
-	accumulatedDeltaT = currFrame->getTimestamp();
+	if (volumic)
+		accumulatedDeltaT = currFrame->getTimestamp();
 	currFrame->display();
-	setDebugDataVisible( this->debugData );
+	setDebugDataVisible( this->debugData, volumic );
 	updateFrameNumber();
 }
 
@@ -173,7 +180,7 @@ void Player::playNextFrame(double deltaT)
 
 	if (old_currentFrame >= 0 && old_currentFrame < (s32)frames_size)
 	{
-		for (u32 i=old_currentFrame; i < frames_size && i < old_currentFrame + 1000; i++)
+		for (u32 i=old_currentFrame; i < frames_size && i < (u32)old_currentFrame + 1000; i++)
 		{
 			if (abs(framesFileNames[i].timestamp - accumulatedDeltaT) < min)
 			{
@@ -201,7 +208,7 @@ void Player::playNextFrame(double deltaT)
 	if (currentFrame >= 0 && currentFrame < (s32)frames_size)
 		frames[currentFrame]->display();*/
 
-	displayFrameById(currentFrame);
+	displayFrameById(currentFrame, false);
 
 	// force looping
 	if (currentFrame == frames_size-1)
@@ -338,7 +345,7 @@ bool Player::load(irr::core::stringc filename)
 	u16 size = framesFileNames.size();
 	for (u16 i=0; i < size; i++)
 	{
-		frames.push_back(new PlayerFrame(framesFileNames[i], false));
+		frames.push_back(new PlayerFrame(this, framesFileNames[i], false));
 		if (frames.getLast()->getNodes().size() == 0)
 		{
 			delete frames.getLast();
@@ -378,6 +385,9 @@ void Player::createGUI()
 
 	submenu = menu->getSubMenu(1);
 	submenu->addItem(L"toggle model debug information", GUI_ID_PLAYER_TOGGLE_DEBUG_INFO, true, true);
+	submenu->addItem(L"Don't Improve Rendering", GUI_ID_PLAYER_IMPROVE_RENDERING_NONE);
+	submenu->addItem(L"Improve Rendering 1", GUI_ID_PLAYER_IMPROVE_RENDERING_1);
+	submenu->addItem(L"Improve Rendering 2", GUI_ID_PLAYER_IMPROVE_RENDERING_2);
 
 	submenu = submenu->getSubMenu(0);
 	submenu->addItem(L"Off", GUI_ID_PLAYER_DEBUG_OFF, true, false, (isDebugDataVisible() == scene::EDS_OFF));
@@ -441,24 +451,79 @@ void Player::createGUI()
 }
 
 
-void Player::setDebugDataVisible(scene::E_DEBUG_SCENE_TYPE state)
+void Player::setDebugDataVisible(scene::E_DEBUG_SCENE_TYPE state, bool f)
 {
 	/*if (currentFrame >= 0 && currentFrame < (s32)frames_size)
 	{
 		for (u16 j=0; j < frames[currentFrame]->getNodes().size(); j++)
 			frames[currentFrame]->getNodes()[j]->setDebugDataVisible(state);
 	}*/
-	if (currFrame)
+	if (currFrame && (!improve_rendering || f))
 	{
 		for (u16 j=0; j < currFrame->getNodes().size(); j++)
 			currFrame->getNodes()[j]->setDebugDataVisible(state);
+		this->debugData = state;
 	}
-	this->debugData = state;
+	else if (currFrame)
+	{
+		for (u16 j=0; j < currFrame->getNodes().size(); j++)
+			currFrame->getNodes()[j]->setDebugDataVisible(scene::EDS_OFF);
+	}
 }
 
 s32 Player::isDebugDataVisible()
 {
 	return debugData;
+}
+
+void Player::improveRendering(bool enable, s32 type)
+{
+	if (enable)
+	{
+		effect->removeShadowFromNode(terrain);
+		effect->addShadowToNode(terrain, EFT_8PCF, ESM_RECEIVE);
+		if (type == 0)
+		{
+			skydomes[0]->setVisible(true);
+			skydomes[1]->setVisible(false);
+			effect->getShadowLight(0).setPosition(vector3df(0, 500.0f, -50.0f));
+			effect->setAmbientColor(SColor(255, 132, 132, 132));
+		}
+		else if (type == 1)
+		{
+			skydomes[0]->setVisible(false);
+			skydomes[1]->setVisible(true);
+			effect->getShadowLight(0).setPosition(vector3df(0, 80.0f, -200.0f));
+			effect->setAmbientColor(SColor(255, 32, 32, 32));
+		}
+	}
+	else
+	{
+		if (currFrame)
+		{
+			for (u32 i=0; i < currFrame->getNodes().size(); i++)
+				effect->removeShadowFromNode(currFrame->getNodes()[i]);
+		}
+		effect->removeShadowFromNode(terrain);
+		setDebugDataVisible(this->debugData);
+		for (u32 i=0; i < skydomes.size(); i++)
+			skydomes[i]->setVisible(false);
+	}
+	this->improve_rendering = enable;
+	terrain->setMaterialFlag(video::EMF_WIREFRAME, !enable);
+}
+
+bool Player::isImproveRendering()
+{
+	return improve_rendering;
+}
+video::ITexture* Player::getDefaultObjectTexture()
+{
+	return defaultObjectTexture;
+}
+video::ITexture* Player::getNoneObjectTexture()
+{
+	return noneObjectTexture;
 }
 
 
@@ -502,6 +567,13 @@ void Player::run()
 		{
 			lastTime = device->getTimer()->getTime();
 			this->playNextFrame(fps * ((double)this->playSpeed) / 100);
+			if (currFrame && currFrame->getNodes().size() > 0 &&
+				currFrame->getNodes()[0]->getMesh()->getMeshBufferCount() > 0 &&
+				currFrame->getNodes()[0]->getMesh()->getMeshBuffer(0)->getVertexCount() > 0)
+			{
+				S3DVertex *v = (S3DVertex*)currFrame->getNodes()[0]->getMesh()->getMeshBuffer(0)->getVertices();
+				effect->getShadowLight(0).setTarget(v[0].Pos);
+			}
 		}
 	}
 }
