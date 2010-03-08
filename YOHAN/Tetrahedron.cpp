@@ -106,7 +106,9 @@ void Tetrahedron::computeBeta()
 	beta(0,2) = u4[0]-u1[0];
 	beta(1,2) = u4[1]-u1[1];
 	beta(2,2) = u4[2]-u1[2];
-	beta = beta.inverse().eval();
+	Eigen::LU<Matrix3d> lu(beta);
+	beta = lu.inverse();
+	//beta = beta.inverse().eval();
 }
 
 void Tetrahedron::computeN()
@@ -215,7 +217,7 @@ void Tetrahedron::computeCoreJacobian()
 	y[1] = beta.row(0);
 	y[2] = beta.row(1);
 	y[3] = beta.row(2);
-	y[0] = -y[1]-y[2]-y[3];
+	y[0] = (-y[1]-y[2]-y[3]);
 	
 	
 
