@@ -66,7 +66,7 @@ int main(int argc, _TCHAR* argv[])
 	driver = device->getVideoDriver();
 	smgr = device->getSceneManager();
 	env = device->getGUIEnvironment();
-	smgr->setAmbientLight(SColorf(0.2f,0.2f,0.2f));
+	smgr->setAmbientLight(SColorf(0.5f,0.5f,0.5f));
 
 	//driver->setTextureCreationFlag(video::ETCF_ALWAYS_32_BIT, true);
 
@@ -96,7 +96,6 @@ int main(int argc, _TCHAR* argv[])
 	/*
 	Add XEffects
 	*/
-	smgr->setShadowColor(video::SColor(150,0,0,0));
 	effect = new EffectHandler(device, driver->getScreenSize(), true, true, true);
 	effect->setAmbientColor(SColor(255, 32, 32, 32));
 	effect->setClearColour(SColor(255,100,101,140));
