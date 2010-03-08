@@ -689,6 +689,10 @@ void Tetrahedron::remesh2(Point* orginal, Matrix<double, 3, 1>& nvector, vector<
 		util::intersect_line_plane(p1->getX(), p3->getX(), nvector, orginal->getX(), ratioP1P3);
 		util::intersect_line_plane(p2->getX(), p3->getX(), nvector, orginal->getX(), ratioP2P3);
 	}
+	else if (resP1P2 == 0 && resP1P3 == 0 && resP2P3 == 0)
+	{
+		// do not intersect with this tetrahedron
+	}
 	else if ((resP1P2 == 3 && resP1P3 == 3 && resP2P3 == 0) ||
 			 (resP1P2 == 10 && resP1P3 == 0 && resP2P3 == 3) ||
 			 (resP1P2 == 1 && resP1P3 == 0 && resP2P3 == 3) ||
@@ -702,7 +706,9 @@ void Tetrahedron::remesh2(Point* orginal, Matrix<double, 3, 1>& nvector, vector<
 			 (resP1P2 == 0 && resP1P3 == 1 && resP2P3 == 10) ||
 			 (resP1P2 == 1 && resP1P3 == 3 && resP2P3 == 0) ||
 			 (resP1P2 == 0 && resP1P3 == 10 && resP2P3 == 3) ||
-			 (resP1P2 == 0 && resP1P3 == 3 && resP2P3 == 10))
+			 (resP1P2 == 0 && resP1P3 == 3 && resP2P3 == 10) ||
+			 (resP1P2 == 3 && resP1P3 == 10 && resP2P3 == 0) ||
+			 (resP1P2 == 3 && resP1P3 == 0 && resP2P3 == 3))
 	{
 		// ignore
 	}

@@ -767,11 +767,11 @@ int Volume::calculFracture()
 			else
 			{
 				// must not reach here
-				util::log("FETAL ERROR: Volume::replica with remesh");
+				//util::log("FETAL ERROR: Volume::replica with remesh");
 			}
 
 			// end the remesh process to avoid some crush increasing tets
-			if (tetrahedra.size() - oldTetSize > 100)
+			if (tetrahedra.size() - oldTetSize > 10)
 				return fractureCount;
 		}
 
@@ -785,9 +785,12 @@ Point* Volume::replicaPointWithRemesh2(Point* orginal, Matrix<double, 3, 1>& nve
 	// remesh buf
 	std::vector<IndexTetraPoint> remeshBuf = *orginal->getIndexTetra();
 
+	int oldTetSize = tetrahedra.size();
 	for (std::vector<IndexTetraPoint>::iterator iter = remeshBuf.begin(); iter != remeshBuf.end(); ++iter)
 	{
 		iter->tet->remesh2(orginal, nvector, this->points);
+		if (tetrahedra.size() - oldTetSize > 10)
+			break;
 	}
 
 	// reassign
