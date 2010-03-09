@@ -375,7 +375,6 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 	{
 		currentTime += deltaT;
 		tstart = GetTickCount();
-		cout << "step number: " << stepNumber << endl;
 
 		// reset
 		for (int i=0; i < (int)volumes.size(); i++) {
@@ -678,9 +677,8 @@ void Scene::handleCollisions()
 	}
 	for (int i=0; i < (int)volumes.size(); i++) {
 		volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(0, found_plan);
-		for (int j=0; j < (int)volumes.size(); j++) {
-			if (i!=j)
-				volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(volumes[j]->getMasterBoundingBox(), found);
+		for (int j=i+1; j < (int)volumes.size(); j++) {
+			volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(volumes[j]->getMasterBoundingBox(), found);
 		}
 	}
 	planCollisionResponse(found_plan);

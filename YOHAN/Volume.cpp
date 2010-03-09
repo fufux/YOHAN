@@ -630,7 +630,7 @@ void Volume::collisionBidon()
 
 int Volume::calculFracture2()
 {
-
+	return 0;
 }
 
 void Volume::calculTensileAndCompressiveOfTetrahedron()
@@ -828,9 +828,9 @@ int Volume::calculFracture()
 	}
 
 	//log
-	char msg[128];
-	itoa(fractureCount, msg, 10);
-	util::log(msg);
+	std::stringstream sstream;
+	sstream << "fractureCount: " << fractureCount;
+	util::log(sstream.str());
 
 	return fractureCount;
 }

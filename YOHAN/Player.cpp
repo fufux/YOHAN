@@ -379,7 +379,7 @@ void Player::createGUI()
 
 	gui::IGUIContextMenu* submenu;
 	submenu = menu->getSubMenu(0);
-	submenu->addItem(L"Open video...", GUI_ID_PLAYER_OPEN_VIDEO);
+	submenu->addItem(L"Open animation...", GUI_ID_PLAYER_OPEN_VIDEO);
 	submenu->addSeparator();
 	submenu->addItem(L"Switch to editor", GUI_ID_SWITCH_TO_EDITOR);
 	submenu->addItem(L"Quit", GUI_ID_PLAYER_QUIT);
@@ -420,7 +420,7 @@ void Player::createGUI()
 	bar = env->addToolBar(0, GUI_ID_TOOLBAR);
 
 	video::ITexture* image = driver->getTexture("open.png");
-	bar->addButton(GUI_ID_PLAYER_OPEN_VIDEO_BUTTON, 0, L"Open a video", image, 0, false, true);
+	bar->addButton(GUI_ID_PLAYER_OPEN_VIDEO_BUTTON, 0, L"Open animation", image, 0, false, true);
 
 	image = driver->getTexture("previous.png");
 	bar->addButton(GUI_ID_PLAYER_PREVIOUS_FRAME, 0, L"Previous Frame", image, 0, false, true);

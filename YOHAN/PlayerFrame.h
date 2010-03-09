@@ -29,6 +29,8 @@ public:
 	static core::array<stringc> lastFaceFileNames;
 	static core::array<scene::SMeshBuffer*> lastBuffers;
 
+	vector3df& getCenter();
+
 private:
 	// this is the list of nodes which will be displayed. One node <=> one volume
 	core::array<scene::IAnimatedMeshSceneNode*> nodes;
@@ -38,6 +40,9 @@ private:
 
 	// this if the files names in which we are getting mesh info for the loading frame
 	s32 id;
+
+	// this point will be targeted by lights
+	vector3df center;
 
 	double timestamp;
 
