@@ -407,7 +407,7 @@ void EditorEventReceiver::showConfirmDeleteNode()
 
 void EditorEventReceiver::askForParameters(bool previous_was_bad)
 {
-	if (editor->getAllSceneNodes().size() == 0)
+	if (editor->getAllEditorNodes().size() == 0)
 	{
 		env->addMessageBox(L"Warning", L"There is nothing in the scene...");
 	}

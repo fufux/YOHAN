@@ -11,6 +11,14 @@ struct EditorMaterial
 	f32 lambda,mu,alpha,beta,density;
 };
 
+struct EditorNode
+{
+	IMeshSceneNode* node;
+	stringc meshFile;
+	EditorMaterial meshMaterial;
+	vector3df initialSpeed;
+};
+
 
 class Editor
 {
@@ -38,7 +46,7 @@ public:
 
 	getForceField() returns a 3D vector containing the intensity of the force field on each coord (X,Y,Z)
 	*/
-	core::array<IMeshSceneNode*> getAllSceneNodes();
+	core::array<EditorNode>& getAllEditorNodes();
 	vector3df getForceField();
 
 	// load scene from a scene file
@@ -106,13 +114,14 @@ private:
 	EditorEventReceiver* er;
 
 	// this is the list of all models in the scene
-	core::array<IMeshSceneNode*> nodes;
+	//core::array<IMeshSceneNode*> nodes;
+	core::array<EditorNode> enodes;
 	IMesh* getMeshWithAbsoluteCoordinates(IMeshSceneNode* node);
 
 	// and this is the list of meshe files name that correspond to the nodes (index must correspond with previous list)
-	core::array<stringc> meshFiles;
-	core::array<EditorMaterial> meshMaterials; // and here are the materials of each object
-	core::array<vector3df> initialSpeeds;
+	//core::array<stringc> meshFiles;
+	//core::array<EditorMaterial> meshMaterials; // and here are the materials of each object
+	//core::array<vector3df> initialSpeeds;
 
 	// this is the list of all force fields in the scene
 	core::array<vector3df> forceFields;
@@ -120,6 +129,8 @@ private:
 	// store (current) selected node/forcefield (if defined)
 	s32 selectedNodeIndex;
 	s32 selectedForceField;
+	video::ITexture* selectedObjectTexture;
+	video::ITexture* defaultObjectTexture;
 
 	// what kind of debug are we displaying currently ?
 	scene::E_DEBUG_SCENE_TYPE debugData;

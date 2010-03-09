@@ -1,3 +1,4 @@
+#include "irrlicht/XEffects/Source/XEffects.h"
 #include "Editor.h"
 #include "Scene.h"
 
@@ -6,6 +7,7 @@ extern IrrlichtDevice* device;
 extern IVideoDriver* driver;
 extern ISceneManager* smgr;
 extern IGUIEnvironment* env;
+extern EffectHandler* effect;
 extern scene::ICameraSceneNode* camera[CAMERA_COUNT];
 
 
@@ -36,6 +38,8 @@ Editor::Editor(void)
 	this->name = "untitled";
 	this->baseDir = device->getFileSystem()->getWorkingDirectory();
 	this->lastSimulatedSceneOutDir = "";
+	this->defaultObjectTexture = driver->getTexture("irrlicht/media/black.bmp");
+	this->selectedObjectTexture = driver->getTexture("irrlicht/media/red.bmp");
 }
 
 Editor::~Editor(void)
@@ -49,6 +53,7 @@ void Editor::start()
 	device->setEventReceiver(this->er);
 	this->is_running = true;
 	this->lastSimulatedSceneOutDir = "";
+	effect->setAmbientColor(SColor(255, 200, 200, 200));
 }
 
 
@@ -95,12 +100,12 @@ stringc Editor::getBaseDir()
 
 void Editor::clear(bool clear_gui)
 {
-	for (u16 i=0; i < nodes.size(); i++)
-		nodes[i]->remove();
-	nodes.clear();
-	meshFiles.clear();
+	for (u16 i=0; i < enodes.size(); i++)
+		enodes[i].node->remove();
+	enodes.clear();
+	/*meshFiles.clear();
 	meshMaterials.clear();
-	initialSpeeds.clear();
+	initialSpeeds.clear();*/
 	forceFields.clear();
 	this->selectedNodeIndex = -1;
 	this->selectedForceField = -1;
@@ -156,24 +161,31 @@ void Editor::selectNode()
 
 	if (selectedSceneNode)
 	{
-		if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
+		if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)enodes.size())
 		{
-			nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
-			nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
+			enodes[selectedNodeIndex].node->setMaterialTexture(0, this->defaultObjectTexture);
+			enodes[selectedNodeIndex].node->setDebugDataVisible( debugData );
 		}
 
-		this->selectedNodeIndex = this->nodes.binary_search( selectedSceneNode );
+		for (u32 i=0; i < enodes.size(); i++)
+		{
+			if (enodes[i].node == selectedSceneNode)
+			{
+				this->selectedNodeIndex = i;
+				break;
+			}
+		}
 		
-		selectedSceneNode->setMaterialFlag(EMF_WIREFRAME, true);
+		selectedSceneNode->setMaterialTexture(0, this->selectedObjectTexture);
 
 		this->createSceneNodeToolBox();
 	}
 	else
 	{
-		if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
+		if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)enodes.size())
 		{
-			nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
-			nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
+			enodes[selectedNodeIndex].node->setMaterialTexture(0, this->defaultObjectTexture);
+			enodes[selectedNodeIndex].node->setDebugDataVisible( debugData );
 		}
 		this->selectedNodeIndex = -1;
 
@@ -185,9 +197,9 @@ void Editor::selectNode()
 
 void Editor::setDebugDataVisible(scene::E_DEBUG_SCENE_TYPE state)
 {
-	for (u16 i=0; i < nodes.size(); i++)
+	for (u16 i=0; i < enodes.size(); i++)
 	{
-		nodes[i]->setDebugDataVisible(state);
+		enodes[i].node->setDebugDataVisible(state);
 	}
 	this->debugData = state;
 }
@@ -200,7 +212,7 @@ s32 Editor::isDebugDataVisible()
 
 void Editor::setPositionRotationScaleOfSelectedNode()
 {
-	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
+	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)enodes.size())
 	{
 		gui::IGUIElement* root = env->getRootGUIElement();
 		core::vector3df pos, rot, sca, ispeed;
@@ -242,20 +254,19 @@ void Editor::setPositionRotationScaleOfSelectedNode()
 		s = root->getElementFromId(GUI_ID_TOOL_BOX_MATERIAL_DENSITY, true)->getText();
 		material.density = (f32)atof(s.c_str());
 
-		nodes[selectedNodeIndex]->setPosition( pos );
-		nodes[selectedNodeIndex]->setRotation( rot );
-		nodes[selectedNodeIndex]->setScale( sca );
-		meshMaterials[selectedNodeIndex] = material;
-		initialSpeeds[selectedNodeIndex] = ispeed;
+		enodes[selectedNodeIndex].node->setPosition( pos );
+		enodes[selectedNodeIndex].node->setRotation( rot );
+		enodes[selectedNodeIndex].node->setScale( sca );
+		enodes[selectedNodeIndex].meshMaterial = material;
+		enodes[selectedNodeIndex].initialSpeed = ispeed;
 	}
 }
 
 void Editor::moveSelectedNode(irr::core::vector3df vec)
 {
-	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
+	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)enodes.size())
 	{
-		vector3df pos = nodes[selectedNodeIndex]->getPosition() + vec;
-		//setPositionOfSelectedNode( pos );
+		vector3df pos = enodes[selectedNodeIndex].node->getPosition() + vec;
 	}
 }
 
@@ -282,9 +293,9 @@ void Editor::setForceField()
 	}
 }
 
-core::array<IMeshSceneNode*> Editor::getAllSceneNodes()
+core::array<EditorNode>& Editor::getAllEditorNodes()
 {
-	return nodes;
+	return enodes;
 }
 
 vector3df Editor::getForceField()
@@ -330,38 +341,34 @@ bool Editor::add3DModel(stringc filename)
 	selector->drop(); // We're done with this selector, so drop it now.
 
 
-	for (int i=0; i < nodes.size(); i++)
-		cout << nodes[i] << endl;
-	cout <<endl;
-	// select the newly loaded scene node
-	nodes.push_back( node );
-	for (int i=0; i < nodes.size(); i++)
-			cout << nodes[i] << endl;
-	cout <<endl<<endl;
-	meshFiles.push_back( filename.c_str() );
-
 	// set default values for material and initial speed
 	EditorMaterial material;
-	material.lambda = 0.419f;
-	material.mu = 0.578f;
-	material.alpha = 1.04f;
-	material.beta = 1.44f;
-	material.density = 2595.0f;
-	meshMaterials.push_back( material );
+	material.lambda = 1.04e8f;
+	material.mu = 1.04e8f;
+	material.alpha = 0;
+	material.beta = 6760.0f;
+	material.density = 2588.0f;
 	vector3df initialSpeed = vector3df(0,0,0);
-	initialSpeeds.push_back( initialSpeed );
+
+	// create EditorNode
+	EditorNode enode;
+	enode.node = node;
+	enode.meshFile = filename.c_str();
+	enode.meshMaterial = material;
+	enode.initialSpeed = initialSpeed;
+	enodes.push_back(enode);
 
 	// unselect current selected node if exists
-	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
+	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)enodes.size())
 	{
-		nodes[selectedNodeIndex]->setMaterialFlag(EMF_WIREFRAME, false);
-		nodes[selectedNodeIndex]->setDebugDataVisible( debugData );
+		enodes[selectedNodeIndex].node->setMaterialTexture(0, this->defaultObjectTexture);
+		enodes[selectedNodeIndex].node->setDebugDataVisible( debugData );
 	}
 
 	// select the node we've just loaded
-	selectedNodeIndex = nodes.size() - 1;
+	selectedNodeIndex = enodes.size() - 1;
 	this->createSceneNodeToolBox();
-	node->setMaterialFlag(EMF_WIREFRAME, true);
+	node->setMaterialTexture(0, this->selectedObjectTexture);
 	node->setDebugDataVisible( debugData );
 
 	return true;
@@ -376,45 +383,10 @@ void Editor::addForceField()
 
 void Editor::remove3DModel()
 {
-	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)nodes.size())
+	if (selectedNodeIndex >= 0 && selectedNodeIndex < (s32)enodes.size())
 	{
-		core::array<IMeshSceneNode*> _nodes;
-		core::array<stringc> _meshFiles;
-		core::array<EditorMaterial> _meshMaterials;
-		core::array<vector3df> _initialSpeeds;
-
-		for (int i=0; i < nodes.size(); i++) {
-			if (i != selectedNodeIndex)
-				_nodes.push_back(nodes[i]);
-		}
-		for (int i=0; i < meshFiles.size(); i++) {
-			if (i != selectedNodeIndex)
-				_meshFiles.push_back(meshFiles[i]);
-		}
-		for (int i=0; i < meshMaterials.size(); i++) {
-			if (i != selectedNodeIndex)
-				_meshMaterials.push_back(meshMaterials[i]);
-		}
-		for (int i=0; i < initialSpeeds.size(); i++) {
-			if (i != selectedNodeIndex)
-				_initialSpeeds.push_back(initialSpeeds[i]);
-		}
-
-		nodes[selectedNodeIndex]->remove();
-		/*for (int i=0; i < nodes.size(); i++)
-			cout << nodes[i] << endl;
-		cout <<endl<<endl;*/
-		nodes = _nodes;
-		/*for (int i=0; i < nodes.size(); i++)
-			cout << nodes[i] << endl;
-		for (int i=0; i < meshFiles.size(); i++)
-			cout << meshFiles[i].c_str() << endl;
-		cout <<endl<<endl;*/
-		meshFiles = _meshFiles;
-		/*for (int i=0; i < meshFiles.size(); i++)
-			cout << meshFiles[i].c_str() << endl;*/
-		meshMaterials = _meshMaterials;
-		initialSpeeds = _initialSpeeds;
+		enodes[selectedNodeIndex].node->remove();
+		enodes.erase(selectedNodeIndex);
 		selectedNodeIndex = -1;
 		removeSceneNodeToolBox();
 	}
@@ -520,7 +492,7 @@ void Editor::createGUI()
 
 void Editor::createSceneNodeToolBox()
 {
-	if (selectedNodeIndex < 0 || selectedNodeIndex >= (s32)nodes.size())
+	if (selectedNodeIndex < 0 || selectedNodeIndex >= (s32)enodes.size())
 		return;
 
 	// remove tool box if already there
@@ -546,17 +518,17 @@ void Editor::createSceneNodeToolBox()
 	env->addStaticText(L"Position:", core::rect<s32>(x,y,x+140,y+16), false, false, t1);
 	x = 22; y = y+16;
 	env->addStaticText(L"X:", core::rect<s32>(x,y+2,x+16,y+18), false, false, t1);
-	env->addEditBox(stringw( nodes[selectedNodeIndex]->getPosition().X ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_X_POSITION);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].node->getPosition().X ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_X_POSITION);
 	env->addButton(core::rect<s32>(x+122,y+1,x+142,y+10), t1, GUI_ID_TOOL_BOX_INCREASE_POSITION_X, L"+");
 	env->addButton(core::rect<s32>(x+122,y+10,x+142,y+19), t1, GUI_ID_TOOL_BOX_DECREASE_POSITION_X, L"-");
 	x = 22; y = y+19;
 	env->addStaticText(L"Y:", core::rect<s32>(x,y+2,x+16,y+18), false, false, t1);
-	env->addEditBox(stringw( nodes[selectedNodeIndex]->getPosition().Y ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Y_POSITION);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].node->getPosition().Y ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Y_POSITION);
 	env->addButton(core::rect<s32>(x+122,y+1,x+142,y+10), t1, GUI_ID_TOOL_BOX_INCREASE_POSITION_Y, L"+");
 	env->addButton(core::rect<s32>(x+122,y+10,x+142,y+19), t1, GUI_ID_TOOL_BOX_DECREASE_POSITION_Y, L"-");
 	x = 22; y = y+19;
 	env->addStaticText(L"Z:", core::rect<s32>(x,y+2,x+316,y+18), false, false, t1);
-	env->addEditBox(stringw( nodes[selectedNodeIndex]->getPosition().Z ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Z_POSITION);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].node->getPosition().Z ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Z_POSITION);
 	env->addButton(core::rect<s32>(x+122,y+1,x+142,y+10), t1, GUI_ID_TOOL_BOX_INCREASE_POSITION_Z, L"+");
 	env->addButton(core::rect<s32>(x+122,y+10,x+142,y+19), t1, GUI_ID_TOOL_BOX_DECREASE_POSITION_Z, L"-");
 	x = 22; y = y+19;
@@ -566,17 +538,17 @@ void Editor::createSceneNodeToolBox()
 	env->addStaticText(L"Rotation:", core::rect<s32>(x,y,x+140,y+16), false, false, t1);
 	x = 22; y = y+16;
 	env->addStaticText(L"X:", core::rect<s32>(x,y+2,x+16,y+18), false, false, t1);
-	env->addEditBox(stringw( nodes[selectedNodeIndex]->getRotation().X ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_X_ROTATION);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].node->getRotation().X ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_X_ROTATION);
 	env->addButton(core::rect<s32>(x+122,y+1,x+142,y+10), t1, GUI_ID_TOOL_BOX_INCREASE_ROTATION_X, L"+");
 	env->addButton(core::rect<s32>(x+122,y+10,x+142,y+19), t1, GUI_ID_TOOL_BOX_DECREASE_ROTATION_X, L"-");
 	x = 22; y = y+19;
 	env->addStaticText(L"Y:", core::rect<s32>(x,y+2,x+16,y+18), false, false, t1);
-	env->addEditBox(stringw( nodes[selectedNodeIndex]->getRotation().Y ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Y_ROTATION);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].node->getRotation().Y ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Y_ROTATION);
 	env->addButton(core::rect<s32>(x+122,y+1,x+142,y+10), t1, GUI_ID_TOOL_BOX_INCREASE_ROTATION_Y, L"+");
 	env->addButton(core::rect<s32>(x+122,y+10,x+142,y+19), t1, GUI_ID_TOOL_BOX_DECREASE_ROTATION_Y, L"-");
 	x = 22; y = y+19;
 	env->addStaticText(L"Z:", core::rect<s32>(x,y+2,x+316,y+18), false, false, t1);
-	env->addEditBox(stringw( nodes[selectedNodeIndex]->getRotation().Z ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Z_ROTATION);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].node->getRotation().Z ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Z_ROTATION);
 	env->addButton(core::rect<s32>(x+122,y+1,x+142,y+10), t1, GUI_ID_TOOL_BOX_INCREASE_ROTATION_Z, L"+");
 	env->addButton(core::rect<s32>(x+122,y+10,x+142,y+19), t1, GUI_ID_TOOL_BOX_DECREASE_ROTATION_Z, L"-");
 	x = 22; y = y+19;
@@ -586,17 +558,17 @@ void Editor::createSceneNodeToolBox()
 	env->addStaticText(L"Scale:", core::rect<s32>(x,y,x+140,y+16), false, false, t1);
 	x = 22; y = y+16;
 	env->addStaticText(L"X:", core::rect<s32>(x,y+2,x+16,y+18), false, false, t1);
-	env->addEditBox(stringw( nodes[selectedNodeIndex]->getScale().X ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_X_SCALE);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].node->getScale().X ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_X_SCALE);
 	env->addButton(core::rect<s32>(x+122,y+1,x+142,y+10), t1, GUI_ID_TOOL_BOX_INCREASE_SCALE_X, L"+");
 	env->addButton(core::rect<s32>(x+122,y+10,x+142,y+19), t1, GUI_ID_TOOL_BOX_DECREASE_SCALE_X, L"-");
 	x = 22; y = y+19;
 	env->addStaticText(L"Y:", core::rect<s32>(x,y+2,x+16,y+18), false, false, t1);
-	env->addEditBox(stringw( nodes[selectedNodeIndex]->getScale().Y ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Y_SCALE);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].node->getScale().Y ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Y_SCALE);
 	env->addButton(core::rect<s32>(x+122,y+1,x+142,y+10), t1, GUI_ID_TOOL_BOX_INCREASE_SCALE_Y, L"+");
 	env->addButton(core::rect<s32>(x+122,y+10,x+142,y+19), t1, GUI_ID_TOOL_BOX_DECREASE_SCALE_Y, L"-");
 	x = 22; y = y+19;
 	env->addStaticText(L"Z:", core::rect<s32>(x,y+2,x+316,y+18), false, false, t1);
-	env->addEditBox(stringw( nodes[selectedNodeIndex]->getScale().Z ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Z_SCALE);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].node->getScale().Z ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t1, GUI_ID_TOOL_BOX_Z_SCALE);
 	env->addButton(core::rect<s32>(x+122,y+1,x+142,y+10), t1, GUI_ID_TOOL_BOX_INCREASE_SCALE_Z, L"+");
 	env->addButton(core::rect<s32>(x+122,y+10,x+142,y+19), t1, GUI_ID_TOOL_BOX_DECREASE_SCALE_Z, L"-");
 	x = 22; y = y+19;
@@ -612,13 +584,13 @@ void Editor::createSceneNodeToolBox()
 	env->addStaticText(L"Initial speed:", core::rect<s32>(x,y,x+140,y+16), false, false, t2);
 	x = 22; y = y+16;
 	env->addStaticText(L"X:", core::rect<s32>(x,y+2,x+16,y+18), false, false, t2);
-	env->addEditBox(stringw( initialSpeeds[selectedNodeIndex].X ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t2, GUI_ID_TOOL_BOX_X_SPEED);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].initialSpeed.X ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t2, GUI_ID_TOOL_BOX_X_SPEED);
 	x = 22; y = y+19;
 	env->addStaticText(L"Y:", core::rect<s32>(x,y+2,x+16,y+18), false, false, t2);
-	env->addEditBox(stringw( initialSpeeds[selectedNodeIndex].Y ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t2, GUI_ID_TOOL_BOX_Y_SPEED);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].initialSpeed.Y ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t2, GUI_ID_TOOL_BOX_Y_SPEED);
 	x = 22; y = y+19;
 	env->addStaticText(L"Z:", core::rect<s32>(x,y+2,x+316,y+18), false, false, t2);
-	env->addEditBox(stringw( initialSpeeds[selectedNodeIndex].Z ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t2, GUI_ID_TOOL_BOX_Z_SPEED);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].initialSpeed.Z ).c_str(), core::rect<s32>(x+18,y+2,x+120,y+18), true, t2, GUI_ID_TOOL_BOX_Z_SPEED);
 	x = 22; y = y+19;
 
 
@@ -632,19 +604,19 @@ void Editor::createSceneNodeToolBox()
 	env->addStaticText(L"Initial speed:", core::rect<s32>(x,y,x+140,y+16), false, false, t3);
 	x = 22; y = y+16;
 	env->addStaticText(L"Lambda:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
-	env->addEditBox(stringw( meshMaterials[selectedNodeIndex].lambda ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_LAMBDA);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.lambda ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_LAMBDA);
 	x = 22; y = y+19;
 	env->addStaticText(L"Mu:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
-	env->addEditBox(stringw( meshMaterials[selectedNodeIndex].mu ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_MU);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.mu ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_MU);
 	x = 22; y = y+19;
 	env->addStaticText(L"Alpha:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
-	env->addEditBox(stringw( meshMaterials[selectedNodeIndex].alpha ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_ALPHA);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.alpha ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_ALPHA);
 	x = 22; y = y+19;
 	env->addStaticText(L"Beta:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
-	env->addEditBox(stringw( meshMaterials[selectedNodeIndex].beta ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_BETA);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.beta ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_BETA);
 	x = 22; y = y+19;
 	env->addStaticText(L"Density:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
-	env->addEditBox(stringw( meshMaterials[selectedNodeIndex].density ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_DENSITY);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.density ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_DENSITY);
 
 }
 
@@ -795,7 +767,7 @@ bool Editor::load(irr::core::stringc filename)
 				{
 					if (currentType == SCENENODE && add3DModel_success)
 					{
-						nodes.getLast()->setPosition(vector3df(
+						enodes.getLast().node->setPosition(vector3df(
 							xml->getAttributeValueAsFloat(L"x"),
 							xml->getAttributeValueAsFloat(L"y"),
 							xml->getAttributeValueAsFloat(L"z")));
@@ -806,7 +778,7 @@ bool Editor::load(irr::core::stringc filename)
 				{
 					if (currentType == SCENENODE && add3DModel_success)
 					{
-						nodes.getLast()->setRotation(vector3df(
+						enodes.getLast().node->setRotation(vector3df(
 							xml->getAttributeValueAsFloat(L"x"),
 							xml->getAttributeValueAsFloat(L"y"),
 							xml->getAttributeValueAsFloat(L"z")));
@@ -817,7 +789,7 @@ bool Editor::load(irr::core::stringc filename)
 				{
 					if (currentType == SCENENODE && add3DModel_success)
 					{
-						nodes.getLast()->setScale(vector3df(
+						enodes.getLast().node->setScale(vector3df(
 							xml->getAttributeValueAsFloat(L"x"),
 							xml->getAttributeValueAsFloat(L"y"),
 							xml->getAttributeValueAsFloat(L"z")));
@@ -828,7 +800,7 @@ bool Editor::load(irr::core::stringc filename)
 				{
 					if (currentType == SCENENODE && add3DModel_success)
 					{
-						initialSpeeds[nodes.size() - 1] = vector3df(
+						enodes.getLast().initialSpeed = vector3df(
 							xml->getAttributeValueAsFloat(L"x"),
 							xml->getAttributeValueAsFloat(L"y"),
 							xml->getAttributeValueAsFloat(L"z"));
@@ -839,11 +811,13 @@ bool Editor::load(irr::core::stringc filename)
 				{
 					if (currentType == SCENENODE && add3DModel_success)
 					{
-						meshMaterials[nodes.size() - 1].lambda = xml->getAttributeValueAsFloat(L"lambda");
-						meshMaterials[nodes.size() - 1].mu = xml->getAttributeValueAsFloat(L"mu");
-						meshMaterials[nodes.size() - 1].alpha = xml->getAttributeValueAsFloat(L"alpha");
-						meshMaterials[nodes.size() - 1].beta = xml->getAttributeValueAsFloat(L"beta");
-						meshMaterials[nodes.size() - 1].density = xml->getAttributeValueAsFloat(L"density");
+						EditorMaterial material;
+						material.lambda = xml->getAttributeValueAsFloat(L"lambda");
+						material.mu = xml->getAttributeValueAsFloat(L"mu");
+						material.alpha = xml->getAttributeValueAsFloat(L"alpha");
+						material.beta = xml->getAttributeValueAsFloat(L"beta");
+						material.density = xml->getAttributeValueAsFloat(L"density");
+						enodes.getLast().meshMaterial = material;
 						this->createSceneNodeToolBox();
 					}
 				}
@@ -899,41 +873,41 @@ bool Editor::save(irr::core::stringc filename)
 		<density value="50.0" />
 	</scenenode>
 	*/
-	for (u16 i=0; i < nodes.size(); i++)
+	for (u32 i=0; i < enodes.size(); i++)
 	{
-		xml->writeElement(L"scenenode", false, L"filename", stringw(meshFiles[i].c_str()).c_str());
+		xml->writeElement(L"scenenode", false, L"filename", stringw(enodes[i].meshFile.c_str()).c_str());
 		xml->writeLineBreak();
 
 		xml->writeElement(L"position", true,
-			L"x", stringw( nodes[i]->getPosition().X ).c_str(),
-			L"y", stringw( nodes[i]->getPosition().Y ).c_str(),
-			L"z", stringw( nodes[i]->getPosition().Z ).c_str());
+			L"x", stringw( enodes[i].node->getPosition().X ).c_str(),
+			L"y", stringw( enodes[i].node->getPosition().Y ).c_str(),
+			L"z", stringw( enodes[i].node->getPosition().Z ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeElement(L"rotation", true,
-			L"x", stringw( nodes[i]->getRotation().X ).c_str(),
-			L"y", stringw( nodes[i]->getRotation().Y ).c_str(),
-			L"z", stringw( nodes[i]->getRotation().Z ).c_str());
+			L"x", stringw( enodes[i].node->getRotation().X ).c_str(),
+			L"y", stringw( enodes[i].node->getRotation().Y ).c_str(),
+			L"z", stringw( enodes[i].node->getRotation().Z ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeElement(L"scale", true,
-			L"x", stringw( nodes[i]->getScale().X ).c_str(),
-			L"y", stringw( nodes[i]->getScale().Y ).c_str(),
-			L"z", stringw( nodes[i]->getScale().Z ).c_str());
+			L"x", stringw( enodes[i].node->getScale().X ).c_str(),
+			L"y", stringw( enodes[i].node->getScale().Y ).c_str(),
+			L"z", stringw( enodes[i].node->getScale().Z ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeElement(L"initialspeed", true,
-			L"x", stringw( initialSpeeds[i].X ).c_str(),
-			L"y", stringw( initialSpeeds[i].Y ).c_str(),
-			L"z", stringw( initialSpeeds[i].Z ).c_str());
+			L"x", stringw( enodes[i].initialSpeed.X ).c_str(),
+			L"y", stringw( enodes[i].initialSpeed.Y ).c_str(),
+			L"z", stringw( enodes[i].initialSpeed.Z ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeElement(L"materialproperties", true,
-			L"lambda", stringw( meshMaterials[i].lambda ).c_str(),
-			L"mu", stringw( meshMaterials[i].mu ).c_str(),
-			L"alpha", stringw( meshMaterials[i].alpha ).c_str(),
-			L"beta", stringw( meshMaterials[i].beta ).c_str(),
-			L"density", stringw( meshMaterials[i].density ).c_str());
+			L"lambda", stringw( enodes[i].meshMaterial.lambda ).c_str(),
+			L"mu", stringw( enodes[i].meshMaterial.mu ).c_str(),
+			L"alpha", stringw( enodes[i].meshMaterial.alpha ).c_str(),
+			L"beta", stringw( enodes[i].meshMaterial.beta ).c_str(),
+			L"density", stringw( enodes[i].meshMaterial.density ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeClosingTag(L"scenenode");
@@ -1137,9 +1111,9 @@ bool Editor::tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir,
 	xml->writeElement(L"scene", false, L"name", stringw(name.c_str()).c_str());
 	xml->writeLineBreak();
 
-	for (u16 i=0; i < nodes.size(); i++)
+	for (u16 i=0; i < enodes.size(); i++)
 	{
-		IMesh* mesh = getMeshWithAbsoluteCoordinates( nodes[i] );
+		IMesh* mesh = getMeshWithAbsoluteCoordinates( enodes[i].node );
 		IMeshBuffer* buf = mesh->getMeshBuffer(0);
 		stringc n =  device->getFileSystem()->getFileBasename( name, false );
 		n += stringc(i);
@@ -1174,29 +1148,29 @@ bool Editor::tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir,
 		xml->writeLineBreak();
 
 		xml->writeElement(L"initialposition", true,
-			L"x", stringw( nodes[i]->getPosition().X ).c_str(),
-			L"y", stringw( nodes[i]->getPosition().Y ).c_str(),
-			L"z", stringw( nodes[i]->getPosition().Z ).c_str());
+			L"x", stringw( enodes[i].node->getPosition().X ).c_str(),
+			L"y", stringw( enodes[i].node->getPosition().Y ).c_str(),
+			L"z", stringw( enodes[i].node->getPosition().Z ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeElement(L"initialrotation", true,
-			L"x", stringw( degToRad(nodes[i]->getRotation().X) ).c_str(),
-			L"y", stringw( degToRad(nodes[i]->getRotation().Y) ).c_str(),
-			L"z", stringw( degToRad(nodes[i]->getRotation().Z) ).c_str());
+			L"x", stringw( degToRad(enodes[i].node->getRotation().X) ).c_str(),
+			L"y", stringw( degToRad(enodes[i].node->getRotation().Y) ).c_str(),
+			L"z", stringw( degToRad(enodes[i].node->getRotation().Z) ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeElement(L"initialspeed", true,
-			L"x", stringw( initialSpeeds[i].X ).c_str(),
-			L"y", stringw( initialSpeeds[i].Y ).c_str(),
-			L"z", stringw( initialSpeeds[i].Z ).c_str());
+			L"x", stringw( enodes[i].initialSpeed.X ).c_str(),
+			L"y", stringw( enodes[i].initialSpeed.Y ).c_str(),
+			L"z", stringw( enodes[i].initialSpeed.Z ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeElement(L"materialproperties", true,
-			L"Lambda", stringw( meshMaterials[i].lambda ).c_str(),
-			L"Mu", stringw( meshMaterials[i].mu ).c_str(),
-			L"Alpha", stringw( meshMaterials[i].alpha ).c_str(),
-			L"Beta", stringw( meshMaterials[i].beta ).c_str(),
-			L"Density", stringw( meshMaterials[i].density ).c_str());
+			L"Lambda", stringw( enodes[i].meshMaterial.lambda ).c_str(),
+			L"Mu", stringw( enodes[i].meshMaterial.mu ).c_str(),
+			L"Alpha", stringw( enodes[i].meshMaterial.alpha ).c_str(),
+			L"Beta", stringw( enodes[i].meshMaterial.beta ).c_str(),
+			L"Density", stringw( enodes[i].meshMaterial.density ).c_str());
 		xml->writeLineBreak();
 
 		xml->writeClosingTag(L"volumicmesh");

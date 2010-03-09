@@ -348,7 +348,7 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 
 	// Initialize collision response constants
 	kerr = 1000;
-	kdmp = 7500;
+	kdmp = 5000;
 	kfrc = 0.5;
 
 
@@ -596,6 +596,11 @@ void Scene::planCollisionResponse(vector<Tetrahedron*>* tets)
 		p.collisionForces(kerr,kdmp,kfrc);
 	}
 	delete[] m;
+}
+
+void Scene::CollisionResponse(vector<Tetrahedron**>* tets)
+{
+
 }
 
 

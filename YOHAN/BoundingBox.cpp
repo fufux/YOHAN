@@ -309,7 +309,7 @@ void BoundingBox::getCollidingTetrahedra(BoundingBox* other, std::vector<Tetrahe
 {
 	if (collision(other)) // if bounds overlap ( a, b )
 	{
-		if (this->isLeaf() && other->isLeaf()) // if are leaf nodes ( a, b )
+		if (this->isLeaf() && other->isLeaf() && this != other) // if are leaf nodes ( a, b )
 		{
 			// insert a pair of tetrahedra colliding
 			Tetrahedron** tets = new Tetrahedron*[2];

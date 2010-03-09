@@ -183,12 +183,11 @@ void Polyhedron::collisionForces(double kerr, double kdmp, double kfrc)
 	fA = *(this->calcDir(parents[0]->getID()));
 	fB = -fA;
 
-	// Ferr calcul
-	ferrA = kerr * vol * fA;
-	ferrB = - ferrA;
-
 	// Two tetrahedron collision
 	if(parents[0]->getID()>=0 && parents[1]->getID()>=0){
+		// Ferr calcul
+		ferrA = kerr * vol * fA;
+		ferrB = - ferrA;
 
 		// Fdmp calcul
 		vector<Point*>* ptsA = getByParent( parents[0]->getID());
@@ -245,6 +244,9 @@ void Polyhedron::collisionForces(double kerr, double kdmp, double kfrc)
 	// One Tetrahedron and y=O Collision
 	}else{
 		if(parents[0]->getID()<0){
+			// Ferr calcul
+			ferrB = this->parents[1]->getVolume()->getMaterial()->rho *kerr * vol * fB;
+
 			// Fdmp calcul
 			vector<Point*>* ptsB = getByParent( parents[1]->getID());
 			vector<double>* bB = calcBarCoeff(ptsB);
@@ -254,7 +256,7 @@ void Polyhedron::collisionForces(double kerr, double kdmp, double kfrc)
 				v[1] += (*bB)[j]*(*ptsB)[j]->getV()[1];
 			}
 			k = v.dot(fB);
-			fdmpB = -kdmp * vol * k * fB;
+			fdmpB = -this->parents[1]->getVolume()->getMaterial()->rho * kdmp * vol * k * fB;
 
 			// Ffrc calcul
 			ffrcB = Vector3d::Zero();
@@ -278,6 +280,9 @@ void Polyhedron::collisionForces(double kerr, double kdmp, double kfrc)
 			}
 
 		}else{
+			// Ferr calcul
+			ferrA = this->parents[0]->getVolume()->getMaterial()->rho *kerr * vol * fA;
+
 			// Fdmp calcul
 			vector<Point*>* ptsA = getByParent( parents[0]->getID());
 			vector<double>* bA = calcBarCoeff(ptsA);
@@ -287,7 +292,7 @@ void Polyhedron::collisionForces(double kerr, double kdmp, double kfrc)
 				v[1] += (*bA)[j]*(*ptsA)[j]->getV()[1];
 			}
 			k = v.dot(fA);
-			fdmpA = -kdmp * vol * k * fA;
+			fdmpA = -this->parents[0]->getVolume()->getMaterial()->rho * kdmp * vol * k * fA;
 
 			// Ffrc calcul
 			ffrcA = Vector3d::Zero();
