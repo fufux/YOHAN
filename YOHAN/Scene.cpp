@@ -390,12 +390,14 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		handleCollisions();
 		for (int i=0; i < (int)volumes.size(); i++) 
 		{
+			/*
 			// artificat force, to test fracture
 			if (stepNumber > 1)
 			{
 				volumes[i]->getForces()[99] += 5000000;
 				volumes[i]->getForces()[81] -= 5000000;
 			}
+			*/
 
 			volumes[i]->evolve(deltaT);
 			volumes[i]->calculFracture();
