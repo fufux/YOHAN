@@ -42,9 +42,6 @@ bool PlayerEventReceiver::OnEvent(const SEvent &event)
 					root->getElementFromId(GUI_ID_PLAYER_STATIC_TEXT_CAMERA_FPS, true)->remove();
 				break;
 			}
-		case KEY_KEY_M:
-			device->minimizeWindow();
-			break;
 		}
 	}
 
@@ -109,10 +106,6 @@ bool PlayerEventReceiver::OnEvent(const SEvent &event)
 				case GUI_ID_PLAYER_DEBUG_NORMALS: // View -> Debug Information
 					menu->setItemChecked(menu->getSelectedItem(), !menu->isItemChecked(menu->getSelectedItem()));
 					player->setDebugDataVisible((scene::E_DEBUG_SCENE_TYPE)(player->isDebugDataVisible()^scene::EDS_NORMALS));
-					break;
-				case GUI_ID_PLAYER_DEBUG_SKELETON: // View -> Debug Information
-					menu->setItemChecked(menu->getSelectedItem(), !menu->isItemChecked(menu->getSelectedItem()));
-					player->setDebugDataVisible((scene::E_DEBUG_SCENE_TYPE)(player->isDebugDataVisible()^scene::EDS_SKELETON));
 					break;
 				case GUI_ID_PLAYER_DEBUG_WIRE_OVERLAY: // View -> Debug Information
 					menu->setItemChecked(menu->getSelectedItem(), !menu->isItemChecked(menu->getSelectedItem()));
