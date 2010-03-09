@@ -59,6 +59,7 @@ public:
 
 	/* Added by Ning, for fracture */
 	int calculFracture();
+	int calculFracture2();
 
 	void resetAll();
 
@@ -120,6 +121,8 @@ private:
 	Point* replicaPointWithRemesh2(Point* orginal, Matrix<double, 3, 1>& nvector);
 
 	int oldOrder;
+
+	void calculTensileAndCompressiveOfTetrahedron();
 
 	/* END -- Added by Ning, for fracture */
 };

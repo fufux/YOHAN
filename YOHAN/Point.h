@@ -1,6 +1,8 @@
 #pragma once
 
 #include "stdafx.h"
+#include <Eigen/Eigen>
+USING_PART_OF_NAMESPACE_EIGEN
 
 class Tetrahedron;
 
@@ -48,6 +50,8 @@ public:
 
 	void removeReverseIndex(int tetID);
 
+	void setSeperationTensor(Matrix3d& st);
+
 private:
 	// ID of the point
 	int id;
@@ -66,6 +70,8 @@ private:
 	bool is_surface;
 
 	/* Added by Ning, for fracture */
+
+	Matrix3d seperationTensor;
 
 	// the point index correspondant with the surface
 	vector<struct IndexSurfacePoint> indexSurface;

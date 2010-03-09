@@ -628,6 +628,53 @@ void Volume::collisionBidon()
 	}
 }
 
+int Volume::calculFracture2()
+{
+
+}
+
+void Volume::calculTensileAndCompressiveOfTetrahedron()
+{
+	for (int t = 0; t < (int)tetrahedra.size(); t++)
+	{
+		/* Eigen Value and Vector */
+		Matrix3d eigenVectors;
+		Matrix<double, 3, 1> eigenValues;
+
+		tetrahedra[t]->retrieveEigenOfStress(eigenValues, eigenVectors);
+
+		/* Tensile Component and Compressive Component */
+		Matrix3d tensileComp = Matrix3d::Zero();
+		Matrix3d compressiveComp = Matrix3d::Zero();
+		for (int i = 0; i < 3; i++)
+		{
+			double tensileCoef = eigenValues(i,0) > 0 ? eigenValues(i,0) : 0;	// max(vi,0)
+			double compressiveCoef = eigenValues(i,0) < 0 ? eigenValues(i,0) : 0;	// min(vi,0)
+
+			
+			Matrix<double, 3, 1> eigenVector;
+			eigenVector(0,0) = eigenVectors(0,i);	// column
+			eigenVector(1,0) = eigenVectors(1,i);
+			eigenVector(2,0) = eigenVectors(2,i);
+
+			Matrix3d ma_n = util::calcul_M33_MA(eigenVector);
+
+			tensileComp += ma_n * tensileCoef;
+			compressiveComp += ma_n * compressiveCoef;
+		}
+
+		/* Tensile Force and Compressive Force */
+		for (int i = 0; i < 4; i++)
+		{
+			Matrix<double, 3, 1> tensileForce = tetrahedra[t]->getQ() * tensileComp * tetrahedra[t]->getN(i);
+			Matrix<double, 3, 1> compressiveForce = tetrahedra[t]->getQ() * compressiveComp * tetrahedra[t]->getN(i);
+
+			tetrahedra[t]->setCompressiveForce(i, compressiveForce);
+			tetrahedra[t]->setTensileForce(i, tensileForce);
+		}
+	}
+}
+
 int Volume::calculFracture()
 {
 	/* Each Tetrahedron */
@@ -728,7 +775,7 @@ int Volume::calculFracture()
 			nvector(2,0) = eigenVector(2, vindex);
 			nvector.normalize();
 
-			/*
+			
 			// replica without re-mesh
 						
 			int pointIndex = points.size();	//int pointIndex = pointPool->size() + newPointList.size();
@@ -749,8 +796,9 @@ int Volume::calculFracture()
 				// the replica is not useful
 				delete replica;
 			}
-			*/
 			
+			
+			/*
 			// replica with remesh
 			int pointIndex = points.size();
 			//Point* replica = replicaPointWithRemesh(point, nvector, pointIndex);
@@ -771,6 +819,7 @@ int Volume::calculFracture()
 			}
 
 			// end the remesh process to avoid some crush increasing tets
+			*/
 			
 			if (tetrahedra.size() - oldTetSize > 20)
 				return fractureCount;
