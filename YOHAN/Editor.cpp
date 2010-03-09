@@ -600,23 +600,22 @@ void Editor::createSceneNodeToolBox()
 
 	// add some edit boxes and a button to tab one
 	x = 10;
-	y = 20;
-	env->addStaticText(L"Initial speed:", core::rect<s32>(x,y,x+140,y+16), false, false, t3);
+	y = 10;
 	x = 22; y = y+16;
-	env->addStaticText(L"Lambda:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
-	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.lambda ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_LAMBDA);
-	x = 22; y = y+19;
-	env->addStaticText(L"Mu:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
-	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.mu ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_MU);
-	x = 22; y = y+19;
-	env->addStaticText(L"Alpha:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
-	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.alpha ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_ALPHA);
-	x = 22; y = y+19;
-	env->addStaticText(L"Beta:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
-	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.beta ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_BETA);
-	x = 22; y = y+19;
-	env->addStaticText(L"Density:", core::rect<s32>(x,y+2,x+36,y+18), false, false, t3);
-	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.density ).c_str(), core::rect<s32>(x+38,y+2,x+120,y+18), true, t3, GUI_ID_TOOL_BOX_MATERIAL_DENSITY);
+	env->addStaticText(L"Stiffness (Lamé's 1st param lambda):", core::rect<s32>(x,y+2,x+136,y+18), false, false, t3);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.lambda ).c_str(), core::rect<s32>(x+38,y+19,x+120,y+35), true, t3, GUI_ID_TOOL_BOX_MATERIAL_LAMBDA);
+	x = 22; y = y+48;
+	env->addStaticText(L"Shear stress (Lamé's 2nd param mu):", core::rect<s32>(x,y+2,x+136,y+18), false, false, t3);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.mu ).c_str(), core::rect<s32>(x+38,y+19,x+120,y+35), true, t3, GUI_ID_TOOL_BOX_MATERIAL_MU);
+	x = 22; y = y+48;
+	env->addStaticText(L"(phi):", core::rect<s32>(x,y+2,x+136,y+18), false, false, t3);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.alpha ).c_str(), core::rect<s32>(x+38,y+19,x+120,y+35), true, t3, GUI_ID_TOOL_BOX_MATERIAL_ALPHA);
+	x = 22; y = y+48;
+	env->addStaticText(L"(psy):", core::rect<s32>(x,y+2,x+136,y+18), false, false, t3);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.beta ).c_str(), core::rect<s32>(x+38,y+19,x+120,y+35), true, t3, GUI_ID_TOOL_BOX_MATERIAL_BETA);
+	x = 22; y = y+48;
+	env->addStaticText(L"Density (rho):", core::rect<s32>(x,y+2,x+136,y+18), false, false, t3);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.density ).c_str(), core::rect<s32>(x+38,y+19,x+120,y+35), true, t3, GUI_ID_TOOL_BOX_MATERIAL_DENSITY);
 
 }
 
