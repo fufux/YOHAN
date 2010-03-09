@@ -74,6 +74,7 @@ Vector3d* Polyhedron::calcDir(int owner)
 				tmp = *(*(*facets)[i])[j] - *(*(*facets)[i])[0];
 				dir = *(*(*facets)[i])[j-1] - *(*(*facets)[i])[0];
 				dir = tmp.cross(dir);
+				dir.normalize();
 				*resul = *resul + dir;
 			}
 		}

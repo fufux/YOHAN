@@ -14,8 +14,8 @@ using namespace xercesc;
 Scene::Scene(void)
 {
 	// Initialize collision response constants
-	kerr = 1000000;
-	kdmp = 4000000;
+	kerr = 1000;
+	kdmp = 4000;
 	kfrc = 0.5;
 	plan = new Tetrahedron();
 }
@@ -376,7 +376,7 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 
 		// reset
 		for (int i=0; i < (int)volumes.size(); i++) {
-			//volumes[i]->resetAll();
+			volumes[i]->resetAll();
 		}
 
 		// compute
@@ -384,7 +384,7 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		for (int i=0; i < (int)volumes.size(); i++) 
 		{
 			volumes[i]->evolve(deltaT);
-			//volumes[i]->calculFracture();
+			volumes[i]->calculFracture();
 		}
 		tend = GetTickCount();
 		tdif = tend - tstart;
