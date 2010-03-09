@@ -123,6 +123,8 @@ private:
 	int oldOrder;
 
 	void calculTensileAndCompressiveOfTetrahedron();
+	void calculTensileAndCompressOfPoint();
+	int reassign();
 
 	/* END -- Added by Ning, for fracture */
 };

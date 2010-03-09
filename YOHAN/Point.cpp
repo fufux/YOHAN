@@ -12,6 +12,9 @@ Point::Point(int id, double* x, double* v, double* u, bool is_surface)
 		this->v[i] = v[i];
 	}
 	this->is_surface = is_surface;
+
+	/* Added for fast propagation */
+	this->seperationTensor = Matrix3d::Zero();
 }
 
 Point::~Point(void)
@@ -121,4 +124,20 @@ void Point::removeReverseIndex(int tetID)
 	}
 
 	util::log("FETAL ERROR: Could not reach here: Point::removeReverseIndex");
+}
+
+/* Added by Hongyu, for fast propagation */
+void Point::setSeperationTensor(Matrix3d& st)
+{
+	this->seperationTensor = st;
+}
+
+Matrix3d& Point::getSeperationTensor()
+{
+	return this->seperationTensor;
+}
+
+void Point::updateSeperationTensor(double residu, double alpha, Matrix3d& ma_nvector, int n)
+{
+	this->seperationTensor += alpha / n * ma_nvector * residu;
 }

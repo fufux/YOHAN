@@ -189,7 +189,7 @@ void Tetrahedron::computeN()
 	for (int i=0; i<4; i++)
 		norm += n[i].norm();
 	for (int i=0; i<4; i++)
-		n[i] /= norm;
+		n[i] /= 2;
 }
 
 
@@ -562,9 +562,278 @@ void Tetrahedron::remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& n
 	{
 		// Must not reach here
 	}
+}
+
+/* Added by Hongyu, for fast propagation */
+
+int Tetrahedron::correctOrderOfPoint(Point* p0, Point* &p1, Point* &p2, Point* &p3, Matrix<double, 3, 1>& nvector, double& ratioP1P2, double& ratioP1P3, double& ratioP2P3)
+{
+	if (p0 == points[0])
+	{
+		p1 = points[1];
+		p2 = points[2];
+		p3 = points[3];
+	}
+	else if (p0 == points[1])
+	{
+		p1 = points[0];
+		p2 = points[2];
+		p3 = points[3];
+	}
+	else if (p0 == points[2])
+	{
+		p1 = points[1];
+		p2 = points[0];
+		p3 = points[3];
+	}
+	else if (p0 == points[3])
+	{
+		p1 = points[1];
+		p2 = points[2];
+		p3 = points[0];
+	}
+	else
+	{
+		// must not reach here, it is a fetal error
+		util::log("FETAL ERROR IN Tetrahedron::Remesh");
+	}
+	
+
+	/* calculate the intersected points for P1P2 and P1P3
+
+	NOTE:	a. 2 new points different from P1 P2 and P3
+			b. 1 new point, and another is same to P1 P2 or P3
+			c. no new point :
+				c1. P1P2
+				c2. P1P3
+				c3. P2P3
+	*/
+	
+	int resP1P2 = util::intersect_line_plane(p1->getX(), p2->getX(), nvector, p0->getX(), ratioP1P2);
+	int resP1P3 = util::intersect_line_plane(p1->getX(), p3->getX(), nvector, p0->getX(), ratioP1P3);
+	int resP2P3 = util::intersect_line_plane(p2->getX(), p3->getX(), nvector, p0->getX(), ratioP2P3);
+
+	int state = -1;		// 0 - a, 1 - b, 2 - c
+
+	/* 2 New Points, assert that p4:p1-p2, p5:p1-p3 */
+	if (resP1P2 + resP1P3 + resP2P3 == 2)
+	{
+		state = 0;
+
+		// swap the p1 p2 p3 to keep the assertion
+		if (resP1P2 == 0)	//1<->3
+		{
+			Point* tmp = p1;
+			p1 = p3;
+			p3 = tmp;
+
+			// update ratio
+			util::intersect_line_plane(p1->getX(), p2->getX(), nvector, p0->getX(), ratioP1P2);
+			util::intersect_line_plane(p1->getX(), p3->getX(), nvector, p0->getX(), ratioP1P3);
+			util::intersect_line_plane(p2->getX(), p3->getX(), nvector, p0->getX(), ratioP2P3);
+		}
+		else if (resP1P3 == 0)	// 1<->2
+		{			
+			Point* tmp = p1;
+			p1 = p2;
+			p2 = tmp;
+
+			// update ratio
+			util::intersect_line_plane(p1->getX(), p2->getX(), nvector, p0->getX(), ratioP1P2);
+			util::intersect_line_plane(p1->getX(), p3->getX(), nvector, p0->getX(), ratioP1P3);
+			util::intersect_line_plane(p2->getX(), p3->getX(), nvector, p0->getX(), ratioP2P3);
+		}
+		else
+		{
+			// order is correct
+		}
+	}
+	/* 1 New Points, assert that p4:p2-p3 */
+	else if ((resP1P2 == 3 && resP1P3 == 3 && resP2P3 == 1) ||
+			 (resP1P2 == 3 && resP1P3 == 0 && resP2P3 == 1) ||
+			 (resP1P2 == 0 && resP1P3 == 3 && resP2P3 == 1))		// 3,3,1 == 3,0,1 == 0,3,1
+	{
+		state = 1;
+		// order is correct
+	}
+	else if ((resP1P2 == 1 && resP1P3 == 10 && resP2P3 == 10) ||
+			 (resP1P2 == 1 && resP1P3 == 10 && resP2P3 == 0) ||
+			 (resP1P2 == 1 && resP1P3 == 0 && resP2P3 == 10))		// 1,10,10 == 1,0,10 == 1,10,0
+	{
+		state = 1;
+		//1<->3
+		Point* tmp = p1;
+		p1 = p3;
+		p3 = tmp;
+
+		// update ratio
+		util::intersect_line_plane(p1->getX(), p2->getX(), nvector, p0->getX(), ratioP1P2);
+		util::intersect_line_plane(p1->getX(), p3->getX(), nvector, p0->getX(), ratioP1P3);
+		util::intersect_line_plane(p2->getX(), p3->getX(), nvector, p0->getX(), ratioP2P3);
+	}
+	else if ((resP1P2 == 10 && resP1P3 == 1 && resP2P3 == 3) ||
+			 (resP1P2 == 10 && resP1P3 == 1 && resP2P3 == 0) ||
+			 (resP1P2 == 0 && resP1P3 == 1 && resP2P3 == 3))		// 10,1,3 == 10,1,0 == 0,1,3
+	{
+		state = 1;
+		// 1<->2
+		Point* tmp = p1;
+		p1 = p2;
+		p2 = tmp;
+
+		// update ratio
+		util::intersect_line_plane(p1->getX(), p2->getX(), nvector, p0->getX(), ratioP1P2);
+		util::intersect_line_plane(p1->getX(), p3->getX(), nvector, p0->getX(), ratioP1P3);
+		util::intersect_line_plane(p2->getX(), p3->getX(), nvector, p0->getX(), ratioP2P3);
+	}
+	else if (resP1P2 == 0 && resP1P3 == 0 && resP2P3 == 0)
+	{
+		// do not intersect with this tetrahedron
+	}
+	else if ((resP1P2 == 3 && resP1P3 == 3 && resP2P3 == 0) ||
+			 (resP1P2 == 10 && resP1P3 == 0 && resP2P3 == 3) ||
+			 (resP1P2 == 1 && resP1P3 == 0 && resP2P3 == 3) ||
+			 (resP1P2 == 3 && resP1P3 == 0 && resP2P3 == 10) ||
+			 (resP1P2 == 0 && resP1P3 == 10 && resP2P3 == 1) ||
+			 (resP1P2 == 0 && resP1P3 == 10 && resP2P3 == 10) ||
+			 (resP1P2 == 10 && resP1P3 == 0 && resP2P3 == 1) ||
+			 (resP1P2 == 3 && resP1P3 == 1 && resP2P3 == 0) ||
+			 (resP1P2 == 10 && resP1P3 == 10 && resP2P3 == 0) ||
+			 (resP1P2 == 0 && resP1P3 == 3 && resP2P3 == 3) ||
+			 (resP1P2 == 0 && resP1P3 == 1 && resP2P3 == 10) ||
+			 (resP1P2 == 1 && resP1P3 == 3 && resP2P3 == 0) ||
+			 (resP1P2 == 0 && resP1P3 == 10 && resP2P3 == 3) ||
+			 (resP1P2 == 0 && resP1P3 == 3 && resP2P3 == 10) ||
+			 (resP1P2 == 3 && resP1P3 == 10 && resP2P3 == 0) ||
+			 (resP1P2 == 3 && resP1P3 == 0 && resP2P3 == 3) ||
+			 (resP1P2 == 10 && resP1P3 == 0 && resP2P3 == 10))
+	{
+		// ignore
+	}
+	else
+	{
+		std::stringstream sstream;
+		sstream << "CASE NOT SOLVED: Tetrahedron::correctOrderOfPoint" << resP1P2 << "-" << resP1P3 << "-" << resP2P3;
+		//util::log("CASE NOT SOLVED: Tetrahedron::correctOrderOfPoint");
+		util::log(sstream.str());
+	}
+
+	return state;
+}
+
+void Tetrahedron::remesh3(Point* orginal, Matrix<double, 3, 1>& nvector, vector<Point*>& pointList, double residu, Matrix3d& ma_nvector, int n_point, double alpha)
+{
+	Point *p0 = orginal, *p1, *p2, *p3;
+	double ratioP1P2, ratioP1P3, ratioP2P3;
+	int state = correctOrderOfPoint(p0, p1, p2, p3, nvector, ratioP1P2, ratioP1P3, ratioP2P3);
+
+	if (state == 0)	/* 2 New Points, assert that p4:p1-p2, p5:p1-p3 */
+	{
+		/* create the 2 new points */
+		double *x1 = p1->getX(), *v1 = p1->getV(), *u1 = p1->getU();
+		double *x2 = p2->getX(), *v2 = p2->getV(), *u2 = p2->getU();
+		double *x3 = p3->getX(), *v3 = p3->getV(), *u3 = p3->getU();
+
+		// np1 : between P1 and P2, np1 = p1 + t * (p2 - p1)
+		// np2 : between P1 and P3, np2 = p1 + t * (p3 - p1)
+		double xP1P2[3], vP1P2[3], uP1P2[3];
+		double xP1P3[3], vP1P3[3], uP1P3[3];
+
+		for (int i = 0; i < 3; i++)
+		{
+			xP1P2[i] = x1[i] + ratioP1P2 * (x2[i] - x1[i]);
+			vP1P2[i] = v1[i] + ratioP1P2 * (v2[i] - v1[i]);
+			uP1P2[i] = u1[i] + ratioP1P2 * (u2[i] - u1[i]);
+
+			xP1P3[i] = x1[i] + ratioP1P3 * (x3[i] - x1[i]);
+			vP1P3[i] = v1[i] + ratioP1P3 * (v3[i] - v1[i]);
+			uP1P3[i] = u1[i] + ratioP1P3 * (u3[i] - u1[i]);
+		}
+
+		Point* p4 = new Point(pointList.size(), xP1P2, vP1P2, uP1P2, true);
+		pointList.push_back(p4);
+		Point* p5 = new Point(pointList.size(), xP1P3, vP1P3, uP1P3, true);
+		pointList.push_back(p5);
+
+		/* find the face neighbours and remesh it */
+		Tetrahedron* nf123 = faceNeighour(p1, p2, p3);
+		if (nf123 != NULL)
+			nf123->remeshByFaceWithTwoNewPoints(p1, p2, p3, p4, p5);
+
+		/* find the edge neighbours and remesh them */
+		std::vector<Tetrahedron*> en12, en13;
+		Tetrahedron* nf012 = faceNeighour(p0, p1, p2);
+		Tetrahedron* nf013 = faceNeighour(p0, p1, p3);
+
+		edgeNeighour(p1, p2, nf012, nf123, en12);
+		edgeNeighour(p1, p3, nf013, nf123, en13);
+
+		for (std::vector<Tetrahedron*>::iterator iter = en12.begin(); iter != en12.end(); ++iter)
+			(*iter)->remeshByEdgeWithOneNewPoint(p1, p2, p4);
+		for (std::vector<Tetrahedron*>::iterator iter = en13.begin(); iter != en13.end(); ++iter)
+			(*iter)->remeshByEdgeWithOneNewPoint(p1, p3, p5);
+
+		/* remesh self */
+		this->remeshByFaceWithTwoNewPoints(p1, p2, p3, p4, p5);
+
+		/* update the seperation Tensor */
+		p4->updateSeperationTensor(residu, alpha, ma_nvector, n_point);
+		p5->updateSeperationTensor(residu, alpha, ma_nvector, n_point);
+
+	}
+
+	else if (state == 1)	// 1 new point between P2 and P3
+	{
+		/*DEBUG ONLY
+		ratioP2P3 = 0.5;
+		END DEBUG*/
+
+		/* create the 1 new point */
+		double *x2 = p2->getX(), *v2 = p2->getV(), *u2 = p2->getU();
+		double *x3 = p3->getX(), *v3 = p3->getV(), *u3 = p3->getU();
+
+		double xP2P3[3], vP2P3[3], uP2P3[3];
+		for (int i = 0; i < 3; i++)
+		{
+			xP2P3[i] = x2[i] + ratioP2P3 * (x3[i] - x2[i]);
+			vP2P3[i] = v2[i] + ratioP2P3 * (v3[i] - v2[i]);
+			uP2P3[i] = u2[i] + ratioP2P3 * (u3[i] - u2[i]);
+		}
+
+		Point* p4 = new Point(pointList.size(), xP2P3, vP2P3, uP2P3, true);
+		pointList.push_back(p4);
+
+		/* find the face neighbours and remesh it */
+		Tetrahedron* nf123 = faceNeighour(p1, p2, p3);
+		if (nf123 != NULL)
+			nf123->remeshByFaceWithOneNewPoint(p1, p2, p3, p4);
+
+		/* find the edge neighbours and remesh them */
+		std::vector<Tetrahedron*> en23;
+		Tetrahedron* nf023 = faceNeighour(p0, p2, p3);
+
+		edgeNeighour(p2, p3, nf023, nf123, en23);
+
+		for (std::vector<Tetrahedron*>::iterator iter = en23.begin(); iter != en23.end(); ++iter)
+			(*iter)->remeshByEdgeWithOneNewPoint(p2, p3, p4);
+
+		/* remesh self */
+		this->remeshByFaceWithOneNewPoint(p1, p2, p3, p4);
+
+		/* update the seperation Tensor */
+		p4->updateSeperationTensor(residu, alpha, ma_nvector, n_point);
+		p1->updateSeperationTensor(residu, alpha, ma_nvector, n_point);
+	}
+	else
+	{
+		// Must not reach here
+	}
 
 
 }
+
+/* END-- Added by Hongyu, for fast propagation */
+
 
 void Tetrahedron::remesh2(Point* orginal, Matrix<double, 3, 1>& nvector, vector<Point*>& pointList)
 {

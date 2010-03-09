@@ -175,7 +175,7 @@ bool Scene::load(std::string tetrahedralizedSceneFile)
 						material.rho = atof(tmp);
 
 						/* Added by Ning, for fracture */
-						material.toughness = 2E5;
+						material.toughness = 1E3;
 						/* END -- Added by Ning, for fracture */
 					}
 					else					
@@ -387,17 +387,22 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		handleCollisions();
 		for (int i=0; i < (int)volumes.size(); i++) 
 		{
-			/*
+			
 			// artificat force, to test fracture
 			if (stepNumber > 1)
 			{
-				volumes[i]->getForces()[99] += 5000000;
-				volumes[i]->getForces()[81] -= 5000000;
+				double* v_force = volumes[i]->getForceField();
+				double const_f = 1000;
+				int order = volumes[i]->getC()->getOrder();
+				for (int j = 0; j < order; j = j + 3)
+				{
+					v_force[j] += const_f;
+					const_f = -const_f;
+				}
 			}
-			*/
 
 			volumes[i]->evolve(deltaT);
-			volumes[i]->calculFracture();
+			volumes[i]->calculFracture2();
 		}
 		tend = GetTickCount();
 		tdif = tend - tstart;
@@ -684,7 +689,7 @@ void Scene::handleCollisions()
 		}
 	}
 	planCollisionResponse(found_plan);
-	//CollisionResponse(found);
+	CollisionResponse(found);
 	delete found_plan;
 	delete found;
 }

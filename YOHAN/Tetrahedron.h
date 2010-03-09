@@ -39,6 +39,7 @@ public:
 
 	void remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& nvector, vector<Point*>& pointList);
 	void remesh2(Point* orginal, Matrix<double, 3, 1>& nvector, vector<Point*>& pointList);
+	void remesh3(Point* orginal, Matrix<double, 3, 1>& nvector, vector<Point*>& pointList, double residu, Matrix3d& ma_nvector, int n_point, double alpha);
 	/* END -- Added by Ning, for fracture */
 
 private:
@@ -93,6 +94,9 @@ private:
 	
 	Point* getFacePoint(Point* a, Point* b, Point* c);
 	bool isPositiveRemesh(Point* p1, Point* p2, Matrix<double, 3, 1>& nvector);
+
+	int correctOrderOfPoint(Point* p0, Point* &p1, Point* &p2, Point* &p3, Matrix<double, 3, 1>& nvector, double& ratioP1P2, double& ratioP1P3, double& ratioP2P3);
+
 
 
 	/* END -- Added by Ning, for fracture */

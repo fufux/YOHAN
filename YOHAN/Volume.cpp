@@ -630,7 +630,166 @@ void Volume::collisionBidon()
 
 int Volume::calculFracture2()
 {
+	calculTensileAndCompressiveOfTetrahedron();
 
+	calculTensileAndCompressOfPoint();
+
+	int fractureCount = reassign();
+
+	//log
+	char msg[128];
+	itoa(fractureCount, msg, 10);
+	util::log(msg);
+
+	return fractureCount;
+
+}
+
+int Volume::reassign()
+{
+	int fractureCount = 0;
+
+	int oldPointSize = (int)points.size();
+	for (int k = 0; k < oldPointSize; k++)
+	{
+		Point* point = points[k];
+
+		//if this point attaches only one tetra, it it not necessary to reassign
+		if (point->getIndexTetra()->size() < 2)
+			continue;
+
+		// v+, the greatest positive eigenValue of c
+		Matrix<double, 3, 1> eigenValue; 
+		Matrix3d eigenVector;
+		util::retrieveEigen(point->getSeperationTensor(), eigenValue, eigenVector);
+
+		int vindex = 0;
+		for (int i = 0; i < 3; i++)
+		{
+			if (eigenValue(i, 0) > eigenValue(vindex, 0))
+				vindex = i;
+		}
+
+		if (eigenValue(vindex, 0) > 0 && eigenValue(vindex, 0) > material.toughness)
+		{
+			/* A fracture is happened */
+			/* We only reassign */
+
+			// normal vector
+			Matrix<double, 3, 1> nvector;
+			nvector(0,0) = eigenVector(0, vindex);
+			nvector(1,0) = eigenVector(1, vindex);
+			nvector(2,0) = eigenVector(2, vindex);
+			nvector.normalize();
+			
+			// replica and reassign
+			Point* replica = replicaPointWithoutRemesh(point, nvector, points.size());
+			if (replica->getIndexTetra()->size() > 0)
+			{
+				points.push_back(replica);
+
+				tetrahedraChanged = true;
+				facesChanged = true;
+
+				fractureCount++;
+			}
+			else
+			{
+				// must not reach here
+				util::log("WARING: Volume::replica with remesh:: an ill-conditioned example");
+			}
+			
+		}
+	}
+
+	return fractureCount;
+}
+
+void Volume::calculTensileAndCompressOfPoint()
+{
+	int oldTetSize = (int)tetrahedra.size();
+	int oldPointSize = (int)points.size();
+
+	for (int k = 0; k < oldPointSize; k++)
+	{
+		Matrix<double, 3, 1> tforce = Matrix<double, 3, 1>::Zero();
+		Matrix<double, 3, 1> cforce = Matrix<double, 3, 1>::Zero();
+		Matrix3d separationTensor = Matrix3d::Zero();
+
+		Point* point = points[k];
+
+		std::vector<IndexTetraPoint> *myTetraIndex = point->getIndexTetra();
+
+		for (int i = 0; i < (int)myTetraIndex->size(); i++)
+		{
+			int pointIndex = myTetraIndex->at(i).indexOfPoint;
+			Tetrahedron* tet = myTetraIndex->at(i).tet;
+
+			// should be read-only
+			Matrix<double, 3, 1> pointTF = tet->getTensileForce(pointIndex);
+			Matrix<double, 3, 1> pointCF = tet->getCompressiveForce(pointIndex);
+
+			// accumulate f+ and f-
+			tforce += pointTF;
+			cforce += pointCF;
+
+			// c += m(f+(ell)) - m(f-(ell))
+			separationTensor += util::calcul_M33_MA(pointTF) - util::calcul_M33_MA(pointCF);
+		}
+
+		// c-= m(f+) - m(f-)	// whether * 1/2 it depends
+		separationTensor -= util::calcul_M33_MA(tforce) - util::calcul_M33_MA(cforce);
+
+		// store it for later fast propagation
+		point->setSeperationTensor(separationTensor);
+
+		// v+, the greatest positive eigenValue of c
+		Matrix<double, 3, 1> eigenValue; 
+		Matrix3d eigenVector;
+		util::retrieveEigen(separationTensor, eigenValue, eigenVector);
+
+		int vindex = 0;
+		for (int i = 0; i < 3; i++)
+		{
+			if (eigenValue(i, 0) > eigenValue(vindex, 0))
+				vindex = i;
+		}
+
+		if (eigenValue(vindex, 0) > 0 && eigenValue(vindex, 0) > material.toughness)
+		{
+			/* A fracture is happened */
+			/* We do not create new replica for instant, but just do the remesh */
+
+			// normal vector
+			Matrix<double, 3, 1> nvector;
+			nvector(0,0) = eigenVector(0, vindex);
+			nvector(1,0) = eigenVector(1, vindex);
+			nvector(2,0) = eigenVector(2, vindex);
+			nvector.normalize();
+
+			
+			// remesh buf
+			std::vector<IndexTetraPoint> remeshBuf = *point->getIndexTetra();
+
+			Matrix3d ma_nvector = util::calcul_M33_MA(nvector);
+			double residu = eigenValue(vindex, 0) - material.toughness;
+			int n_point = (int)myTetraIndex->size() * 2;
+
+			
+			for (std::vector<IndexTetraPoint>::iterator iter = remeshBuf.begin(); iter != remeshBuf.end(); ++iter)
+			{
+				iter->tet->remesh3(point, nvector, this->points, residu, ma_nvector, n_point, 0.99);
+			}
+
+			// heuristic to stop remesh
+			if (tetrahedra.size() - oldTetSize > 10)
+			{
+				util::log("Stop remesh to prevent it growing quickly");
+				return;
+			}
+		}
+
+	}
 }
 
 void Volume::calculTensileAndCompressiveOfTetrahedron()

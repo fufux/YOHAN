@@ -60,7 +60,7 @@ namespace matrix
 
 		inline int getType();
 
-		inline int getOrder();
+		int getOrder();
 
 		inline double getValue(int i, int j);
 

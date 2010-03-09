@@ -52,6 +52,10 @@ public:
 
 	void setSeperationTensor(Matrix3d& st);
 
+	Matrix3d& getSeperationTensor();
+
+	void updateSeperationTensor(double residu, double alpha, Matrix3d& ma_nvector, int n);
+
 private:
 	// ID of the point
 	int id;
