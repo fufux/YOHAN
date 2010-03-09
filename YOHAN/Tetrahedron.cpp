@@ -195,8 +195,8 @@ void Tetrahedron::computeN()
 
 void Tetrahedron::computeCoreJacobian()
 {
-	/*computeN();
-	for(int i=0;i<4;i++){
+	computeN();
+	/*for(int i=0;i<4;i++){
 		for(int j=0;j<4;j++){
 			// ---------------
 			coreJacobian[i*4+j] = (-volume->getMaterial()->lambda) * (n[i] * n[j].transpose());

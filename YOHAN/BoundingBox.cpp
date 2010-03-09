@@ -168,6 +168,8 @@ BoundingBox::BoundingBox(BoundingBox* parent, vector<Tetrahedron*> tetrahedra, b
 
 BoundingBox::~BoundingBox(void)
 {
+	delete child1;
+	delete child2;
 }
 
 
@@ -309,18 +311,21 @@ void BoundingBox::getCollidingTetrahedra(BoundingBox* other, std::vector<vector<
 {
 	if (collision(other)) // if bounds overlap ( a, b )
 	{
+		cout << "collision!"<<endl;
 		if (this->isLeaf() && other->isLeaf() && this != other) // if are leaf nodes ( a, b )
 		{
 			// insert a pair of tetrahedra colliding
 			vector<Tetrahedron*> tets;
 			tets.push_back(tetrahedra[0]);
 			tets.push_back((*other->getTetrahedra())[0]);
+			cout << "coin"<<endl;
 			if (tets[0]->getPoints()[0] != tets[1]->getPoints()[0] &&
 				tets[0]->getPoints()[1] != tets[1]->getPoints()[1] &&
 				tets[0]->getPoints()[2] != tets[1]->getPoints()[2] &&
 				tets[0]->getPoints()[3] != tets[1]->getPoints()[3])
 			{
 				found->push_back( tets );
+				cout << "pouet"<<endl;
 			}
 		}
 		else if (this->isLeaf()) // if is a leaf node ( a )
