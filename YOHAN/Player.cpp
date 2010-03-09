@@ -394,7 +394,6 @@ void Player::createGUI()
 	submenu->addItem(L"Off", GUI_ID_PLAYER_DEBUG_OFF, true, false, (isDebugDataVisible() == scene::EDS_OFF));
 	submenu->addItem(L"Bounding Box", GUI_ID_PLAYER_DEBUG_BOUNDING_BOX, true, false, (isDebugDataVisible() == scene::EDS_BBOX));
 	submenu->addItem(L"Normals", GUI_ID_PLAYER_DEBUG_NORMALS, true, false, (isDebugDataVisible() == scene::EDS_NORMALS));
-	submenu->addItem(L"Skeleton", GUI_ID_PLAYER_DEBUG_SKELETON, true, false, (isDebugDataVisible() == scene::EDS_SKELETON));
 	submenu->addItem(L"Wire overlay", GUI_ID_PLAYER_DEBUG_WIRE_OVERLAY, true, false, (isDebugDataVisible() == scene::EDS_MESH_WIRE_OVERLAY));
 	submenu->addItem(L"Half-Transparent", GUI_ID_PLAYER_DEBUG_HALF_TRANSPARENT, true, false, (isDebugDataVisible() == scene::EDS_HALF_TRANSPARENCY));
 	submenu->addItem(L"Buffers bounding boxes", GUI_ID_PLAYER_DEBUG_BUFFERS_BOUNDING_BOXES, true, false, (isDebugDataVisible() == scene::EDS_BBOX_BUFFERS));

@@ -24,7 +24,7 @@ public:
 	bool collision(double y);
 
 	// this will update the list of potentialy collinding tetrahedra
-	void getCollidingTetrahedra(BoundingBox* other, std::vector<Tetrahedron**> *found);
+	void getCollidingTetrahedra(BoundingBox* other, vector<vector<Tetrahedron*>> *found);
 
 	// this will update the list of potentialy collinding tetrahedra with plan Y=y
 	void getCollidingTetrahedra(double y, std::vector<Tetrahedron*> *found);

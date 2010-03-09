@@ -73,9 +73,6 @@ bool EditorEventReceiver::OnEvent(const SEvent &event)
 					root->getElementFromId(GUI_ID_STATIC_TEXT_CAMERA_FPS, true)->remove();
 				break;
 			}
-		case KEY_KEY_M:
-			device->minimizeWindow();
-			break;
 		}
 	}
 
