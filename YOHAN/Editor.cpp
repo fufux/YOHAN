@@ -253,6 +253,8 @@ void Editor::setPositionRotationScaleOfSelectedNode()
 		material.beta = (f32)atof(s.c_str());
 		s = root->getElementFromId(GUI_ID_TOOL_BOX_MATERIAL_DENSITY, true)->getText();
 		material.density = (f32)atof(s.c_str());
+		s = root->getElementFromId(GUI_ID_TOOL_BOX_MATERIAL_TAU, true)->getText();
+		material.tau = (f32)atof(s.c_str());
 
 		enodes[selectedNodeIndex].node->setPosition( pos );
 		enodes[selectedNodeIndex].node->setRotation( rot );
@@ -348,6 +350,7 @@ bool Editor::add3DModel(stringc filename)
 	material.alpha = 0;
 	material.beta = 6760.0f;
 	material.density = 2588.0f;
+	material.tau = 200000.0f;
 	vector3df initialSpeed = vector3df(0,0,0);
 
 	// create EditorNode
@@ -616,6 +619,9 @@ void Editor::createSceneNodeToolBox()
 	x = 22; y = y+48;
 	env->addStaticText(L"Density (rho):", core::rect<s32>(x,y+2,x+136,y+18), false, false, t3);
 	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.density ).c_str(), core::rect<s32>(x+38,y+19,x+120,y+35), true, t3, GUI_ID_TOOL_BOX_MATERIAL_DENSITY);
+	x = 22; y = y+48;
+	env->addStaticText(L"Toughness (tau):", core::rect<s32>(x,y+2,x+136,y+18), false, false, t3);
+	env->addEditBox(stringw( enodes[selectedNodeIndex].meshMaterial.tau ).c_str(), core::rect<s32>(x+38,y+19,x+120,y+35), true, t3, GUI_ID_TOOL_BOX_MATERIAL_TAU);
 
 }
 
@@ -816,6 +822,7 @@ bool Editor::load(irr::core::stringc filename)
 						material.alpha = xml->getAttributeValueAsFloat(L"alpha");
 						material.beta = xml->getAttributeValueAsFloat(L"beta");
 						material.density = xml->getAttributeValueAsFloat(L"density");
+						material.tau = xml->getAttributeValueAsFloat(L"tau");
 						enodes.getLast().meshMaterial = material;
 						this->createSceneNodeToolBox();
 					}
@@ -901,12 +908,21 @@ bool Editor::save(irr::core::stringc filename)
 			L"z", stringw( enodes[i].initialSpeed.Z ).c_str());
 		xml->writeLineBreak();
 
-		xml->writeElement(L"materialproperties", true,
-			L"lambda", stringw( enodes[i].meshMaterial.lambda ).c_str(),
-			L"mu", stringw( enodes[i].meshMaterial.mu ).c_str(),
-			L"alpha", stringw( enodes[i].meshMaterial.alpha ).c_str(),
-			L"beta", stringw( enodes[i].meshMaterial.beta ).c_str(),
-			L"density", stringw( enodes[i].meshMaterial.density ).c_str());
+		core::array<stringw> names,values;
+		names.push_back(L"lambda");
+		names.push_back(L"mu");
+		names.push_back(L"alpha");
+		names.push_back(L"beta");
+		names.push_back(L"density");
+		names.push_back(L"tau");
+		values.push_back(stringw( enodes[i].meshMaterial.lambda ));
+		values.push_back(stringw( enodes[i].meshMaterial.mu ));
+		values.push_back(stringw( enodes[i].meshMaterial.alpha ));
+		values.push_back(stringw( enodes[i].meshMaterial.beta ));
+		values.push_back(stringw( enodes[i].meshMaterial.density ));
+		values.push_back(stringw( enodes[i].meshMaterial.tau ));
+
+		xml->writeElement(L"materialproperties", true, names, values);
 		xml->writeLineBreak();
 
 		xml->writeClosingTag(L"scenenode");
@@ -1164,12 +1180,21 @@ bool Editor::tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir,
 			L"z", stringw( enodes[i].initialSpeed.Z ).c_str());
 		xml->writeLineBreak();
 
-		xml->writeElement(L"materialproperties", true,
-			L"Lambda", stringw( enodes[i].meshMaterial.lambda ).c_str(),
-			L"Mu", stringw( enodes[i].meshMaterial.mu ).c_str(),
-			L"Alpha", stringw( enodes[i].meshMaterial.alpha ).c_str(),
-			L"Beta", stringw( enodes[i].meshMaterial.beta ).c_str(),
-			L"Density", stringw( enodes[i].meshMaterial.density ).c_str());
+		core::array<stringw> names,values;
+		names.push_back(L"Lambda");
+		names.push_back(L"Mu");
+		names.push_back(L"Alpha");
+		names.push_back(L"Beta");
+		names.push_back(L"Density");
+		names.push_back(L"Tau");
+		values.push_back(stringw( enodes[i].meshMaterial.lambda ));
+		values.push_back(stringw( enodes[i].meshMaterial.mu ));
+		values.push_back(stringw( enodes[i].meshMaterial.alpha ));
+		values.push_back(stringw( enodes[i].meshMaterial.beta ));
+		values.push_back(stringw( enodes[i].meshMaterial.density ));
+		values.push_back(stringw( enodes[i].meshMaterial.tau ));
+
+		xml->writeElement(L"materialproperties", true, names, values);
 		xml->writeLineBreak();
 
 		xml->writeClosingTag(L"volumicmesh");

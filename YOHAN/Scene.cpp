@@ -173,10 +173,8 @@ bool Scene::load(std::string tetrahedralizedSceneFile)
 						material.psy = atof(tmp);
 						wcstombs(tmp, vmnode->getAttributes()->getNamedItem(L"Density")->getNodeValue(), 128);
 						material.rho = atof(tmp);
-
-						/* Added by Ning, for fracture */
-						material.toughness = 1400;
-						/* END -- Added by Ning, for fracture */
+						wcstombs(tmp, vmnode->getAttributes()->getNamedItem(L"Tau")->getNodeValue(), 128);
+						material.toughness = atof(tmp);
 					}
 					else					
 					{
@@ -378,7 +376,6 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 
 		// reset
 		for (int i=0; i < (int)volumes.size(); i++) {
-			//volumes[i]->collisionBidon();
 			volumes[i]->resetAll();
 		}
 
@@ -386,17 +383,8 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		handleCollisions();
 		for (int i=0; i < (int)volumes.size(); i++) 
 		{
-			/*
-			// artificat force, to test fracture
-			if (stepNumber > 1)
-			{
-				volumes[i]->getForces()[99] += 5000000;
-				volumes[i]->getForces()[81] -= 5000000;
-			}
-			*/
-
 			volumes[i]->evolve(deltaT);
-			volumes[i]->calculFracture();
+			//volumes[i]->calculFracture();
 		}
 		tend = GetTickCount();
 		tdif = tend - tstart;
@@ -408,7 +396,7 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		// log
 		if (stepNumber % 10 == 0) {
 			std::stringstream s;
-			s << "Step n" << stepNumber << " computed.";
+			s << "Step n°" << stepNumber << " computed in " << tdif << "ms and saved in " << tdif2 << "ms.";
 			util::log( s.str() );
 		}
 	}
@@ -682,7 +670,7 @@ void Scene::handleCollisions()
 		}
 	}
 	planCollisionResponse(found_plan);
-	//CollisionResponse(found);
+	CollisionResponse(found);
 	delete found_plan;
 	delete found;
 }

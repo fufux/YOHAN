@@ -8,7 +8,7 @@
 
 struct EditorMaterial
 {
-	f32 lambda,mu,alpha,beta,density;
+	f32 lambda,mu,alpha,beta,density,tau;
 };
 
 struct EditorNode
