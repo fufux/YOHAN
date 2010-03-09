@@ -13,6 +13,10 @@ using namespace xercesc;
 
 Scene::Scene(void)
 {
+	// Initialize collision response constants
+	kerr = 1;//1000
+	kdmp = 4;//4000
+	kfrc = 0.5;
 	plan = new Tetrahedron();
 }
 
@@ -342,12 +346,6 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 	this->simulatedSceneOutDir = simulatedSceneOutDir;
 
 
-	// Initialize collision response constants
-	kerr = 1000;
-	kdmp = 5000;
-	kfrc = 0.5;
-
-
 	std::string filename = simulatedSceneOutDir;
 	filename += "/scene.xml";
 
@@ -373,7 +371,7 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 	{
 		currentTime += deltaT;
 		tstart = GetTickCount();
-
+		cout << "step number: " << stepNumber << endl;
 		// compute
 		handleCollisions();
 		for (int i=0; i < (int)volumes.size(); i++) {
@@ -577,21 +575,94 @@ void Scene::planCollisionResponse(vector<Tetrahedron*>* tets)
 	delete[] m;
 }
 
-void Scene::CollisionResponse(vector<Tetrahedron**>* tets)
+void Scene::CollisionResponse(vector<vector<Tetrahedron*>>* tets)
 {
+	vector<Vector3d*>* vertices;
+	vector<Vector3d*>* resul;
+	double* coord;
+	// the four tetrahedron's plans
+	Vector3d* alpha[4];
+	for (int i=0; i<4; i++)
+		alpha[i] = new Vector3d();
+	double alphaC[4];
+	vector<Face*>* faces;
+	Polyhedron p;
+	for(int nbtet=0; nbtet<tets->size(); nbtet++){
+		faces = new vector<Face*>();
 
+		// For the first tetrahderon
+		// Construction of plans
+		util::plan(&(*tets)[nbtet][1]->getPoints(), 0, 2, 1, alpha[0], &alphaC[0]);
+		util::plan(&(*tets)[nbtet][1]->getPoints(), 0, 1, 3, alpha[1], &alphaC[1]);
+		util::plan(&(*tets)[nbtet][1]->getPoints(), 2, 3, 1, alpha[2], &alphaC[2]);
+		util::plan(&(*tets)[nbtet][1]->getPoints(), 0, 3, 2, alpha[3], &alphaC[3]);
+		vertices = new vector<Vector3d*>();
+		for(int j=0; j<4; j++){
+			coord = (*tets)[nbtet][0]->getPoints()[j]->getX();
+			vertices->push_back(new Vector3d(coord[0],coord[1],coord[2]));
+		}
+		// Intersection with plans of the other tetrahedron
+		resul = util::intersect(vertices, alpha[0], alphaC[0], (*tets)[nbtet][1]->getPoints()[3]);
+		if(resul->size()>2)
+			faces->push_back(new Face(resul, (*tets)[nbtet][0]->getID()));
+		resul = util::intersect(vertices, alpha[1], alphaC[1], (*tets)[nbtet][1]->getPoints()[2]);
+		if(resul->size()>2)
+			faces->push_back(new Face(resul, (*tets)[nbtet][0]->getID()));
+		resul = util::intersect(vertices, alpha[2], alphaC[2], (*tets)[nbtet][1]->getPoints()[0]);
+		if(resul->size()>2)
+			faces->push_back(new Face(resul, (*tets)[nbtet][0]->getID()));
+		resul = util::intersect(vertices, alpha[3], alphaC[3], (*tets)[nbtet][1]->getPoints()[1]);
+		if(resul->size()>2)
+			faces->push_back(new Face(resul, (*tets)[nbtet][0]->getID()));
+
+		// For the second tetrahderon
+		// Construction of plans
+		util::plan(&(*tets)[nbtet][0]->getPoints(), 0, 2, 1, alpha[0], &alphaC[0]);
+		util::plan(&(*tets)[nbtet][0]->getPoints(), 0, 1, 3, alpha[1], &alphaC[1]);
+		util::plan(&(*tets)[nbtet][0]->getPoints(), 2, 3, 1, alpha[2], &alphaC[2]);
+		util::plan(&(*tets)[nbtet][0]->getPoints(), 0, 3, 2, alpha[3], &alphaC[3]);
+		vertices = new vector<Vector3d*>();
+		for(int j=0; j<4; j++){
+			coord = (*tets)[nbtet][1]->getPoints()[j]->getX();
+			vertices->push_back(new Vector3d(coord[0],coord[1],coord[2]));
+		}
+		// Intersection with plans of the other tetrahedron
+		resul = util::intersect(vertices, alpha[0], alphaC[0], (*tets)[nbtet][0]->getPoints()[3]);
+		if(resul->size()>2)
+			faces->push_back(new Face(resul, (*tets)[nbtet][1]->getID()));
+		resul = util::intersect(vertices, alpha[1], alphaC[1], (*tets)[nbtet][0]->getPoints()[2]);
+		if(resul->size()>2)
+			faces->push_back(new Face(resul, (*tets)[nbtet][1]->getID()));
+		resul = util::intersect(vertices, alpha[2], alphaC[2], (*tets)[nbtet][0]->getPoints()[0]);
+		if(resul->size()>2)
+			faces->push_back(new Face(resul, (*tets)[nbtet][1]->getID()));
+		resul = util::intersect(vertices, alpha[3], alphaC[3], (*tets)[nbtet][0]->getPoints()[1]);
+		if(resul->size()>2)
+			faces->push_back(new Face(resul, (*tets)[nbtet][1]->getID()));
+		if(faces->size()>3){
+			p = Polyhedron(faces, (*tets)[nbtet][0], (*tets)[nbtet][1]);
+			p.collisionForces(kerr,kdmp,kfrc);
+		}
+	}
 }
 
 
 void Scene::handleCollisions()
 {
-	std::vector<Tetrahedron*> *found = new std::vector<Tetrahedron*>();
+	std::vector<Tetrahedron*> *found_plan = new std::vector<Tetrahedron*>();
+	std::vector<vector<Tetrahedron*>> *found = new std::vector<vector<Tetrahedron*>>();
 	for (int i=0; i < (int)volumes.size(); i++) {
 		volumes[i]->getMasterBoundingBox()->recalculateBoundingBoxes();
 	}
 	for (int i=0; i < (int)volumes.size(); i++) {
-		volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(0, found);
+		volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(0, found_plan);
+		for (int j=0; j < (int)volumes.size(); j++) {
+			if (i!=j)
+				volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(volumes[j]->getMasterBoundingBox(), found);
+		}
 	}
-	planCollisionResponse(found);
+	planCollisionResponse(found_plan);
+	//CollisionResponse(found);
+	delete found_plan;
 	delete found;
 }

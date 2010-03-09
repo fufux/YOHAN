@@ -53,7 +53,7 @@ double Polyhedron::calcVolume()
 
 Vector3d* Polyhedron::calcDir(int owner)
 {
-	Vector3d* resul = new Vector3d(0,0,0);
+	Vector3d* resul; 
 	vector<Face*>* facets;
 	Vector3d tmp;
 	Vector3d dir;
@@ -63,7 +63,7 @@ Vector3d* Polyhedron::calcDir(int owner)
 		else resul = new Vector3d(0,1,0);
 	// Two tetrahedron collision
 	}else{
-		resul = new Vector3d();
+		resul = new Vector3d(0,0,0);
 		if(this->parents[0]->getID()==owner){
 			facets = this->getByOwner(parents[1]->getID());
 		}else{

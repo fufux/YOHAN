@@ -18,7 +18,7 @@ public:
 	double* getForceField();
 	double getDeltaT();
 	void planCollisionResponse(vector<Tetrahedron*>* tets);
-	void CollisionResponse(vector<Tetrahedron**>* tets);
+	void CollisionResponse(vector<vector<Tetrahedron*>>* tets);
 
 private:
 	double deltaT;
