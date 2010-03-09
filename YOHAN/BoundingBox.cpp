@@ -315,7 +315,13 @@ void BoundingBox::getCollidingTetrahedra(BoundingBox* other, std::vector<Tetrahe
 			Tetrahedron** tets = new Tetrahedron*[2];
 			tets[0] = tetrahedra[0];
 			tets[1] = (*other->getTetrahedra())[0];
-			found->push_back( tets );
+			if (tets[0]->getPoints()[0] != tets[1]->getPoints()[0] &&
+				tets[0]->getPoints()[1] != tets[1]->getPoints()[1] &&
+				tets[0]->getPoints()[2] != tets[1]->getPoints()[2] &&
+				tets[0]->getPoints()[3] != tets[1]->getPoints()[3])
+			{
+				found->push_back( tets );
+			}
 		}
 		else if (this->isLeaf()) // if is a leaf node ( a )
 		{
