@@ -18,7 +18,7 @@ namespace util
 	void plan(vector<Point*>* vertices, int i1, int i2, int i3, Vector3d* n, double* c);
 	vector<Vector3d*>* intersect(vector<Vector3d*>* vertices, Vector3d* alpha, double alphaC, Point* pt);
 	Vector3d* intersectLinePlan(Vector3d* s, Vector3d* p, Vector3d* alpha, double alphaC);
-
+	
 	inline void polarDecomposition(Matrix3d& f, Matrix3d& q)
 	{
 		q.col(0) = f.col(0)/f.col(0).norm();
@@ -30,4 +30,11 @@ namespace util
 		svd.compute(f);
 		q = svd.matrixU() * svd.matrixV().adjoint();*/
 	}
+
+
+	/* Added by Ning, for fracture */
+	Matrix3d calcul_M33_MA(Matrix<double, 3, 1>& vector);
+	void retrieveEigen(Matrix3d& mat, Matrix<double, 3, 1>& eigenValue, Matrix3d& eigenVector);
+	int intersect_line_plane(double* p1, double* p2, Matrix<double, 3, 1>& normalOfPlane, double* pOnPlane, double& ratio);
+
 }

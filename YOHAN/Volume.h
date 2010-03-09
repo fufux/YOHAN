@@ -17,7 +17,18 @@ class Scene;
 struct Material
 {
 	double lambda, mu, phi, psy, rho;
+
+	/* Added by Ning, for fracture */
+	double toughness;
+	/* END -- Added by Ning*/
 };
+
+/* Added by Ning */
+struct Surface
+{
+	int pointIndex[3];
+};
+/* END -- Added by Ning*/
 
 
 //
@@ -41,10 +52,18 @@ public:
 	matrix::SymmetricMumpsSquareSparseMatrix* getC();
 	double* getForceField();
 	double* getForces();
-	vector<Tetrahedron*>& getTetrahedra();
+	vector<Tetrahedron*>* getTetrahedra();
 	BoundingBox* getMasterBoundingBox();
 
 	void collisionBidon();
+
+	/* Added by Ning, for fracture */
+	int calculFracture();
+	int calculFracture2();
+
+	void resetAll();
+
+	/* END -- Added by Ning, for fracture */
 
 private:
 	int id;
@@ -60,7 +79,7 @@ private:
 	vector<Tetrahedron*> tetrahedra;
 
 	// this is the list of all facets in this volume
-	vector<int*> facets; // vector of int[3]
+	vector<struct Surface*> surfaces; // vector of int[3]
 
 	// big matrices needed in the equation
 	matrix::SymmetricMumpsSquareSparseMatrix* K;
@@ -95,4 +114,15 @@ private:
 	bool tetrahedraChanged;
 	std::string lastOutputFacesFileName;
 	std::string lastOutputTetrahedraFileName;
+
+	/* Added by Ning, for fracture */
+	Point* replicaPointWithoutRemesh(Point* orginal, Matrix<double, 3, 1>& nvector, int replicaPointIndex);
+	Point* replicaPointWithRemesh(Point* orginal, Matrix<double, 3, 1>& nvector, int replicaPointIndex);
+	Point* replicaPointWithRemesh2(Point* orginal, Matrix<double, 3, 1>& nvector);
+
+	int oldOrder;
+
+	void calculTensileAndCompressiveOfTetrahedron();
+
+	/* END -- Added by Ning, for fracture */
 };

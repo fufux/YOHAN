@@ -44,9 +44,9 @@ double* Volume::getForces()
 	return forces;
 }
 
-vector<Tetrahedron*>& Volume::getTetrahedra()
+vector<Tetrahedron*>* Volume::getTetrahedra()
 {
-	return tetrahedra;
+	return &tetrahedra;
 }
 
 
@@ -106,6 +106,8 @@ bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFil
 	// the point visible list
 	for (int i = 0; i < n && fp.good(); i++)
 	{
+		/* Modified by Ning */
+		/*
 		int* p = new int[3];
 		fp >> tmp >> p[0] >> p[1] >> p[2] >> tmp;
 
@@ -119,6 +121,32 @@ bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFil
 
 		// fill facets
 		facets.push_back(p);
+		*/
+
+		struct Surface* surf = new struct Surface();
+
+		fp >> tmp >> surf->pointIndex[0] >> surf->pointIndex[1] >> surf->pointIndex[2] >> tmp;
+		
+		// ajust indices
+		surf->pointIndex[0]--;
+		surf->pointIndex[1]--;
+		surf->pointIndex[2]--;
+
+		// update points
+		for (int j = 0; j < 3; j++)
+		{
+			points[surf->pointIndex[j]]->setIsSurface(true);
+
+			struct IndexSurfacePoint indexSurf;
+			indexSurf.indexOfPoint = j;
+			indexSurf.surface = surf;
+
+			points[surf->pointIndex[j]]->getIndexSurface()->push_back(indexSurf);
+		}
+
+		// fill facets
+		surfaces.push_back(surf);
+
 	}
 
 	// close file
@@ -155,12 +183,29 @@ bool Volume::load(std::string nodeFile, std::string eleFile, std::string faceFil
 		Tetrahedron* t = new Tetrahedron(id, this, vp);
 		tetrahedra.push_back( t );
 		for (int j=0; j<4; j++)
-			points[p[j]]->getTetrahedra()->push_back( t );
+		{
+			/* Modified by Ning, for fracture */
+
+			// points[p[j]]->getTetrahedra()->push_back( t );
+
+			struct IndexTetraPoint newIndexTetra;
+			newIndexTetra.tet = t;
+			newIndexTetra.indexOfPoint = j;
+			points[p[j]]->getIndexTetra()->push_back(newIndexTetra);
+			/* END -- Modified by Ning, for fracture */
+		}
 	}
 
 	// close file
 	fp.close();
 	fp.clear();
+
+	/* Added by Ning, for fracture*/
+
+	/* pre-calculate the face neighbour and the edge neighbour for each tetrahedron */
+
+
+	/* END -- Added by Ning, for fracture*/
 
 	// the matrix
 	int order = points.size() * 3;
@@ -276,12 +321,13 @@ vector<std::string> Volume::save(std::string dir)
 		// output
 		fp.open(sstream3.str().c_str(), ios::out | ios::binary);
 
-		size = facets.size();
+		/*
+		size = surfaces.size();
 		fp.write ((char*)&size, sizeof(int));
 
-		for (std::vector<int*>::iterator iter = facets.begin(); iter != facets.end(); ++iter)
+		for (std::vector<struct Surface*>::iterator iter = surfaces.begin(); iter != surfaces.end(); ++iter)
 		{
-			int* face = *iter;
+			int* face = (*iter)->pointIndex;
 			int f1 = face[0];
 			int f2 = face[1];
 			int f3 = face[2];
@@ -289,6 +335,32 @@ vector<std::string> Volume::save(std::string dir)
 			fp.write ((char*)&f2, sizeof(int));
 			fp.write ((char*)&f3, sizeof(int));
 		}
+		*/
+
+		/* Modified by Ning, for fracture, debug */
+		size = tetrahedra.size() * 4;
+		fp.write ((char*)&size, sizeof(int));
+
+		int format[4][3] = {0,1,2,0,2,3,0,3,1,1,3,2};	// 0-1-2, 0-2-3, 0-3-1, 1-3-2 : inverse clock-wise
+
+		for (std::vector<Tetrahedron*>::iterator iter = tetrahedra.begin(); iter != tetrahedra.end(); ++iter)
+		{
+			Tetrahedron* tet = *iter;
+			std::vector<Point*> pl = tet->getPoints();
+			
+			// 0-1-2, 0-2-3, 0-3-1, 1-3-2
+			
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 3; j++)
+				{
+					int pid = pl[format[i][j]]->getID();
+					fp.write ((char*)&pid, sizeof(int));
+				}
+			}
+		}
+
+
 		fp.flush();
 		fp.close();
 		fp.clear();
@@ -354,7 +426,25 @@ void Volume::generateK()
 		q10 = q(1,0); q11 = q(1,1); q12 = q(1,2);
 		q20 = q(2,0); q21 = q(2,1); q22 = q(2,2);
 
-		for (i = 0; i < 4; i++)
+		/* Added by Ning, for fracture */
+
+		// F~ = Q' * F
+		Matrix3d fp = q.transpose() * f;
+		// e~ = 0.5 * (F~ + F~') - I
+		Matrix3d epsilon = 0.5 * (fp + fp.transpose()) - Matrix3d::Identity();
+		// sigma~ = lambda * trace(e~) * I + 2 * mu * e~
+		Matrix3d sigma = material.lambda * epsilon.trace() * Matrix3d::Identity() + 2 * material.mu * epsilon;
+
+		// copy sigma as stress
+		tetrahedra[t]->setStress(sigma);
+
+		// copy Q
+		tetrahedra[t]->setQ(q);
+
+		/* END -- Added by Ning, for fracture */
+
+
+                for (i = 0; i < 4; i++)
 		{
 			ri = pts[i]->getID() * 3 + 1;	// +1 is to conform the index in the matrix
 			ind = pts[i]->getID() * 3;
@@ -535,5 +625,494 @@ void Volume::collisionBidon()
 		if (points[i]->getX()[1] < 0) {
 			forces[3*i+1] = -points[i]->getMass()*points[i]->getX()[1]/(scene->getDeltaT()*scene->getDeltaT());
 		}
+	}
+}
+
+int Volume::calculFracture2()
+{
+	return 0;
+}
+
+void Volume::calculTensileAndCompressiveOfTetrahedron()
+{
+	for (int t = 0; t < (int)tetrahedra.size(); t++)
+	{
+		/* Eigen Value and Vector */
+		Matrix3d eigenVectors;
+		Matrix<double, 3, 1> eigenValues;
+
+		tetrahedra[t]->retrieveEigenOfStress(eigenValues, eigenVectors);
+
+		/* Tensile Component and Compressive Component */
+		Matrix3d tensileComp = Matrix3d::Zero();
+		Matrix3d compressiveComp = Matrix3d::Zero();
+		for (int i = 0; i < 3; i++)
+		{
+			double tensileCoef = eigenValues(i,0) > 0 ? eigenValues(i,0) : 0;	// max(vi,0)
+			double compressiveCoef = eigenValues(i,0) < 0 ? eigenValues(i,0) : 0;	// min(vi,0)
+
+			
+			Matrix<double, 3, 1> eigenVector;
+			eigenVector(0,0) = eigenVectors(0,i);	// column
+			eigenVector(1,0) = eigenVectors(1,i);
+			eigenVector(2,0) = eigenVectors(2,i);
+
+			Matrix3d ma_n = util::calcul_M33_MA(eigenVector);
+
+			tensileComp += ma_n * tensileCoef;
+			compressiveComp += ma_n * compressiveCoef;
+		}
+
+		/* Tensile Force and Compressive Force */
+		for (int i = 0; i < 4; i++)
+		{
+			Matrix<double, 3, 1> tensileForce = tetrahedra[t]->getQ() * tensileComp * tetrahedra[t]->getN(i);
+			Matrix<double, 3, 1> compressiveForce = tetrahedra[t]->getQ() * compressiveComp * tetrahedra[t]->getN(i);
+
+			tetrahedra[t]->setCompressiveForce(i, compressiveForce);
+			tetrahedra[t]->setTensileForce(i, tensileForce);
+		}
+	}
+}
+
+int Volume::calculFracture()
+{
+	/* Each Tetrahedron */
+	for (int t = 0; t < (int)tetrahedra.size(); t++)
+	{
+		/* Eigen Value and Vector */
+		Matrix3d eigenVectors;
+		Matrix<double, 3, 1> eigenValues;
+
+		tetrahedra[t]->retrieveEigenOfStress(eigenValues, eigenVectors);
+
+		/* Tensile Component and Compressive Component */
+		Matrix3d tensileComp = Matrix3d::Zero();
+		Matrix3d compressiveComp = Matrix3d::Zero();
+		for (int i = 0; i < 3; i++)
+		{
+			double tensileCoef = eigenValues(i,0) > 0 ? eigenValues(i,0) : 0;	// max(vi,0)
+			double compressiveCoef = eigenValues(i,0) < 0 ? eigenValues(i,0) : 0;	// min(vi,0)
+
+			
+			Matrix<double, 3, 1> eigenVector;
+			eigenVector(0,0) = eigenVectors(0,i);	// column
+			eigenVector(1,0) = eigenVectors(1,i);
+			eigenVector(2,0) = eigenVectors(2,i);
+
+			Matrix3d ma_n = util::calcul_M33_MA(eigenVector);
+
+			tensileComp += ma_n * tensileCoef;
+			compressiveComp += ma_n * compressiveCoef;
+		}
+
+		/* Tensile Force and Compressive Force */
+		for (int i = 0; i < 4; i++)
+		{
+			Matrix<double, 3, 1> tensileForce = tetrahedra[t]->getQ() * tensileComp * tetrahedra[t]->getN(i);
+			Matrix<double, 3, 1> compressiveForce = tetrahedra[t]->getQ() * compressiveComp * tetrahedra[t]->getN(i);
+
+			tetrahedra[t]->setCompressiveForce(i, compressiveForce);
+			tetrahedra[t]->setTensileForce(i, tensileForce);
+		}
+	}
+
+	/* Each point */
+	int fractureCount = 0;
+	int oldPointSize = (int)points.size();
+	int oldTetSize = (int)tetrahedra.size();
+
+	for (int k = 0; k < oldPointSize; k++)
+	{
+		Matrix<double, 3, 1> tforce = Matrix<double, 3, 1>::Zero();
+		Matrix<double, 3, 1> cforce = Matrix<double, 3, 1>::Zero();
+		Matrix3d separationTensor = Matrix3d::Zero();
+
+		Point* point = points[k];
+
+		std::vector<IndexTetraPoint> *myTetraIndex = point->getIndexTetra();
+
+		for (int i = 0; i < (int)myTetraIndex->size(); i++)
+		{
+			int pointIndex = myTetraIndex->at(i).indexOfPoint;
+			Tetrahedron* tet = myTetraIndex->at(i).tet;
+
+			// should be read-only
+			Matrix<double, 3, 1> pointTF = tet->getTensileForce(pointIndex);
+			Matrix<double, 3, 1> pointCF = tet->getCompressiveForce(pointIndex);
+
+			// accumulate f+ and f-
+			tforce += pointTF;
+			cforce += pointCF;
+
+			// c += m(f+(ell)) - m(f-(ell))
+			separationTensor += util::calcul_M33_MA(pointTF) - util::calcul_M33_MA(pointCF);
+		}
+
+		// c-= m(f+) - m(f-)	// whether * 1/2 it depends
+		separationTensor -= util::calcul_M33_MA(tforce) - util::calcul_M33_MA(cforce);
+
+		// v+, the greatest positive eigenValue of c
+		Matrix<double, 3, 1> eigenValue; 
+		Matrix3d eigenVector;
+		util::retrieveEigen(separationTensor, eigenValue, eigenVector);
+
+		int vindex = 0;
+		for (int i = 0; i < 3; i++)
+		{
+			if (eigenValue(i, 0) > eigenValue(vindex, 0))
+				vindex = i;
+		}
+
+		if (eigenValue(vindex, 0) > 0 && eigenValue(vindex, 0) > material.toughness)
+		{
+			/* A fracture is happened */
+
+			// normal vector
+			Matrix<double, 3, 1> nvector;
+			nvector(0,0) = eigenVector(0, vindex);
+			nvector(1,0) = eigenVector(1, vindex);
+			nvector(2,0) = eigenVector(2, vindex);
+			nvector.normalize();
+
+			
+			// replica without re-mesh
+						
+			int pointIndex = points.size();	//int pointIndex = pointPool->size() + newPointList.size();
+
+			Point* replica = replicaPointWithoutRemesh(point, nvector, pointIndex);
+
+			if (replica->getIndexTetra()->size() > 0)
+			{
+				points.push_back(replica);//newPointList.push_back(replica);
+
+				tetrahedraChanged = true;
+				facesChanged = true;
+
+				fractureCount++;
+			}
+			else
+			{
+				// the replica is not useful
+				delete replica;
+			}
+			
+			
+			/*
+			// replica with remesh
+			int pointIndex = points.size();
+			//Point* replica = replicaPointWithRemesh(point, nvector, pointIndex);
+			Point* replica = replicaPointWithRemesh2(point, nvector);
+			if (replica->getIndexTetra()->size() > 0)
+			{
+				points.push_back(replica);
+
+				tetrahedraChanged = true;
+				facesChanged = true;
+
+				fractureCount++;
+			}
+			else
+			{
+				// must not reach here
+				util::log("WARING: Volume::replica with remesh:: an ill-conditioned example");
+			}
+
+			// end the remesh process to avoid some crush increasing tets
+			*/
+			
+			if (tetrahedra.size() - oldTetSize > 20)
+				return fractureCount;
+		}
+
+	}
+
+	//log
+	std::stringstream sstream;
+	sstream << "fractureCount: " << fractureCount;
+	util::log(sstream.str());
+
+	return fractureCount;
+}
+
+Point* Volume::replicaPointWithRemesh2(Point* orginal, Matrix<double, 3, 1>& nvector)
+{
+	// remesh buf
+	std::vector<IndexTetraPoint> remeshBuf = *orginal->getIndexTetra();
+
+	int oldTetSize = tetrahedra.size();
+	for (std::vector<IndexTetraPoint>::iterator iter = remeshBuf.begin(); iter != remeshBuf.end(); ++iter)
+	{
+		iter->tet->remesh2(orginal, nvector, this->points);
+		if (tetrahedra.size() - oldTetSize > 10)
+			break;
+	}
+
+	// reassign
+	return replicaPointWithoutRemesh(orginal, nvector, points.size());
+}	
+
+Point* Volume::replicaPointWithRemesh(Point* orginal, Matrix<double, 3, 1>& nvector, int replicaPointIndex)
+{
+	// copy material position, current position , velority;
+	Point* replica = new Point(replicaPointIndex, orginal->getX(), orginal->getV(), orginal->getU(), true);
+
+	// reassign
+	std::vector<IndexTetraPoint> *myTetraIndex = orginal->getIndexTetra();
+
+	// remesh buf
+	std::vector<IndexTetraPoint> remeshBuf;
+
+	double* thisPosition = orginal->getX();
+
+	for (std::vector<IndexTetraPoint>::iterator iter = orginal->getIndexTetra()->begin(); iter != orginal->getIndexTetra()->end();)
+	{
+		int pointIndex = iter->indexOfPoint;
+		Tetrahedron* tet = iter->tet;
+
+		/* for those poi																													nts which is not this point (fracture), could calculate its cos() to determine whether the 
+			tetraedre is (on + side, on - side, intersect)
+		*/
+		int state = 0;
+		
+		for (int i = 0; i < 4; i++)
+		{
+			if (i == pointIndex)		// skip "this point"
+				continue;
+
+			double* thatPosition = tet->getPoints().at(i)->getX();
+
+			// calcul the vector directs from this point (end) to that point (head)
+			Matrix<double, 3, 1> vec;
+			vec(0,0) = thatPosition[0] - thisPosition[0];
+			vec(1,0) = thatPosition[1] - thisPosition[1];
+			vec(2,0) = thatPosition[2] - thisPosition[2];
+
+			// calcul the cos of two vector
+			vec.normalize();
+			double cosValue = vec.dot(nvector);
+
+			// accumulate the number of point on the same side
+			if (cosValue > 0)
+				state += 1;
+			else
+				state -= 1;
+		}
+
+		if (state == 3)
+		{
+			// belongs to q+
+			// do not remove from the current list
+			++iter;
+		}
+		else if (state == -3)	// 
+		{
+			// belongs to q-
+			if (orginal->getIndexTetra()->size() > 1)
+			{
+				// visability
+				orginal->setIsSurface(true);			
+
+				/* re-assign volumic */
+				struct IndexTetraPoint newTetPointIndex;
+				newTetPointIndex.tet = tet;
+				newTetPointIndex.indexOfPoint = pointIndex;
+
+				replica->getIndexTetra()->push_back(newTetPointIndex);
+				tet->getPoints()[pointIndex] = replica;
+
+				// remove from the current tet list
+				iter = orginal->getIndexTetra()->erase(iter);
+			}
+			else
+			{
+				++iter;
+			}
+		}
+		else
+		{
+			// intersect, should remesh
+			IndexTetraPoint index = *iter;
+			remeshBuf.push_back(index);
+			
+			++iter;
+		}
+	}
+
+	//remesh
+	for (std::vector<IndexTetraPoint>::iterator iter = remeshBuf.begin(); iter != remeshBuf.end(); ++iter)
+	{
+		iter->tet->remesh(orginal, replica, nvector, this->points);
+	}
+
+	return replica;
+}
+
+Point* Volume::replicaPointWithoutRemesh(Point* orginal, Matrix<double, 3, 1>& nvector, int replicaPointIndex)
+{
+	// copy material position, current position , velority;
+	Point* replica = new Point(replicaPointIndex, orginal->getX(), orginal->getV(), orginal->getU(), true);
+
+	// reassign
+	std::vector<IndexTetraPoint> *myTetraIndex = orginal->getIndexTetra();
+
+	double* thisPosition = orginal->getX();
+
+	for (std::vector<IndexTetraPoint>::iterator iter = orginal->getIndexTetra()->begin(); iter != orginal->getIndexTetra()->end();)
+	{
+		int pointIndex = iter->indexOfPoint;
+		Tetrahedron* tet = iter->tet;
+
+		/* for those points which is not this point (fracture), could calculate its cos() to determine whether the 
+			tetraedre is (on + side, on - side, intersect)
+		*/
+		int stateP = 0, stateN = 0, stateZ = 0;
+		double sumP = 0, sumN = 0;
+		
+		for (int i = 0; i < 4; i++)
+		{
+			if (i == pointIndex)		// skip "this point"
+				continue;
+
+			double* thatPosition = tet->getPoints().at(i)->getX();
+
+			// calcul the vector directs from this point (end) to that point (head)
+			Matrix<double, 3, 1> vec;
+			vec(0,0) = thatPosition[0] - thisPosition[0];
+			vec(1,0) = thatPosition[1] - thisPosition[1];
+			vec(2,0) = thatPosition[2] - thisPosition[2];
+
+			// calcul the cos of two vector
+			vec.normalize();
+			double cosValue = vec.dot(nvector);
+
+			// accumulate the number of point on the same side
+			if (cosValue > 1E-15)
+			{
+				stateP += 1;
+				sumP += cosValue;
+			}
+			else if (cosValue < -1E-15)
+			{
+				stateN += 1;
+				sumN += -cosValue;
+			}
+			else
+				stateZ += 1;
+		}
+
+		bool isAssignPositive = false;
+
+		switch (stateZ)
+		{
+		case 0:
+			if (stateP > stateN)	// belongs to q+				
+				isAssignPositive = true;			
+			else
+			{
+				// belongs to q-, under the condition that orginal->getIndexTetra()->size() > 1
+				if (orginal->getIndexTetra()->size() > 1)				
+					isAssignPositive = false;				
+				else
+					isAssignPositive = true;
+			}
+			break;
+		case 1:
+			if (stateP > stateN)	// belongs to q+
+				isAssignPositive = true;
+			else if (stateP < stateN)	//belongs to q-
+				isAssignPositive = false;
+			else
+				isAssignPositive = (sumP < sumN);
+			break;
+		case 2:
+			if (stateP > stateN)
+				isAssignPositive = true;
+			else
+				isAssignPositive = false;
+			break;
+		default:
+			util::log("FETAL ERROR: Volume::replicaWithoutRemesh");
+			break;
+
+		}
+
+		if (isAssignPositive)
+			++iter;
+		else
+		{
+			// visability
+			orginal->setIsSurface(true);			
+
+			/* re-assign volumic */
+			struct IndexTetraPoint newTetPointIndex;
+			newTetPointIndex.tet = tet;
+			newTetPointIndex.indexOfPoint = pointIndex;
+
+			replica->getIndexTetra()->push_back(newTetPointIndex);
+			tet->getPoints()[pointIndex] = replica;
+
+			// remove from the current tet list
+			iter = orginal->getIndexTetra()->erase(iter);
+		}
+	}
+
+	//solve ill-conditioned replica
+	if (replica->getIndexTetra()->size() == 0 && orginal->getIndexTetra()->size() > 1)
+	{
+		std::vector<IndexTetraPoint>::iterator iter = orginal->getIndexTetra()->begin();
+		int pointIndex = iter->indexOfPoint;
+		Tetrahedron* tet = iter->tet;
+
+		/* re-assign volumic */
+		struct IndexTetraPoint newTetPointIndex;
+		newTetPointIndex.tet = tet;
+		newTetPointIndex.indexOfPoint = pointIndex;
+
+		replica->getIndexTetra()->push_back(newTetPointIndex);
+		tet->getPoints()[pointIndex] = replica;
+
+		// remove from the current tet list
+		orginal->getIndexTetra()->erase(iter);
+	}
+	
+	return replica;
+}
+
+void Volume::resetAll()
+{
+	if (oldOrder != points.size() * 3)
+	{
+		int order = points.size() * 3;
+
+		//matrix
+		K->changeOrder(order);
+		M->changeOrder(order);
+		C->changeOrder(order);
+
+		//vector
+		delete v;
+		delete forceField;
+		delete forces;
+		delete xu;
+		delete f;
+		
+
+		xu = new double[order];
+		f = new double[order];
+		v = new double[order];
+		forceField = new double[order];
+		forces = new double[order];
+
+		memset((void*)xu, 0, order * sizeof(double));
+		memset((void*)f, 0, order * sizeof(double));
+		memset((void*)v, 0, order * sizeof(double));
+		memset((void*)forceField, 0, order * sizeof(double));
+		memset((void*)forces, 0, order * sizeof(double));
+
+		// recalculate M
+		generateMAndForceField();
+
+		oldOrder = order;		
 	}
 }

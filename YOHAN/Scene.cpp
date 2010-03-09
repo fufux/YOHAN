@@ -14,8 +14,8 @@ using namespace xercesc;
 Scene::Scene(void)
 {
 	// Initialize collision response constants
-	kerr = 1000;
-	kdmp = 4000;
+	kerr = 1;//1000
+	kdmp = 4;//4000
 	kfrc = 0.5;
 	plan = new Tetrahedron();
 }
@@ -173,6 +173,10 @@ bool Scene::load(std::string tetrahedralizedSceneFile)
 						material.psy = atof(tmp);
 						wcstombs(tmp, vmnode->getAttributes()->getNamedItem(L"Density")->getNodeValue(), 128);
 						material.rho = atof(tmp);
+
+						/* Added by Ning, for fracture */
+						material.toughness = 1400;
+						/* END -- Added by Ning, for fracture */
 					}
 					else					
 					{
@@ -372,10 +376,27 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		currentTime += deltaT;
 		tstart = GetTickCount();
 
+		// reset
+		for (int i=0; i < (int)volumes.size(); i++) {
+			//volumes[i]->collisionBidon();
+			volumes[i]->resetAll();
+		}
+
 		// compute
 		handleCollisions();
-		for (int i=0; i < (int)volumes.size(); i++) {
+		for (int i=0; i < (int)volumes.size(); i++) 
+		{
+			/*
+			// artificat force, to test fracture
+			if (stepNumber > 1)
+			{
+				volumes[i]->getForces()[99] += 5000000;
+				volumes[i]->getForces()[81] -= 5000000;
+			}
+			*/
+
 			volumes[i]->evolve(deltaT);
+			volumes[i]->calculFracture();
 		}
 		tend = GetTickCount();
 		tdif = tend - tstart;
@@ -387,7 +408,7 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		// log
 		if (stepNumber % 10 == 0) {
 			std::stringstream s;
-			s << "Step n°" << stepNumber << " computed in " << tdif << "ms and saved in " << tdif2 << "ms.";
+			s << "Step n" << stepNumber << " computed.";
 			util::log( s.str() );
 		}
 	}
@@ -656,10 +677,9 @@ void Scene::handleCollisions()
 	}
 	for (int i=0; i < (int)volumes.size(); i++) {
 		volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(0, found_plan);
-		/*for (int j=0; j < (int)volumes.size(); j++) {
-			if (i!=j)
-				volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(volumes[j]->getMasterBoundingBox(), found);
-		}*/
+		for (int j=i+1; j < (int)volumes.size(); j++) {
+			volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(volumes[j]->getMasterBoundingBox(), found);
+		}
 	}
 	planCollisionResponse(found_plan);
 	//CollisionResponse(found);

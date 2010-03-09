@@ -95,6 +95,7 @@ PlayerFrame::PlayerFrame(Player* player, FrameInfo info, bool load_volumic)
 		while (!innode.eof() && innode.good())// && (int)buffer->Vertices.size() < nb_of_points)
 		{
 			buffer->Vertices.push_back(video::S3DVertex((f32)x, (f32)y, (f32)z, 1,0,0, clr, 0,0));
+			buffer->Vertices.getLast().TCoords += buffer->Vertices[0].Pos.getDistanceFrom(buffer->Vertices.getLast().Pos);
 			faces_per_vertex.push_back(0);
 			// this is one line : innode >> index >> x >> y >> z;
 			innode.read(reinterpret_cast < char * > (&x), sizeof(double));
