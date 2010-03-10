@@ -858,8 +858,13 @@ bool Editor::load(irr::core::stringc filename)
 
 bool Editor::save(irr::core::stringc filename)
 {
+	device->getFileSystem()->changeWorkingDirectoryTo(baseDir);
+	device->getFileSystem()->getFileBasename(filename);
+	createDir("saved_scenes");
+	stringc dirf = "saved_scenes/";
+	dirf += filename;
 	// Create / open the file and get ready to write XML
-	IWriteFile* file = device->getFileSystem()->createAndWriteFile( filename );
+	IWriteFile* file = device->getFileSystem()->createAndWriteFile( dirf );
 	if (!file)
 		return false;
 	IXMLWriter* xml = device->getFileSystem()->createXMLWriter( file );
@@ -992,7 +997,7 @@ void Editor::quickTetAndSimulate()
 	IGUICheckBox *cb = (IGUICheckBox*)root->getElementFromId(GUI_ID_ASK_PARAMETERS_FRACTURE, true);
 	bool fracture = cb->isChecked();
 	cb = (IGUICheckBox*)root->getElementFromId(GUI_ID_ASK_PARAMETERS_SELFCOLLISIONS, true);
-	bool selfcollisions = cb->isChecked();
+	bool selfcollisions = false;//cb->isChecked();
 
 	// check parameters
 	if (nbFrame < 1 || deltaT <= 0 || tetrahedraDensity < 10.0f || tetrahedraDensity > 1000000.0f )

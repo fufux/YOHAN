@@ -590,8 +590,7 @@ void Scene::planCollisionResponse(vector<Tetrahedron*>* tets)
 
 void Scene::CollisionResponse(vector<vector<Tetrahedron*>>* tets)
 {
-	vector<Vector3d*>* vertices;
-	vector<Vector3d*>* resul;
+	vector<Vector3d*>* vertices = new vector<Vector3d*>();;
 	double* coord;
 	// the four tetrahedron's plans
 	Vector3d* alpha[4];
@@ -600,6 +599,8 @@ void Scene::CollisionResponse(vector<vector<Tetrahedron*>>* tets)
 	double alphaC[4];
 	vector<Face*>* faces;
 	Polyhedron p;
+	// Each face points indices (by 3)
+	int inds[12] = {0,2,1,0,1,3,2,3,1,0,3,2};
 	for(int nbtet=0; nbtet<tets->size(); nbtet++){
 		faces = new vector<Face*>();
 
@@ -609,24 +610,28 @@ void Scene::CollisionResponse(vector<vector<Tetrahedron*>>* tets)
 		util::plan(&(*tets)[nbtet][1]->getPoints(), 0, 1, 3, alpha[1], &alphaC[1]);
 		util::plan(&(*tets)[nbtet][1]->getPoints(), 2, 3, 1, alpha[2], &alphaC[2]);
 		util::plan(&(*tets)[nbtet][1]->getPoints(), 0, 3, 2, alpha[3], &alphaC[3]);
-		vertices = new vector<Vector3d*>();
-		for(int j=0; j<4; j++){
-			coord = (*tets)[nbtet][0]->getPoints()[j]->getX();
-			vertices->push_back(new Vector3d(coord[0],coord[1],coord[2]));
+		// For each face
+		for(int i=0; i<4; i++){
+			vertices->clear();
+			// Face construction
+			for(int j=0; j<3; j++){
+				coord = (*tets)[nbtet][0]->getPoints()[inds[3*i+j]]->getX();
+				vertices->push_back(new Vector3d(coord[0],coord[1],coord[2]));
+			}
+			// Intersection with plans of the other tetrahedron
+			vertices = util::intersect(vertices, alpha[0], alphaC[0], (*tets)[nbtet][1]->getPoints()[3]);
+			if(vertices->size()<3)
+				continue;
+			vertices = util::intersect(vertices, alpha[1], alphaC[1], (*tets)[nbtet][1]->getPoints()[2]);
+			if(vertices->size()<3)
+				continue;
+			vertices = util::intersect(vertices, alpha[2], alphaC[2], (*tets)[nbtet][1]->getPoints()[0]);
+			if(vertices->size()<3)
+				continue;
+			vertices = util::intersect(vertices, alpha[3], alphaC[3], (*tets)[nbtet][1]->getPoints()[1]);
+			if(vertices->size()>2)
+				faces->push_back(new Face(vertices, (*tets)[nbtet][0]->getID()));
 		}
-		// Intersection with plans of the other tetrahedron
-		resul = util::intersect(vertices, alpha[0], alphaC[0], (*tets)[nbtet][1]->getPoints()[3]);
-		if(resul->size()>2)
-			faces->push_back(new Face(resul, (*tets)[nbtet][0]->getID()));
-		resul = util::intersect(vertices, alpha[1], alphaC[1], (*tets)[nbtet][1]->getPoints()[2]);
-		if(resul->size()>2)
-			faces->push_back(new Face(resul, (*tets)[nbtet][0]->getID()));
-		resul = util::intersect(vertices, alpha[2], alphaC[2], (*tets)[nbtet][1]->getPoints()[0]);
-		if(resul->size()>2)
-			faces->push_back(new Face(resul, (*tets)[nbtet][0]->getID()));
-		resul = util::intersect(vertices, alpha[3], alphaC[3], (*tets)[nbtet][1]->getPoints()[1]);
-		if(resul->size()>2)
-			faces->push_back(new Face(resul, (*tets)[nbtet][0]->getID()));
 
 		// For the second tetrahderon
 		// Construction of plans
@@ -634,24 +639,28 @@ void Scene::CollisionResponse(vector<vector<Tetrahedron*>>* tets)
 		util::plan(&(*tets)[nbtet][0]->getPoints(), 0, 1, 3, alpha[1], &alphaC[1]);
 		util::plan(&(*tets)[nbtet][0]->getPoints(), 2, 3, 1, alpha[2], &alphaC[2]);
 		util::plan(&(*tets)[nbtet][0]->getPoints(), 0, 3, 2, alpha[3], &alphaC[3]);
-		vertices = new vector<Vector3d*>();
-		for(int j=0; j<4; j++){
-			coord = (*tets)[nbtet][1]->getPoints()[j]->getX();
-			vertices->push_back(new Vector3d(coord[0],coord[1],coord[2]));
+		// For each face
+		for(int i=0; i<4; i++){
+			vertices->clear();
+			// Face construction
+			for(int j=0; j<3; j++){
+				coord = (*tets)[nbtet][1]->getPoints()[inds[3*i+j]]->getX();
+				vertices->push_back(new Vector3d(coord[0],coord[1],coord[2]));
+			}
+			// Intersection with plans of the other tetrahedron
+			vertices = util::intersect(vertices, alpha[0], alphaC[0], (*tets)[nbtet][0]->getPoints()[3]);
+			if(vertices->size()<3)
+				continue;
+			vertices = util::intersect(vertices, alpha[1], alphaC[1], (*tets)[nbtet][0]->getPoints()[2]);
+			if(vertices->size()<3)
+				continue;
+			vertices = util::intersect(vertices, alpha[2], alphaC[2], (*tets)[nbtet][0]->getPoints()[0]);
+			if(vertices->size()<3)
+				continue;
+			vertices = util::intersect(vertices, alpha[3], alphaC[3], (*tets)[nbtet][0]->getPoints()[1]);
+			if(vertices->size()>2)
+				faces->push_back(new Face(vertices, (*tets)[nbtet][1]->getID()));
 		}
-		// Intersection with plans of the other tetrahedron
-		resul = util::intersect(vertices, alpha[0], alphaC[0], (*tets)[nbtet][0]->getPoints()[3]);
-		if(resul->size()>2)
-			faces->push_back(new Face(resul, (*tets)[nbtet][1]->getID()));
-		resul = util::intersect(vertices, alpha[1], alphaC[1], (*tets)[nbtet][0]->getPoints()[2]);
-		if(resul->size()>2)
-			faces->push_back(new Face(resul, (*tets)[nbtet][1]->getID()));
-		resul = util::intersect(vertices, alpha[2], alphaC[2], (*tets)[nbtet][0]->getPoints()[0]);
-		if(resul->size()>2)
-			faces->push_back(new Face(resul, (*tets)[nbtet][1]->getID()));
-		resul = util::intersect(vertices, alpha[3], alphaC[3], (*tets)[nbtet][0]->getPoints()[1]);
-		if(resul->size()>2)
-			faces->push_back(new Face(resul, (*tets)[nbtet][1]->getID()));
 		if(faces->size()>3){
 			p = Polyhedron(faces, (*tets)[nbtet][0], (*tets)[nbtet][1]);
 			p.collisionForces(kerr,kdmp,kfrc);

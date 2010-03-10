@@ -220,8 +220,8 @@ bool PlayerEventReceiver::OnEvent(const SEvent &event)
 void PlayerEventReceiver::showHelp()
 {
 	stringw message = L"";
-	message += L"This video player allows you to load....\n\r";
-	message += L"Bla bla.";
+	message += L"This video player allows you to visualize the result of your simulation.\n\r";
+	message += L"For more information, please refer to the user manual which was delivered with the software.";
 
 	env->addMessageBox(
 		CAPTION_HELP, message.c_str());

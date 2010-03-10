@@ -286,7 +286,7 @@ void BoundingBox::recalculateBoundingBoxes()
 
 bool BoundingBox::collision(BoundingBox* other)
 {
-	return ((this->x1 >= other->x1 && this->x1 <= other->x2
+	/*return ((this->x1 >= other->x1 && this->x1 <= other->x2
 		 ||  this->x2 >= other->x1 && this->x2 <= other->x2
 		 ||  other->x1 >= this->x1 && other->x1 <= this->x2
 		 ||  other->x2 >= this->x1 && other->x2 <= this->x2)
@@ -297,7 +297,15 @@ bool BoundingBox::collision(BoundingBox* other)
 		 && (this->z1 >= other->z1 && this->z1 <= other->z2
 		 ||  this->z2 >= other->z1 && this->z2 <= other->z2
 		 ||  other->z1 >= this->z1 && other->z1 <= this->z2
-		 ||  other->z2 >= this->z1 && other->z2 <= this->z2));
+		 ||  other->z2 >= this->z1 && other->z2 <= this->z2));*/
+	if (this->x1 > other->x2) return false;
+	if (this->y1 > other->y2) return false;
+	if (this->z1 > other->z2) return false;
+	if (this->x2 < other->x1) return false;
+	if (this->y2 < other->y1) return false;
+	if (this->z2 < other->z1) return false;
+
+	return true;
 }
 
 
@@ -375,7 +383,7 @@ void BoundingBox::saveToFile(ofstream &fp)
 	// write my children
 	if (!this->isLeaf())
 	{
-		child1->saveToFile(fp);
+		//child1->saveToFile(fp);
 		//child2->saveToFile(fp);
 	}
 }

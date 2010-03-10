@@ -387,10 +387,10 @@ void Player::createGUI()
 	submenu->addItem(L"Quit", GUI_ID_PLAYER_QUIT);
 
 	submenu = menu->getSubMenu(1);
-	submenu->addItem(L"toggle model debug information", GUI_ID_PLAYER_TOGGLE_DEBUG_INFO, true, true);
+	submenu->addItem(L"Views", GUI_ID_PLAYER_TOGGLE_DEBUG_INFO, true, true);
 	submenu->addItem(L"Don't Improve Rendering", GUI_ID_PLAYER_IMPROVE_RENDERING_NONE);
-	submenu->addItem(L"Improve Rendering 1", GUI_ID_PLAYER_IMPROVE_RENDERING_1);
-	submenu->addItem(L"Improve Rendering 2", GUI_ID_PLAYER_IMPROVE_RENDERING_2);
+	submenu->addItem(L"Cloudy day", GUI_ID_PLAYER_IMPROVE_RENDERING_1);
+	submenu->addItem(L"Sunset", GUI_ID_PLAYER_IMPROVE_RENDERING_2);
 
 	submenu = submenu->getSubMenu(0);
 	submenu->addItem(L"Off", GUI_ID_PLAYER_DEBUG_OFF, true, false, (isDebugDataVisible() == scene::EDS_OFF));
@@ -488,14 +488,14 @@ void Player::improveRendering(bool enable, s32 type)
 		{
 			skydomes[0]->setVisible(true);
 			skydomes[1]->setVisible(false);
-			effect->getShadowLight(0).setPosition(vector3df(0, 500.0f, -50.0f));
+			effect->getShadowLight(0).setPosition(vector3df(0, 600.0f, -50.0f));
 			effect->setAmbientColor(SColor(255, 132, 132, 132));
 		}
 		else if (type == 1)
 		{
 			skydomes[0]->setVisible(false);
 			skydomes[1]->setVisible(true);
-			effect->getShadowLight(0).setPosition(vector3df(0, 80.0f, -200.0f));
+			effect->getShadowLight(0).setPosition(vector3df(0, 320.0f, -800.0f));
 			effect->setAmbientColor(SColor(255, 32, 32, 32));
 		}
 	}

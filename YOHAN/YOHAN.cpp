@@ -109,7 +109,7 @@ int main(int argc, _TCHAR* argv[])
 	effect->addPostProcessingEffectFromFile(core::stringc("irrlicht/XEffects/Bin/shaders/BloomP") + shaderExt);*/
 
 	effect->addShadowLight(SShadowLight(2048, vector3df(0, 40.0f, -100.0f), vector3df(0, 0, 0), 
-		SColor(0, 255, 255, 175), 80.0f, 4000.0f, 70.0f * DEGTORAD));
+		SColor(0, 255, 255, 175), 80.0f, 4000.0f, 130.0f * DEGTORAD));
 
 
 	/*

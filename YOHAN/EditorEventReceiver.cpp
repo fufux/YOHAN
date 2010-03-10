@@ -382,7 +382,7 @@ void EditorEventReceiver::showHelp()
 {
 	stringw message = L"";
 	message += L"This scene editor allows you to load meshes, place them in the scene, add forces, initial speed values, etc.\n\r";
-	message += L"Once you have set the scene up, you can start the simulation. You can save/load a scene whenever you want.";
+	message += L"For more information, please refer to the user manual which was delivered with the software.";
 
 	env->addMessageBox(
 		CAPTION_HELP, message.c_str());
@@ -441,9 +441,12 @@ void EditorEventReceiver::askForParameters(bool previous_was_bad)
 		y += 45;
 		env->addStaticText(L"Handle fractures", core::rect<s32>(40,y,380,y+20), false, true, wnd);
 		env->addCheckBox(true, core::rect<s32>(20,y+2,36,y+18), wnd, GUI_ID_ASK_PARAMETERS_FRACTURE);
-		y += 20;
-		env->addStaticText(L"Handle self-collisions", core::rect<s32>(40,y+4,380,y+20), false, true, wnd);
-		env->addCheckBox(true, core::rect<s32>(20,y+2,36,y+18), wnd, GUI_ID_ASK_PARAMETERS_SELFCOLLISIONS);
+		/*y += 20;
+		env->addStaticText(L"Handle self-collisions", core::rect<s32>(40,y+4,380,y+20), false, true, wnd);*/
+		IGUICheckBox* cb = env->addCheckBox(false, core::rect<s32>(20,y+2,36,y+18), wnd, GUI_ID_ASK_PARAMETERS_SELFCOLLISIONS);
+		cb->setVisible(false);
+		cb->setEnabled(false);
+
 		y += 50;
 		env->addButton(core::rect<s32>(60,y,100,y+16), wnd, GUI_ID_ASK_PARAMETERS_GO_BUTTON, L"GO!");
 		env->addButton(core::rect<s32>(320,y,360,y+16), wnd, GUI_ID_ASK_PARAMETERS_CANCEL_BUTTON, L"Cancel");

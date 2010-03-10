@@ -76,23 +76,49 @@ vector<Vector3d*>* util::intersect(vector<Vector3d*>* vertices, Vector3d* alpha,
 	Vector3d in(pt->getX()[0], pt->getX()[1], pt->getX()[2]);
 	bool as;
 	bool ap;
+	// Look if the point is "inside" or "outside"
+	as = (alpha->dot(*s)+alphaC)*(alpha->dot(in)+alphaC)<0;
+	ap = (alpha->dot(*p)+alphaC)*(alpha->dot(in)+alphaC)<0;
+	if(!as && !ap)
+		//"in" -> "in"
+		resul->push_back(p);
+	else if(!as && ap){
+		//"in" -> "out"
+		v = intersectLinePlan(s, p, alpha, alphaC);
+		resul->push_back(v);
+	}else if(as && ap){
+		//"out" -> "out"
+		// reject
+	}else{
+		//"out" -> "in"
+		// as && !ap
+		v = intersectLinePlan(s, p, alpha, alphaC);
+		resul->push_back(v);
+		resul->push_back(p);
+	}
 	for(int i=1; i<(int)vertices->size(); i++){
+		s = p;
+		p = (*vertices)[i];
 		// Look if the point is "inside" or "outside"
 		as = (alpha->dot(*s)+alphaC)*(alpha->dot(in)+alphaC)<0;
 		ap = (alpha->dot(*p)+alphaC)*(alpha->dot(in)+alphaC)<0;
 		if(!as && !ap)
+			//"in" -> "in"
 			resul->push_back(p);
 		else if(!as && ap){
+			//"in" -> "out"
 			v = intersectLinePlan(s, p, alpha, alphaC);
+			resul->push_back(v);
 		}else if(as && ap){
+			//"out" -> "out"
 			// reject
 		}else{
+			//"out" -> "in"
 			// as && !ap
 			v = intersectLinePlan(s, p, alpha, alphaC);
+			resul->push_back(v);
 			resul->push_back(p);
 		}
-		s = p;
-		p = (*vertices)[i];
 	}
 	return resul;
 }
