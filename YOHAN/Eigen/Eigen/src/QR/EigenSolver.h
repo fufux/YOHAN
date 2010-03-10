@@ -304,7 +304,7 @@ void EigenSolver<MatrixType>::hqr2(MatrixType& matH)
   int n = nn-1;
   int low = 0;
   int high = nn-1;
-  Scalar eps = ei_pow(Scalar(2),ei_is_same_type<Scalar,float>::ret ? Scalar(-23) : Scalar(-52));
+  Scalar eps = ei_pow(Scalar(10),ei_is_same_type<Scalar,float>::ret ? Scalar(-7) : Scalar(-17));
   Scalar exshift = 0.0;
   Scalar p=0,q=0,r=0,s=0,z=0,t,w,x,y;
 

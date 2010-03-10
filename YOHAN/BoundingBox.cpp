@@ -288,16 +288,16 @@ bool BoundingBox::collision(BoundingBox* other)
 {
 	return ((this->x1 >= other->x1 && this->x1 <= other->x2
 		 ||  this->x2 >= other->x1 && this->x2 <= other->x2
-		 ||  this->x2 <= other->x1 && this->x2 >= other->x2
-		 ||  this->x1 <= other->x1 && this->x1 >= other->x2)
+		 ||  other->x1 >= this->x1 && other->x1 <= this->x2
+		 ||  other->x2 >= this->x1 && other->x2 <= this->x2)
 		 && (this->y1 >= other->y1 && this->y1 <= other->y2
 		 ||  this->y2 >= other->y1 && this->y2 <= other->y2
-		 ||  this->y2 <= other->y1 && this->y2 >= other->y2
-		 ||  this->y1 <= other->y1 && this->y1 >= other->y2)
+		 ||  other->y1 >= this->y1 && other->y1 <= this->y2
+		 ||  other->y2 >= this->y1 && other->y2 <= this->y2)
 		 && (this->z1 >= other->z1 && this->z1 <= other->z2
 		 ||  this->z2 >= other->z1 && this->z2 <= other->z2
-		 ||  this->z2 <= other->z1 && this->z2 >= other->z2
-		 ||  this->z1 <= other->z1 && this->z1 >= other->z2));
+		 ||  other->z1 >= this->z1 && other->z1 <= this->z2
+		 ||  other->z2 >= this->z1 && other->z2 <= this->z2));
 }
 
 
@@ -309,36 +309,30 @@ bool BoundingBox::collision(double y)
 
 void BoundingBox::getCollidingTetrahedra(BoundingBox* other, std::vector<vector<Tetrahedron*>> *found)
 {
-	if (collision(other)) // if bounds overlap ( a, b )
+	if (this->collision(other)) // if bounds overlap ( a, b )
 	{
-		cout << "collision!"<<endl;
 		if (this->isLeaf() && other->isLeaf() && this != other) // if are leaf nodes ( a, b )
 		{
 			// insert a pair of tetrahedra colliding
 			vector<Tetrahedron*> tets;
 			tets.push_back(tetrahedra[0]);
 			tets.push_back((*other->getTetrahedra())[0]);
-			cout << "coin"<<endl;
-			if (tets[0]->getPoints()[0] != tets[1]->getPoints()[0] &&
-				tets[0]->getPoints()[1] != tets[1]->getPoints()[1] &&
-				tets[0]->getPoints()[2] != tets[1]->getPoints()[2] &&
-				tets[0]->getPoints()[3] != tets[1]->getPoints()[3])
+			if (!tets[0]->hasPointInCommonWith(tets[1]))
 			{
 				found->push_back( tets );
-				cout << "pouet"<<endl;
 			}
 		}
-		else if (this->isLeaf()) // if is a leaf node ( a )
+		else if (this->isLeaf() && !other->isLeaf()) // if is a leaf node ( a )
 		{
 			other->getChild1()->getCollidingTetrahedra(this, found);
 			other->getChild2()->getCollidingTetrahedra(this, found);
 		}
-		else if (other->isLeaf()) // if is a leaf node ( b )
+		else if (!this->isLeaf() && other->isLeaf()) // if is a leaf node ( b )
 		{
 			this->child1->getCollidingTetrahedra(other, found);
 			this->child2->getCollidingTetrahedra(other, found);
 		}
-		else
+		else if (!this->isLeaf() && !other->isLeaf())
 		{
 			this->child1->getCollidingTetrahedra(other->getChild1(), found);
 			this->child1->getCollidingTetrahedra(other->getChild2(), found);
@@ -381,7 +375,7 @@ void BoundingBox::saveToFile(ofstream &fp)
 	// write my children
 	if (!this->isLeaf())
 	{
-		//child1->saveToFile(fp);
+		child1->saveToFile(fp);
 		//child2->saveToFile(fp);
 	}
 }

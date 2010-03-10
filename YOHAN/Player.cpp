@@ -272,6 +272,8 @@ bool Player::load(irr::core::stringc filename)
 	*/
 	bool firstLoop = true;
 	bool is_valid_file = false;
+	stringc video_dir = device->getFileSystem()->getFileDir( filename );
+	video_dir += "/";
 
 	while(xml->read())
 	{
@@ -312,10 +314,10 @@ bool Player::load(irr::core::stringc filename)
 				}
 				else if (stringw("object") == xml->getNodeName())
 				{
-					framesFileNames.getLast().nodefiles.push_back( xml->getAttributeValueSafe(L"nodefile") );
-					framesFileNames.getLast().facefiles.push_back( xml->getAttributeValueSafe(L"facefile") );
-					framesFileNames.getLast().elefiles.push_back( xml->getAttributeValueSafe(L"elefile") );
-					framesFileNames.getLast().bbfiles.push_back( xml->getAttributeValueSafe(L"bbfile") );
+					framesFileNames.getLast().nodefiles.push_back( video_dir + xml->getAttributeValueSafe(L"nodefile") );
+					framesFileNames.getLast().facefiles.push_back( video_dir + xml->getAttributeValueSafe(L"facefile") );
+					framesFileNames.getLast().elefiles.push_back( video_dir + xml->getAttributeValueSafe(L"elefile") );
+					framesFileNames.getLast().bbfiles.push_back( video_dir + xml->getAttributeValueSafe(L"bbfile") );
 				}
 			}
 		default:

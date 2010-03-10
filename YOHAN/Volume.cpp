@@ -261,11 +261,12 @@ vector<std::string> Volume::save(std::string dir)
 	int size, pid;
 
 	// .bnode
-	std::stringstream sstream;
-	sstream << dir.c_str() << "/" << id << ".bnode";
+	std::stringstream sstream1,sstream1_;
+	sstream1 << scene->simulatedSceneOutDir << "/" << dir.c_str() << "/" << id << ".bnode";
+	sstream1_ << dir.c_str() << "/" << id << ".bnode";
 
 	// output
-	ofstream fp (sstream.str().c_str(), ios::out | ios::binary);
+	ofstream fp (sstream1.str().c_str(), ios::out | ios::binary);
 
 	size = points.size();
 	fp.write ((char*)&size, sizeof(int));
@@ -279,13 +280,14 @@ vector<std::string> Volume::save(std::string dir)
 	fp.close();
 	fp.clear();
 
-	files.push_back(sstream.str());
+	files.push_back(sstream1_.str());
 
 	if (tetrahedraChanged)
 	{
 		// .bele
-		std::stringstream sstream2;
-		sstream2 << dir.c_str() << "/" << id << ".bele";
+		std::stringstream sstream2,sstream2_;
+		sstream2 << scene->simulatedSceneOutDir << "/" << dir.c_str() << "/" << id << ".bele";
+		sstream2_ << dir.c_str() << "/" << id << ".bele";
 
 		// output
 		fp.open(sstream2.str().c_str(), ios::out | ios::binary);
@@ -307,7 +309,7 @@ vector<std::string> Volume::save(std::string dir)
 		fp.clear();
 
 		tetrahedraChanged = false;
-		lastOutputTetrahedraFileName = sstream2.str();
+		lastOutputTetrahedraFileName = sstream2_.str();
 	}
 	files.push_back(lastOutputTetrahedraFileName);
 
@@ -315,8 +317,9 @@ vector<std::string> Volume::save(std::string dir)
 	if (facesChanged)
 	{
 		// .bface
-		std::stringstream sstream3;
-		sstream3 << dir.c_str() << "/" << id << ".bface";
+		std::stringstream sstream3,sstream3_;
+	sstream3 << scene->simulatedSceneOutDir << "/" << dir.c_str() << "/" << id << ".bface";
+	sstream3_ << dir.c_str() << "/" << id << ".bface";
 
 		// output
 		fp.open(sstream3.str().c_str(), ios::out | ios::binary);
@@ -366,18 +369,19 @@ vector<std::string> Volume::save(std::string dir)
 		fp.clear();
 
 		facesChanged = false;
-		lastOutputFacesFileName = sstream3.str();
+		lastOutputFacesFileName = sstream3_.str();
 	}
 	files.push_back(lastOutputFacesFileName);
 
 
 	// .bbb
-	std::stringstream sstream4;
-	sstream4 << dir.c_str() << "/" << id << ".bbb";
+	std::stringstream sstream4,sstream4_;
+	sstream4 << scene->simulatedSceneOutDir << "/" << dir.c_str() << "/" << id << ".bbb";
+	sstream4_ << dir.c_str() << "/" << id << ".bbb";
 
 	// output
 	bb->saveAllToFile(sstream4.str());
-	files.push_back(sstream4.str());
+	files.push_back(sstream4_.str());
 
 	return files;
 }
@@ -827,10 +831,17 @@ int Volume::calculFracture()
 
 	}
 
-	//log
-	std::stringstream sstream;
-	sstream << "fractureCount: " << fractureCount;
-	util::log(sstream.str());
+
+	// when fractures occur, we re-build the entire bounds tree
+	if (fractureCount > 0)
+	{
+		//log
+		std::stringstream sstream;
+		sstream << "Fracture count (this is now displayed only if >0): " << fractureCount;
+		util::log(sstream.str());
+		//delete bb;
+		//bb = new BoundingBox(NULL, tetrahedra, false);
+	}
 
 	return fractureCount;
 }
@@ -1032,7 +1043,7 @@ Point* Volume::replicaPointWithoutRemesh(Point* orginal, Matrix<double, 3, 1>& n
 				isAssignPositive = false;
 			break;
 		default:
-			util::log("FETAL ERROR: Volume::replicaWithoutRemesh");
+			util::log("FATAL ERROR: Volume::replicaWithoutRemesh");
 			break;
 
 		}

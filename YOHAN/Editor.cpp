@@ -977,7 +977,9 @@ void Editor::quickTetAndSimulate()
 	gui::IGUIElement* root = env->getRootGUIElement();
 	if (!root->getElementFromId(GUI_ID_ASK_PARAMETERS_NBTET, true) ||
 		!root->getElementFromId(GUI_ID_ASK_PARAMETERS_NBFRAME, true) ||
-		!root->getElementFromId(GUI_ID_ASK_PARAMETERS_DELTAT, true))
+		!root->getElementFromId(GUI_ID_ASK_PARAMETERS_DELTAT, true) ||
+		!root->getElementFromId(GUI_ID_ASK_PARAMETERS_FRACTURE, true) ||
+		!root->getElementFromId(GUI_ID_ASK_PARAMETERS_SELFCOLLISIONS, true))
 		return;
 
 	stringc s = "";
@@ -987,6 +989,10 @@ void Editor::quickTetAndSimulate()
 	s32 nbFrame = (s32)atoi(s.c_str());
 	s = root->getElementFromId(GUI_ID_ASK_PARAMETERS_DELTAT, true)->getText();
 	f32 deltaT = (f32)atof(s.c_str());
+	IGUICheckBox *cb = (IGUICheckBox*)root->getElementFromId(GUI_ID_ASK_PARAMETERS_FRACTURE, true);
+	bool fracture = cb->isChecked();
+	cb = (IGUICheckBox*)root->getElementFromId(GUI_ID_ASK_PARAMETERS_SELFCOLLISIONS, true);
+	bool selfcollisions = cb->isChecked();
 
 	// check parameters
 	if (nbFrame < 1 || deltaT <= 0 || tetrahedraDensity < 10.0f || tetrahedraDensity > 1000000.0f )
@@ -1035,7 +1041,7 @@ void Editor::quickTetAndSimulate()
 		wnd->remove();
 
 		// simulate...
-		if ( simulateScene(outDirTetrahedralize + "/" + tetrahedralizedSceneFile, simulatedSceneOutDir, nbFrame, deltaT) )
+		if ( simulateScene(outDirTetrahedralize + "/" + tetrahedralizedSceneFile, simulatedSceneOutDir, nbFrame, deltaT, fracture, selfcollisions) )
 		{
 			this->lastSimulatedSceneOutDir = simulatedSceneOutDir;
 			this->er->askForSwitch();
@@ -1055,7 +1061,7 @@ void Editor::quickTetAndSimulate()
 }
 
 
-bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSceneOutDir, s32 nbFrame, f32 deltaT)
+bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSceneOutDir, s32 nbFrame, f32 deltaT, bool fracture, bool selfcollision)
 {
 	if (nbFrame < 1 || deltaT <= 0)
 		return false;
@@ -1078,7 +1084,7 @@ bool Editor::simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSc
 			tstart = GetTickCount();
 			
 			// launch the simulation
-			scene->simulate(ssod, deltaT, nbFrame);
+			scene->simulate(ssod, deltaT, nbFrame, fracture, selfcollision);
 
 			// display time
 			tend = GetTickCount();

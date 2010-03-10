@@ -76,7 +76,7 @@ public:
 	// This method tetrahedralize the current scene and save the result in the given file and directory.
 	bool tetrahedralizeScene(stringc outTetrahedralizedFile, stringc outDir, f32 tetrahedraDensity);
 	// This method simulate the given volumic scene and save the result in a given directory
-	bool simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSceneOutDir, s32 nbFrame, f32 deltaT);
+	bool simulateScene(stringc tetrahedralizedSceneFile, stringc simulatedSceneOutDir, s32 nbFrame, f32 deltaT, bool fracture, bool selfcollision);
 
 	// This simply calls tetrahedralizeScene and simulateScene with right arguments
 	void quickTetAndSimulate();

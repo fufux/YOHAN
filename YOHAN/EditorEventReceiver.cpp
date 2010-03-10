@@ -411,7 +411,7 @@ void EditorEventReceiver::askForParameters(bool previous_was_bad)
 	else
 	{
 		// create the window
-		IGUIWindow* wnd = env->addWindow(core::rect<s32>(driver->getScreenSize().Width/2-200,100,driver->getScreenSize().Width/2+200,380),
+		IGUIWindow* wnd = env->addWindow(core::rect<s32>(driver->getScreenSize().Width/2-200,100,driver->getScreenSize().Width/2+200,460),
 			true, L"Parameters", 0, GUI_ID_ASK_PARAMETERS_WINDOW);
 
 		s32 y=20;
@@ -431,13 +431,19 @@ void EditorEventReceiver::askForParameters(bool previous_was_bad)
 
 		y += 30;
 		env->addStaticText(L"Approximate number of tetrahedra to be generated for each object (min: 10, max: 1,000,000)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
-		env->addEditBox(L"5000", core::rect<s32>(40,y+20,80,y+36), true, wnd, GUI_ID_ASK_PARAMETERS_NBTET);
+		env->addEditBox(L"500", core::rect<s32>(40,y+20,80,y+36), true, wnd, GUI_ID_ASK_PARAMETERS_NBTET);
 		y += 40;
 		env->addStaticText(L"Number of frames to compute (min: 1)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
 		env->addEditBox(L"200", core::rect<s32>(40,y+20,80,y+36), true, wnd, GUI_ID_ASK_PARAMETERS_NBFRAME);
 		y += 40;
 		env->addStaticText(L"Frame step (strict-min: 0)", core::rect<s32>(20,y,380,y+20), false, true, wnd);
 		env->addEditBox(L"0.01", core::rect<s32>(40,y+20,80,y+36), true, wnd, GUI_ID_ASK_PARAMETERS_DELTAT);
+		y += 45;
+		env->addStaticText(L"Handle fractures", core::rect<s32>(40,y,380,y+20), false, true, wnd);
+		env->addCheckBox(true, core::rect<s32>(20,y+2,36,y+18), wnd, GUI_ID_ASK_PARAMETERS_FRACTURE);
+		y += 20;
+		env->addStaticText(L"Handle self-collisions", core::rect<s32>(40,y+4,380,y+20), false, true, wnd);
+		env->addCheckBox(true, core::rect<s32>(20,y+2,36,y+18), wnd, GUI_ID_ASK_PARAMETERS_SELFCOLLISIONS);
 		y += 50;
 		env->addButton(core::rect<s32>(60,y,100,y+16), wnd, GUI_ID_ASK_PARAMETERS_GO_BUTTON, L"GO!");
 		env->addButton(core::rect<s32>(320,y,360,y+16), wnd, GUI_ID_ASK_PARAMETERS_CANCEL_BUTTON, L"Cancel");

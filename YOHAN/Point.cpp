@@ -106,7 +106,7 @@ void Point::modifyReverseIndex(Tetrahedron* tetra, int iop, int tetID)
 		}
 	}
 	
-	util::log("FETAL ERROR: Could not reach here: Point::modifyReverseIndex");
+	util::log("FATAL ERROR: Could not reach here: Point::modifyReverseIndex");
 }
 
 void Point::removeReverseIndex(int tetID)
@@ -120,5 +120,5 @@ void Point::removeReverseIndex(int tetID)
 		}
 	}
 
-	util::log("FETAL ERROR: Could not reach here: Point::removeReverseIndex");
+	util::log("FATAL ERROR: Could not reach here: Point::removeReverseIndex");
 }

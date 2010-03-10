@@ -224,7 +224,7 @@ bool Scene::load(std::string tetrahedralizedSceneFile)
 						sf.intensity[2] = atof(tmp);
 					}
 					else
-						fetalError();
+						FATALError();
 				}
 
 				// add into the list
@@ -308,12 +308,13 @@ bool Scene::load(std::string tetrahedralizedSceneFile)
 void Scene::saveStep(std::string filename)
 {
 	// we want to create sub directories each 256 steps
-	std::stringstream dir;
-	dir << simulatedSceneOutDir;
-	dir << "/sub" << (stepNumber / 256);
-	createDir(dir.str().c_str());
-	dir << "/frame-" << stepNumber;
-	createDir(dir.str().c_str());
+	std::stringstream dir,dir_;
+	dir << "sub" << (stepNumber / 256) << "/frame-" << stepNumber;
+
+	dir_ << simulatedSceneOutDir << "/sub" << (stepNumber / 256);
+	createDir(dir_.str().c_str());
+	dir_ << "/frame-" << stepNumber;
+	createDir(dir_.str().c_str());
 
 	ofstream fp (filename.c_str(), ios::app);
 	if (!fp || !fp.good())
@@ -341,11 +342,13 @@ void Scene::saveStep(std::string filename)
 
 
 
-bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbSteps)
+bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbSteps, bool fracture, bool selfcollision)
 {
 	this->currentTime = 0;
 	this->deltaT = deltaT;
 	this->simulatedSceneOutDir = simulatedSceneOutDir;
+	this->simulate_fracture = fracture;
+	this->simulate_selfcollision = selfcollision;
 
 
 	std::string filename = simulatedSceneOutDir;
@@ -384,7 +387,8 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 		for (int i=0; i < (int)volumes.size(); i++) 
 		{
 			volumes[i]->evolve(deltaT);
-			volumes[i]->calculFracture();
+			if (simulate_fracture)
+				volumes[i]->calculFracture();
 		}
 		tend = GetTickCount();
 		tdif = tend - tstart;
@@ -658,14 +662,18 @@ void Scene::CollisionResponse(vector<vector<Tetrahedron*>>* tets)
 
 void Scene::handleCollisions()
 {
+	int offest = simulate_selfcollision ? 0 : 1;
+
 	std::vector<Tetrahedron*> *found_plan = new std::vector<Tetrahedron*>();
 	std::vector<vector<Tetrahedron*>> *found = new std::vector<vector<Tetrahedron*>>();
+
 	for (int i=0; i < (int)volumes.size(); i++) {
 		volumes[i]->getMasterBoundingBox()->recalculateBoundingBoxes();
 	}
 	for (int i=0; i < (int)volumes.size(); i++) {
 		volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(0, found_plan);
-		for (int j=i+1; j < (int)volumes.size(); j++) {
+		// start next loop to j=i+1 if you don't want to handle self-collisions
+		for (int j=i+offest; j < (int)volumes.size(); j++) {
 			volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(volumes[j]->getMasterBoundingBox(), found);
 		}
 	}

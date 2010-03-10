@@ -27,6 +27,8 @@ public:
 	void computeCoreJacobian();
 	void computeBeta();
 
+	bool hasPointInCommonWith(Tetrahedron* other);
+
 	/* Added by Ning, for fracture */
 	void setStress(Matrix3d& stress);
 	void setQ(Matrix3d& q);

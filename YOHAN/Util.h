@@ -21,14 +21,14 @@ namespace util
 	
 	inline void polarDecomposition(Matrix3d& f, Matrix3d& q)
 	{
-		q.col(0) = f.col(0)/f.col(0).norm();
+		/*q.col(0) = f.col(0)/f.col(0).norm();
 		q.col(1) = (f.col(1)-q.col(0).dot(f.col(1))*q.col(1));
 		q.col(1) = q.col(1)/q.col(1).norm();
-		q.col(2) = q.col(0).cross(q.col(1));
+		q.col(2) = q.col(0).cross(q.col(1));*/
 
-		/*Eigen::SVD<Matrix3d> svd;
+		Eigen::SVD<Matrix3d> svd;
 		svd.compute(f);
-		q = svd.matrixU() * svd.matrixV().adjoint();*/
+		q = svd.matrixU() * svd.matrixV().adjoint();
 	}
 
 

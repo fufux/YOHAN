@@ -311,6 +311,17 @@ Matrix<double, 3, 1>& Tetrahedron::getCompressiveForce(int index)
 	return this->compressiveForce[index];
 }
 
+bool Tetrahedron::hasPointInCommonWith(Tetrahedron* other)
+{
+	for (int i=0; i < 4; i++) {
+		for (int j=0; j < 4; j++) {
+			if (this->points[i] == other->points[j])
+				return true;
+		}
+	}
+	return false;
+}
+
 void Tetrahedron::remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& nvector, vector<Point*>& pointList)
 {
 	/* assume that the given point is P0, the rest is P1, P2 and P3 */
@@ -342,8 +353,8 @@ void Tetrahedron::remesh(Point* orginal, Point* replica, Matrix<double, 3, 1>& n
 	}
 	else
 	{
-		// must not reach here, it is a fetal error
-		util::log("FETAL ERROR IN Tetrahedron::Remesh");
+		// must not reach here, it is a FATAL error
+		util::log("FATAL ERROR IN Tetrahedron::Remesh");
 	}
 	
 
@@ -596,8 +607,8 @@ void Tetrahedron::remesh2(Point* orginal, Matrix<double, 3, 1>& nvector, vector<
 	}
 	else
 	{
-		// must not reach here, it is a fetal error
-		util::log("FETAL ERROR IN Tetrahedron::Remesh");
+		// must not reach here, it is a FATAL error
+		util::log("FATAL ERROR IN Tetrahedron::Remesh");
 	}
 	
 
@@ -1487,7 +1498,7 @@ Tetrahedron* Tetrahedron::faceNeighour(Point* a, Point* b, Point* c)
 	if (common.size() > 1)
 	{
 		// ERROR
-		util::log("FETAL ERROR in Tetrahedron::faceNeighour");
+		util::log("FATAL ERROR in Tetrahedron::faceNeighour");
 		return NULL;
 	}
 	else if (common.size() == 0)
@@ -1532,7 +1543,7 @@ Point* Tetrahedron::getFacePoint(Point* a, Point* b, Point* c)
 			return base;
 	}
 
-	util::log("FETAL ERROR: Could not reach here: Tetrahedron::getFacePoint");
+	util::log("FATAL ERROR: Could not reach here: Tetrahedron::getFacePoint");
 	return NULL;
 }
 

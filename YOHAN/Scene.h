@@ -13,12 +13,18 @@ public:
 	~Scene(void);
 
 	bool load(std::string tetrahedralizedSceneFile);
-	bool simulate(std::string simulatedSceneOutDir, double deltaT, int nbSteps);
+	bool simulate(std::string simulatedSceneOutDir, double deltaT, int nbSteps, bool fracture, bool selfcollision);
 
 	double* getForceField();
 	double getDeltaT();
 	void planCollisionResponse(vector<Tetrahedron*>* tets);
 	void CollisionResponse(vector<vector<Tetrahedron*>>* tets);
+
+	// simulation options
+	bool simulate_fracture;
+	bool simulate_selfcollision;
+
+	std::string simulatedSceneOutDir;
 
 private:
 	double deltaT;
@@ -27,7 +33,6 @@ private:
 	double kerr;
 	double kdmp;
 	double kfrc;
-	std::string simulatedSceneOutDir;
 
 	Tetrahedron* plan;
 
