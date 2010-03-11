@@ -3,11 +3,18 @@
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/sax/HandlerBase.hpp>
 #include <xercesc/util/XMLString.hpp>
-#include <xercesc/util/PlatformUtils.hpp>	
+#include <xercesc/util/PlatformUtils.hpp>
 #include "Scene.h"
 #include "BoundingBox.h"
+#include "EditorEventReceiver.h"
 
 using namespace xercesc;
+
+
+extern IrrlichtDevice* device;
+extern IVideoDriver* driver;
+extern ISceneManager* smgr;
+extern IGUIEnvironment* env;
 
 
 
@@ -370,8 +377,9 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 
 
 	// SIMULATE
-	long tstart, tend, tdif, tdif2;
-			
+	long tbegin, tstart, tend, tdif, tdif2;
+	tbegin = GetTickCount();
+
 	for (stepNumber=0; stepNumber < nbSteps; stepNumber++)
 	{
 		currentTime += deltaT;
@@ -402,6 +410,22 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 			std::stringstream s;
 			s << "Step n°" << stepNumber << " computed in " << tdif << "ms and saved in " << tdif2 << "ms.";
 			util::log( s.str() );
+		}
+		// refresh UI
+		IGUIWindow* wnd = (IGUIWindow*)env->getRootGUIElement()->getElementFromId(GUI_ID_REFRESH_SIMULATING, true);
+		if (wnd) {
+			wnd->remove();
+			wnd = env->addMessageBox(L"Processing...", 
+				(stringw("Tetrahedralization successful. Simulating... Please wait.\r\n") +
+				L"Step n°" + stringw(stepNumber) + L" computed in " + stringw(tdif) + L"ms.\r\n" +
+				L"Equivalent simulation time: " + stringw(currentTime) + L"ms.\r\n" + 
+				L"Total time elapsed: " + stringw(tend-tbegin) + L"ms.\r\n").c_str(),
+				true, 0, env->getRootGUIElement(), GUI_ID_REFRESH_SIMULATING);
+			device->clearSystemMessages();
+			driver->beginScene(true, true, SColor(255,100,101,140));
+			env->drawAll();
+			device->clearSystemMessages();
+			driver->endScene();
 		}
 	}
 

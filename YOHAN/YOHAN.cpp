@@ -153,7 +153,7 @@ int main(int argc, _TCHAR* argv[])
 
 	// by default, we start the editor
 	editor->start();
-	editor->load("tmp.xml");
+	editor->load("saved_scenes/tmp.xml");
 
 	/*
 	Ok, now we have set up the scene, lets draw everything: We run the

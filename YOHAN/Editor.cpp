@@ -1039,15 +1039,15 @@ void Editor::quickTetAndSimulate()
 	if ( tetrahedralizeScene(tetrahedralizedSceneFile, outDirTetrahedralize, tetrahedraDensity) )
 	{
 		// display message
-		wnd = env->addMessageBox(L"Processing...", L"Tetrahedralization successful. Simulating... Please wait.", true, 0);
+		wnd = env->addMessageBox(L"Processing...", L"Tetrahedralization successful. Simulating... Please wait.\r\n", true, 0, env->getRootGUIElement(), GUI_ID_REFRESH_SIMULATING);
 		driver->beginScene(true, true, SColor(255,100,101,140));
 		env->drawAll();
 		driver->endScene();
-		wnd->remove();
-
+		
 		// simulate...
 		if ( simulateScene(outDirTetrahedralize + "/" + tetrahedralizedSceneFile, simulatedSceneOutDir, nbFrame, deltaT, fracture, selfcollisions) )
 		{
+			wnd->remove();
 			this->lastSimulatedSceneOutDir = simulatedSceneOutDir;
 			this->er->askForSwitch();
 		}

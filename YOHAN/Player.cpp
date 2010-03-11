@@ -60,7 +60,7 @@ void Player::switchToEditor()
 		editor->start();
 		// reset the working directory
 		device->getFileSystem()->changeWorkingDirectoryTo( baseDir.c_str() );
-		editor->load("tmp.xml");
+		editor->load("saved_scenes/tmp.xml");
 	}
 }
 
