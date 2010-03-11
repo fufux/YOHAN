@@ -64,6 +64,7 @@ void util::plan(vector<Point*>* vertices, int i1, int i2, int i3, Vector3d* n, d
 	Vector3d b = Vector3d((*vertices)[i2]->getX()[0], (*vertices)[i2]->getX()[1], (*vertices)[i2]->getX()[2]);
 	Vector3d c = Vector3d((*vertices)[i3]->getX()[0], (*vertices)[i3]->getX()[1], (*vertices)[i3]->getX()[2]);
 	*n = (b - a).cross(c - a);
+	n->normalize();
 	*cst = -n->dot(a);
 }
 

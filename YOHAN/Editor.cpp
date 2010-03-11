@@ -1055,6 +1055,9 @@ void Editor::quickTetAndSimulate()
 		}
 		else
 		{
+			wnd = (IGUIWindow*)env->getRootGUIElement()->getElementFromId(GUI_ID_REFRESH_SIMULATING, true);
+			if (wnd)
+				wnd->remove();
 			env->addMessageBox(CAPTION_ERROR, L"Simulation failed! Aborting.", true);
 		}
 	}

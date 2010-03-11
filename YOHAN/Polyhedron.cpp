@@ -74,7 +74,6 @@ Vector3d* Polyhedron::calcDir(int owner)
 				tmp = *(*(*facets)[i])[j] - *(*(*facets)[i])[0];
 				dir = *(*(*facets)[i])[j-1] - *(*(*facets)[i])[0];
 				dir = tmp.cross(dir);
-				dir.normalize();
 				*resul = *resul + dir;
 			}
 		}
@@ -164,7 +163,7 @@ void Polyhedron::collisionForces(double kerr, double kdmp, double kfrc)
 	double k;
 
 	double vol = this->calcVolume();
-	
+	//cout << vol << endl;
 	double* f1;
 	if(this->parents[0]->getID()!=-1)
 		f1 = this->parents[0]->getVolume()->getForces();
@@ -183,7 +182,6 @@ void Polyhedron::collisionForces(double kerr, double kdmp, double kfrc)
 	// Calcul des directions des forces
 	fA = *(this->calcDir(parents[0]->getID()));
 	fB= -fA;
-
 
 	// Two tetrahedron collision
 	if(parents[0]->getID()>=0 && parents[1]->getID()>=0){

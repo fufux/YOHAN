@@ -21,7 +21,7 @@ extern IGUIEnvironment* env;
 Scene::Scene(void)
 {
 	// Initialize collision response constants
-	kerr = 10000000;
+	kerr = 1000;
 	kdmp = 4000;
 	kfrc = 0.5;
 	plan = new Tetrahedron();
@@ -418,7 +418,7 @@ bool Scene::simulate(std::string simulatedSceneOutDir, double deltaT, int nbStep
 			wnd = env->addMessageBox(L"Processing...", 
 				(stringw("Tetrahedralization successful. Simulating... Please wait.\r\n") +
 				L"Step n°" + stringw(stepNumber) + L" computed in " + stringw(tdif) + L"ms.\r\n" +
-				L"Equivalent simulation time: " + stringw(currentTime) + L"ms.\r\n" + 
+				L"Equivalent simulation time: " + stringw(currentTime) + L"s.\r\n" + 
 				L"Total time elapsed: " + stringw(tend-tbegin) + L"ms.\r\n").c_str(),
 				true, 0, env->getRootGUIElement(), GUI_ID_REFRESH_SIMULATING);
 			device->clearSystemMessages();
@@ -706,9 +706,9 @@ void Scene::handleCollisions()
 	for (int i=0; i < (int)volumes.size(); i++) {
 		volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(0, found_plan);
 		// start next loop to j=i+1 if you don't want to handle self-collisions
-		for (int j=i+offest; j < (int)volumes.size(); j++) {
+		/*for (int j=i+offest; j < (int)volumes.size(); j++) {
 			volumes[i]->getMasterBoundingBox()->getCollidingTetrahedra(volumes[j]->getMasterBoundingBox(), found);
-		}
+		}*/
 	}
 	planCollisionResponse(found_plan);
 	CollisionResponse(found);
