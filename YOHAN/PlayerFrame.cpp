@@ -371,7 +371,7 @@ PlayerFrame::PlayerFrame(Player* player, FrameInfo info, bool load_volumic)
 		// -----------------------------------------------------------------------
 		// - BOUNDINGBOXES -------------------------------------------------------
 		// -----------------------------------------------------------------------
-		if (bbFileName != "")
+		if (false && bbFileName != "") // remove "false &&" if you want to see the bounding boxes for debug
 		{
 			inbb.open(bbFileName.c_str(), ios::in | ios::binary); // opens the nodes file
 			if (!inbb || !inbb.good())

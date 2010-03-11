@@ -440,7 +440,7 @@ void EditorEventReceiver::askForParameters(bool previous_was_bad)
 		env->addEditBox(L"0.01", core::rect<s32>(40,y+20,80,y+36), true, wnd, GUI_ID_ASK_PARAMETERS_DELTAT);
 		y += 45;
 		env->addStaticText(L"Handle fractures", core::rect<s32>(40,y,380,y+20), false, true, wnd);
-		env->addCheckBox(true, core::rect<s32>(20,y+2,36,y+18), wnd, GUI_ID_ASK_PARAMETERS_FRACTURE);
+		env->addCheckBox(false, core::rect<s32>(20,y+2,36,y+18), wnd, GUI_ID_ASK_PARAMETERS_FRACTURE);
 		/*y += 20;
 		env->addStaticText(L"Handle self-collisions", core::rect<s32>(40,y+4,380,y+20), false, true, wnd);*/
 		IGUICheckBox* cb = env->addCheckBox(false, core::rect<s32>(20,y+2,36,y+18), wnd, GUI_ID_ASK_PARAMETERS_SELFCOLLISIONS);
