@@ -14,7 +14,7 @@ using namespace xercesc;
 Scene::Scene(void)
 {
 	// Initialize collision response constants
-	kerr = 1000;
+	kerr = 10000000;
 	kdmp = 4000;
 	kfrc = 0.5;
 	plan = new Tetrahedron();
