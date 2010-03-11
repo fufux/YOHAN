@@ -333,8 +333,19 @@ bool Player::load(irr::core::stringc filename)
 	}
 	else
 	{
+		for (u32 i=0; i < framesFileNames.size(); i++)
+		{
+			if (framesFileNames[i].nodefiles.size() == 0 ||
+				framesFileNames[i].facefiles.size() == 0 ||
+				framesFileNames[i].elefiles.size() == 0)
+			{
+				framesFileNames.erase(i);
+			}
+		}
 		for (u32 i=0; i < framesFileNames.size()-1; i++)
+		{
 			framesFileNames[i].bbfiles = framesFileNames[i+1].bbfiles;
+		}
 		frames_size = framesFileNames.size();
 	}
 
