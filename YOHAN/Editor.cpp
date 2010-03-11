@@ -1047,7 +1047,9 @@ void Editor::quickTetAndSimulate()
 		// simulate...
 		if ( simulateScene(outDirTetrahedralize + "/" + tetrahedralizedSceneFile, simulatedSceneOutDir, nbFrame, deltaT, fracture, selfcollisions) )
 		{
-			wnd->remove();
+			wnd = (IGUIWindow*)env->getRootGUIElement()->getElementFromId(GUI_ID_REFRESH_SIMULATING, true);
+			if (wnd)
+				wnd->remove();
 			this->lastSimulatedSceneOutDir = simulatedSceneOutDir;
 			this->er->askForSwitch();
 		}
